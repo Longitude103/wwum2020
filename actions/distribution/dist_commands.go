@@ -39,6 +39,7 @@ type weatherStation struct {
 type stDistances struct {
 	Station  string
 	Distance float64
+	weight   float64
 }
 
 func Distribution(debug *bool, startYr *int, endYr *int) {
@@ -101,7 +102,10 @@ func Distribution(debug *bool, startYr *int, endYr *int) {
 	for _, c := range Cells[:5] {
 		fmt.Println(c)
 		dist := distances(c, wStations)
-		fmt.Printf("Distances are %v\n", dist)
+		for _, v := range dist {
+			fmt.Printf("Distance to station %s is %.0f Meters and weight is %.4f\n", v.Station, v.Distance, v.weight)
+		}
+
 	}
 
 }
@@ -146,9 +150,12 @@ func getWeatherStations(db *sql.DB) []weatherStation {
 func distances(cell actCell, wStations []weatherStation) []stDistances {
 
 	var dist []stDistances
+	var lenghts []float64
 	for _, v := range wStations {
 		var stDistance stDistances
-		stDistance.Distance = gisUtils.Distance(cell.cor.Coordinates[1], cell.cor.Coordinates[0], v.Cor.Coordinates[1], v.Cor.Coordinates[0])
+		d := gisUtils.Distance(cell.cor.Coordinates[1], cell.cor.Coordinates[0], v.Cor.Coordinates[1], v.Cor.Coordinates[0])
+		lenghts = append(lenghts, d)
+		stDistance.Distance = d
 		stDistance.Station = v.Code
 		dist = append(dist, stDistance)
 	}
@@ -156,6 +163,18 @@ func distances(cell actCell, wStations []weatherStation) []stDistances {
 	sort.Slice(dist, func(i, j int) bool {
 		return dist[i].Distance < dist[j].Distance
 	})
+
+	sort.Float64s(lenghts)
+
+	idw, err := gisUtils.InverseDW(lenghts[:3])
+	fmt.Println(idw)
+	if err != nil {
+		fmt.Println("Error", err)
+	}
+
+	for i, v := range idw {
+		dist[i].weight = v
+	}
 
 	return dist[:3]
 }
