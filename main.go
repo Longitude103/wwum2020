@@ -22,6 +22,7 @@ For help with those functions type: dist -h or convloss -h
 	distDebug := distCmd.Bool("debug", false, "sets debugger to true to not preform actual write")
 	distStartY := distCmd.Int("StartYr", 1997, "Sets the start year of Dist Command, default = 1997")
 	distEndY := distCmd.Int("EndYr", 2020, "Sets the end year of Dist Command, default = 2020")
+	distCSDir := distCmd.String("CSDir", "", "CropSim Directory path")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -32,7 +33,7 @@ For help with those functions type: dist -h or convloss -h
 	case "dist":
 		distCmd.Parse(os.Args[2:])
 		fmt.Println(color.Red + "Distribution of CropSim Data" + color.Reset)
-		distribution.Distribution(distDebug, distStartY, distEndY)
+		distribution.Distribution(distDebug, distStartY, distEndY, *distCSDir)
 	default:
 		fmt.Println(help)
 	}

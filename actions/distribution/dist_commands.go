@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 	"sort"
 	"wwum2020/database"
+	"wwum2020/fileio"
 )
 
 type actCell struct {
@@ -35,11 +36,14 @@ type stDistances struct {
 	weight   float64
 }
 
-func Distribution(debug *bool, startYr *int, endYr *int) {
+func Distribution(debug *bool, startYr *int, endYr *int, CSDir string) {
 	fmt.Println("Distribution")
 	if *debug {
 		fmt.Println(color.Red + "Debug Mode" + color.Reset)
 	}
+
+	stationData := fileio.LoadTextFiles(CSDir)
+	fmt.Println(stationData["AGAT"])
 
 	fmt.Printf("Start Year: %d -> End Year %d\n", *startYr, *endYr)
 	db := database.PgConn()
