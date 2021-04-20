@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"gisUtils"
 	_ "github.com/lib/pq"
+	"sort"
 )
 
 const (
@@ -32,6 +34,11 @@ type coord struct {
 type weatherStation struct {
 	Code string `json:"code"`
 	Cor  coord  `json:"location"`
+}
+
+type stDistances struct {
+	Station  string
+	Distance float64
 }
 
 func Distribution(debug *bool, startYr *int, endYr *int) {
@@ -64,7 +71,7 @@ func Distribution(debug *bool, startYr *int, endYr *int) {
 		panic(err)
 	}
 
-	var Cells []actCell
+	var Cells []actCell // active cells list
 	cell := actCell{}
 	for rows.Next() {
 		var cellid, rw, clm, soil int
@@ -89,15 +96,14 @@ func Distribution(debug *bool, startYr *int, endYr *int) {
 		Cells = append(Cells, cell)
 	}
 
-	wStations := getWeatherStations(db)
+	wStations := getWeatherStations(db) // weather station list
 
 	for _, c := range Cells[:5] {
 		fmt.Println(c)
+		dist := distances(c, wStations)
+		fmt.Printf("Distances are %v\n", dist)
 	}
 
-	for _, w := range wStations {
-		fmt.Println(w)
-	}
 }
 
 func CheckError(err error) {
@@ -135,4 +141,21 @@ func getWeatherStations(db *sql.DB) []weatherStation {
 	}
 
 	return wStations
+}
+
+func distances(cell actCell, wStations []weatherStation) []stDistances {
+
+	var dist []stDistances
+	for _, v := range wStations {
+		var stDistance stDistances
+		stDistance.Distance = gisUtils.Distance(cell.cor.Coordinates[1], cell.cor.Coordinates[0], v.Cor.Coordinates[1], v.Cor.Coordinates[0])
+		stDistance.Station = v.Code
+		dist = append(dist, stDistance)
+	}
+
+	sort.Slice(dist, func(i, j int) bool {
+		return dist[i].Distance < dist[j].Distance
+	})
+
+	return dist[:3]
 }
