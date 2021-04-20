@@ -8,14 +8,7 @@ import (
 	"gisUtils"
 	_ "github.com/lib/pq"
 	"sort"
-)
-
-const (
-	host     = "long103-wwum.clmtjoquajav.us-east-2.rds.amazonaws.com"
-	port     = 5432
-	user     = "postgres"
-	password = "rQ!461k&Rk8J"
-	dbname   = "wwum"
+	"wwum2020/database"
 )
 
 type actCell struct {
@@ -49,30 +42,29 @@ func Distribution(debug *bool, startYr *int, endYr *int) {
 	}
 
 	fmt.Printf("Start Year: %d -> End Year %d\n", *startYr, *endYr)
+	db := database.PgConn()
 
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	cells := getCells(db)
+	wStations := getWeatherStations(db) // weather station list
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
-	CheckError(err)
+	for _, c := range cells[:5] {
+		dist := distances(c, wStations)
+		for _, v := range dist {
+			fmt.Printf("Cell Address: %d, Distance to station %s is %.0f Meters and weight is %.4f\n",
+				c.CellId, v.Station, v.Distance, v.weight)
+		}
+	}
 
-	// close database
-	defer db.Close()
+}
 
-	// check db
-	err = db.Ping()
-	CheckError(err)
-
-	fmt.Println("Connected!")
-
+func getCells(db *sql.DB) []actCell {
 	rows, err := db.Query(`SELECT tfg_cellid as cellid, rw, clm, soil_code, 
        st_asgeojson(st_transform(st_centroid(geom), 4326)) as cent FROM public.act_cells;`)
-
 	if err != nil {
 		panic(err)
 	}
 
-	var Cells []actCell // active cells list
+	var cells []actCell // active cells list
 	cell := actCell{}
 	for rows.Next() {
 		var cellid, rw, clm, soil int
@@ -94,26 +86,10 @@ func Distribution(debug *bool, startYr *int, endYr *int) {
 		cell.SoilCode = soil
 		cell.CellId = cellid
 		cell.cor = cor
-		Cells = append(Cells, cell)
+		cells = append(cells, cell)
 	}
 
-	wStations := getWeatherStations(db) // weather station list
-
-	for _, c := range Cells[:5] {
-		fmt.Println(c)
-		dist := distances(c, wStations)
-		for _, v := range dist {
-			fmt.Printf("Distance to station %s is %.0f Meters and weight is %.4f\n", v.Station, v.Distance, v.weight)
-		}
-
-	}
-
-}
-
-func CheckError(err error) {
-	if err != nil {
-		panic(err)
-	}
+	return cells
 }
 
 func getWeatherStations(db *sql.DB) []weatherStation {
@@ -167,7 +143,6 @@ func distances(cell actCell, wStations []weatherStation) []stDistances {
 	sort.Float64s(lenghts)
 
 	idw, err := gisUtils.InverseDW(lenghts[:3])
-	fmt.Println(idw)
 	if err != nil {
 		fmt.Println("Error", err)
 	}
