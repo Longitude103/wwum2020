@@ -6,9 +6,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// getSqlite gets or sets the connection string for the sqlite3 results database.
+// GetSqlite gets or sets the connection string for the sqlite3 results database.
 //  It takes no args, and returns the db object for the connection
-func getSqlite() *sql.DB {
+func GetSqlite() *sql.DB {
 	db, err := sql.Open("sqlite3", "./results.db")
 	if err != nil {
 		fmt.Println("Error", err)

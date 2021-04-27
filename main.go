@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"wwum2020/actions"
 	"wwum2020/actions/distribution"
 )
 
@@ -20,9 +21,15 @@ For help with those functions type: dist -h or convloss -h
 
 	distCmd := flag.NewFlagSet("dist", flag.ExitOnError)
 	distDebug := distCmd.Bool("debug", false, "sets debugger to true to not preform actual write")
-	distStartY := distCmd.Int("StartYr", 1997, "Sets the start year of Dist Command, default = 1997")
-	distEndY := distCmd.Int("EndYr", 2020, "Sets the end year of Dist Command, default = 2020")
+	distStartY := distCmd.Int("StartYr", 1997, "Sets the start year of Command, default = 1997")
+	distEndY := distCmd.Int("EndYr", 2020, "Sets the end year of Command, default = 2020")
 	distCSDir := distCmd.String("CSDir", "", "CropSim Directory path")
+
+	rchCmd := flag.NewFlagSet("rch", flag.ExitOnError)
+	rchDebug := rchCmd.Bool("debug", false, "sets debugger for more log information")
+	rchStartY := rchCmd.Int("StartYr", 1997, "Sets the start year of Command, default = 1997")
+	rchEndY := rchCmd.Int("EndYr", 2020, "Sets the end year of Command, default = 2020")
+	rchCSDir := rchCmd.String("CSDir", "", "CropSim Directory path")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -31,9 +38,23 @@ For help with those functions type: dist -h or convloss -h
 
 	switch os.Args[1] {
 	case "dist":
-		distCmd.Parse(os.Args[2:])
+		err := distCmd.Parse(os.Args[2:])
+		if err != nil {
+			fmt.Println("Error", err)
+			fmt.Println(help)
+			os.Exit(1)
+		}
 		fmt.Println(color.Red + "Distribution of CropSim Data" + color.Reset)
 		distribution.Distribution(distDebug, distStartY, distEndY, *distCSDir)
+	case "rch":
+		err := rchCmd.Parse(os.Args[2:])
+		if err != nil {
+			fmt.Println("Error", err)
+			fmt.Println(help)
+			os.Exit(1)
+		}
+		fmt.Println(color.Red + "Run Recharge File Creation" + color.Reset)
+		actions.RechargeFiles(rchDebug, rchStartY, rchEndY, rchCSDir)
 	default:
 		fmt.Println(help)
 	}
