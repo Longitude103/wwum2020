@@ -43,7 +43,8 @@ func Distribution(debug *bool, startYr *int, endYr *int, CSDir string) {
 	}
 
 	stationData := fileio.LoadTextFiles(CSDir)
-	fmt.Println(stationData["AGAT"])
+	//fmt.Println(stationData["AGAT"])
+	_ = stationData
 
 	fmt.Printf("Start Year: %d -> End Year %d\n", *startYr, *endYr)
 	db := database.PgConn()
@@ -127,8 +128,8 @@ func getWeatherStations(db *sql.DB) []weatherStation {
 	return wStations
 }
 
+// distances is a function that
 func distances(cell actCell, wStations []weatherStation) []stDistances {
-
 	var dist []stDistances
 	var lenghts []float64
 	for _, v := range wStations {
