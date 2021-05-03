@@ -9,7 +9,7 @@ import (
 // GetSqlite gets or sets the connection string for the sqlite3 results database.
 //  It takes no args, and returns the db object for the connection
 func GetSqlite() *sql.DB {
-	db, err := sql.Open("sqlite3", "./results.db")
+	db, err := sql.Open("sqlite3", "./results.sqlite")
 	if err != nil {
 		fmt.Println("Error", err)
 	}

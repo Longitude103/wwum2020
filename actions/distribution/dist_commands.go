@@ -19,7 +19,7 @@ func Distribution(debug *bool, startYr *int, endYr *int, CSDir string) {
 	_ = stationData
 
 	fmt.Printf("Start Year: %d -> End Year %d\n", *startYr, *endYr)
-	db := database.PgConn()
+	db := database.PgConnx()
 
 	cells := database.GetCells(db)
 	wStations := database.GetWeatherStations(db) // weather station list

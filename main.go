@@ -12,7 +12,7 @@ import (
 func main() {
 	const help = `WWUM 2020 CLI for various tasks. At this point there are two main functions implemented.
 1. dist -> distribution of CropSim data by cell
-2. convloss -> conveyance loss distribution
+2. rch -> create rch files
 -------------------------------------------------------------------------------------------------
 Use one of these two commands: dist or convloss
 -------------------------------------------------------------------------------------------------

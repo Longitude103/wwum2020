@@ -1,9 +1,9 @@
 package database
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 )
 
 type WeatherStation struct {
@@ -11,7 +11,7 @@ type WeatherStation struct {
 	Cor  coord  `json:"location"`
 }
 
-func GetWeatherStations(db *sql.DB) []WeatherStation {
+func GetWeatherStations(db *sqlx.DB) []WeatherStation {
 	rows, err := db.Query(`SELECT code, st_asgeojson(st_transform(geom, 4326)) as location FROM public.weather_stations;`)
 	if err != nil {
 		panic(err)

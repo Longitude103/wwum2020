@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -32,5 +33,16 @@ func PgConn() *sql.DB {
 	}
 
 	fmt.Printf("Connected to Postgres %s database.\n", dbname)
+	return db
+}
+
+func PgConnx() *sqlx.DB {
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	db, err := sqlx.Connect("postgres", psqlconn)
+	if err != nil {
+		panic(err)
+	}
+
 	return db
 }

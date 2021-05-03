@@ -3,9 +3,19 @@ package rchFiles
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jmoiron/sqlx"
+	"wwum2020/database"
 )
 
-func NaturalVeg(db *sql.DB, debug *bool) {
+func NaturalVeg(sqliteDB *sql.DB, pgDB *sqlx.DB, debug *bool, sYear *int, eYear *int) {
 	fmt.Println("welcome to NaturalVeg")
-	fmt.Println("Debug is set to", debug)
+	fmt.Println("Debug is set to", *debug)
+
+	cells := database.GetCells(pgDB)
+
+	fmt.Println("First Cell ID", cells[0].CellId)
+
+	//for yr := *sYear; yr < *eYear; yr++ {
+	//	fmt.Println("Year", yr)
+	//}
 }

@@ -1,10 +1,10 @@
 package database
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"gisUtils"
+	"github.com/jmoiron/sqlx"
 	"sort"
 )
 
@@ -27,7 +27,7 @@ type StDistances struct {
 	Weight   float64
 }
 
-func GetCells(db *sql.DB) []ActCell {
+func GetCells(db *sqlx.DB) []ActCell {
 	rows, err := db.Query(`SELECT tfg_cellid as cellid, rw, clm, soil_code, 
        st_asgeojson(st_transform(st_centroid(geom), 4326)) as cent FROM public.act_cells;`)
 	if err != nil {

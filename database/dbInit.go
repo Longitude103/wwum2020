@@ -22,48 +22,32 @@ func InitializeDb(db *sql.DB) {
 				on file_keys (file_key);
 	`)
 	if err != nil {
-		fmt.Println("Error", err)
+		fmt.Println("Error in create statement for file keys", err)
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println("Error on create file_keys", err)
 	}
 
 	// if table exists with records, then skip adding data.
 	var count int
 	err = db.QueryRow(`select count(*) from file_keys;`).Scan(&count)
 	if err != nil {
-		fmt.Println("Error", err)
+		fmt.Println("Error in count file_key records", err)
 	}
 
 	if count == 0 {
 		stmt, err = db.Prepare(`
-		insert into file_keys (file_key, description) values (101, 'Dryland');
-		insert into file_keys (file_key, description) values (102, 'Natural Vegetation');
-		insert into file_keys (file_key, description) values (103, 'NP Surface Water Only');
-		insert into file_keys (file_key, description) values (104, 'SP Surface Water Only');
-		insert into file_keys (file_key, description) values (105, 'NP Comingled Parcel Pre 1998');
-		insert into file_keys (file_key, description) values (106, 'NP Comingled Parcel Post 1997');
-		insert into file_keys (file_key, description) values (107, 'SP Comingled Parcel Pre 1998');
-		insert into file_keys (file_key, description) values (108, 'SP Comingled Parcel Post 1997');
-		insert into file_keys (file_key, description) values (109, 'NP Groundwater Only Pre 1998');
-		insert into file_keys (file_key, description) values (110, 'NP Groundwater Only Post 1997');
-		insert into file_keys (file_key, description) values (111, 'SP Groundwater Only Pre 1998');
-		insert into file_keys (file_key, description) values (112, 'SP Groundwater Only Post 1997');
-		insert into file_keys (file_key, description) values (113, 'NP Canal Loss');
-		insert into file_keys (file_key, description) values (114, 'SP Canal Loss');
-		insert into file_keys (file_key, description) values (115, 'Outside NP and SP');
-		insert into file_keys (file_key, description) values (117, 'NP Recharge Sites');
-		insert into file_keys (file_key, description) values (118, 'SP Recharge Sites');
-		insert into file_keys (file_key, description) values (201, 'NP Comingled Pre 1998');
-		insert into file_keys (file_key, description) values (202, 'NP Groundwater Only Pre 1998');
-		insert into file_keys (file_key, description) values (203, 'NP Comingled Post 1997');
-		insert into file_keys (file_key, description) values (204, 'NP Groundwater Only Post 1997');
-		insert into file_keys (file_key, description) values (205, 'SP Comingled Pre 1998');
-		insert into file_keys (file_key, description) values (206, 'SP Groundwater Only Pre 1998');
-		insert into file_keys (file_key, description) values (207, 'SP Comingled Post 1997');
-		insert into file_keys (file_key, description) values (208, 'SP Groundwater Only Post 1997');
-		insert into file_keys (file_key, description) values (209, 'Steady State');
-		insert into file_keys (file_key, description) values (210, 'Municipal');
-		insert into file_keys (file_key, description) values (211, 'Industrial');
-		insert into file_keys (file_key, description) values (212, 'Other Wells');
-		insert into file_keys (file_key, description) values (213, 'Western Canal Outside SP');
+		insert into file_keys (file_key, description) values (101, 'Dryland'), (102, 'Natural Vegetation'), 
+		  (103, 'NP Surface Water Only'), (104, 'SP Surface Water Only'), (105, 'NP Comingled Parcel Pre 1998'), 
+		  (106, 'NP Comingled Parcel Post 1997'), (107, 'SP Comingled Parcel Pre 1998'), (108, 'SP Comingled Parcel Post 1997'), 
+		  (109, 'NP Groundwater Only Pre 1998'), (110, 'NP Groundwater Only Post 1997'), (111, 'SP Groundwater Only Pre 1998'), 
+		  (112, 'SP Groundwater Only Post 1997'), (113, 'NP Canal Loss'), (114, 'SP Canal Loss'), (115, 'Outside NP and SP'), 
+		  (116, 'NP Recharge Sites'), (117, 'SP Recharge Sites'), (201, 'NP Comingled Pre 1998'), (202, 'NP Groundwater Only Pre 1998'), 
+		  (203, 'NP Comingled Post 1997'), (204, 'NP Groundwater Only Post 1997'), (205, 'SP Comingled Pre 1998'), 
+		  (206, 'SP Groundwater Only Pre 1998'), (207, 'SP Comingled Post 1997'), (208, 'SP Groundwater Only Post 1997'), 
+          (209, 'Steady State'), (210, 'Municipal'), (211, 'Industrial'), (212, 'Other Wells'), (213, 'Western Canal Outside SP');
 	`)
 		if err != nil {
 			fmt.Println("Error", err)
