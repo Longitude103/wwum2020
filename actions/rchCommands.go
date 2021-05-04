@@ -26,5 +26,13 @@ func RechargeFiles(debug *bool, startYr *int, endYr *int, CSDir *string) {
 	//rchFiles.NaturalVeg(db, pgDb, debug, startYr, endYr)
 
 	// Irr Cells
-	rchFiles.GetCellsIrr(pgDb, 2014)
+	irrCells := rchFiles.GetCellsIrr(pgDb, 2014)
+	fmt.Println("First Irrigated Cell:")
+	fmt.Println(irrCells[0])
+
+	// Dry Cells
+	dryCells := rchFiles.GetDryCells(pgDb, 2014)
+	fmt.Println("First Dry Cell:")
+	fmt.Println(dryCells[0])
+
 }

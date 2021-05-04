@@ -6,6 +6,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// IrrCell is a struct to hold the data of each cell and parcel intersect, it includes the cert, crops, and other characteristics
+// important to the calculations.
 type IrrCell struct {
 	CellId   int             `db:"cellid"`
 	CertNum  sql.NullString  `db:"cert_num"`
@@ -26,21 +28,23 @@ type IrrCell struct {
 	Gw       sql.NullBool    `db:"gw"`
 }
 
-func GetCellsIrr(db *sqlx.DB, yr int) {
+// GetCellsIrr gets the cells that have irrigation within them and splits them by parcel. If a cell has multiple parcels
+// there will be multiples of the same cell listed. This includes both nrd irrigated acres.
+func GetCellsIrr(db *sqlx.DB, yr int) []IrrCell {
 
 	query := fmt.Sprintf(`SELECT tfg_cellid cellid, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area,
        crop1, crop1_cov, crop2, crop2_cov, crop3, crop3_cov, crop4, crop4_cov, sw, gw, irrig_type, sw_fac, cert_num, model_id
 from public.act_cells c inner join (SELECT crop1, crop1_cov, crop2, crop2_cov, crop3, crop3_cov, crop4, crop4_cov, sw, gw, irrig_type, sw_fac, cert_num::varchar, model_id, geom from np.t%d_irr UNION
                                     SELECT crop1, crop1_cov, crop2, crop2_cov, crop3, crop3_cov, crop4, crop4_cov, sw, gw, irr_type as irrig_type, sw_fac, id as cert_num, null as model_id, geom from sp.t%d_irr) i on st_intersects(c.geom, i.geom);`, yr, yr)
 
-	irrCells := []IrrCell{}
+	var irrCells []IrrCell
 	err := db.Select(&irrCells, query)
 	if err != nil {
 		fmt.Println("Error", err)
-		return
 	}
+	//
+	//fmt.Println("The First IRR Cell:")
+	//fmt.Println(irrCells[0])
 
-	fmt.Println("The First IRR Cell:")
-	fmt.Println(irrCells[0])
-
+	return irrCells
 }
