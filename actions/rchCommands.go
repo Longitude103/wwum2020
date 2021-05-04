@@ -26,5 +26,5 @@ func RechargeFiles(debug *bool, startYr *int, endYr *int, CSDir *string) {
 	//rchFiles.NaturalVeg(db, pgDb, debug, startYr, endYr)
 
 	// Irr Cells
-	rchFiles.GetCellsIrr(pgDb)
+	rchFiles.GetCellsIrr(pgDb, 2014)
 }
