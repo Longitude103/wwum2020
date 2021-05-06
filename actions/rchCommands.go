@@ -3,16 +3,21 @@ package actions
 import (
 	"fmt"
 	"github.com/schollz/progressbar"
+	"os"
 	"wwum2020/database"
+	"wwum2020/parcelpump"
 	"wwum2020/rchFiles"
 	//"wwum2020/rchFiles"
 )
 
 func RechargeFiles(debug *bool, startYr *int, endYr *int, CSDir *string) {
-	db := database.GetSqlite()
+	slDb := database.GetSqlite()
 	pgDb := database.PgConnx()
 
-	_ = db
+	// parcel pumping
+	parcelpump.ParcelPump(pgDb, slDb, 2014, 2014)
+	os.Exit(0)
+
 	// load up data with cell acres
 	cells := database.GetCells(pgDb)
 
@@ -61,6 +66,7 @@ func RechargeFiles(debug *bool, startYr *int, endYr *int, CSDir *string) {
 		if cell.CellId == 78585 {
 			fmt.Printf("CellId: %d, Total Parcel Acres: %g\n", cell.CellId, totalParcelAcres)
 		}
+
 		bar.Add(1)
 	}
 }

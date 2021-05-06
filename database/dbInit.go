@@ -1,14 +1,14 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 )
 
 // InitializeDb creates the database results table if it doesn't exist, so the records of the
 // transaction can be stored properly, also creates file_keys table for result file_type integer
 // and a foreign key restriction to results table
-func InitializeDb(db *sql.DB) {
+func InitializeDb(db *sqlx.DB) {
 	stmt, err := db.Prepare(`
 		create table if not exists file_keys
 			(
