@@ -1,9 +1,12 @@
 package actions
 
 import (
+	"errors"
 	"fmt"
+	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar"
 	"os"
+	"strconv"
 	"wwum2020/database"
 	"wwum2020/fileio"
 	"wwum2020/parcelpump"
@@ -11,14 +14,48 @@ import (
 	//"wwum2020/rchFiles"
 )
 
-func RechargeFiles(debug *bool, startYr *int, endYr *int, CSDir *string) {
+func RechargeFiles(debug *bool, CSDir *string) {
 	slDb := database.GetSqlite()
 	pgDb := database.PgConnx()
 
 	csResults := fileio.LoadTextFiles(*CSDir)
 
+	validate := func(input string) error {
+		_, err := strconv.Atoi(input)
+		if err != nil {
+			return errors.New("Invalid number")
+		}
+		return nil
+	}
+
+	prompt := promptui.Prompt{
+		Label:    "Start Year",
+		Validate: validate,
+	}
+
+	result, err := prompt.Run()
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+		return
+	}
+
+	startYr, _ := strconv.Atoi(result)
+
+	prompt = promptui.Prompt{
+		Label:    "End Year",
+		Validate: validate,
+	}
+
+	result, err = prompt.Run()
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+		return
+	}
+
+	endYr, _ := strconv.Atoi(result)
+
 	// parcel pumping
-	parcelpump.ParcelPump(pgDb, slDb, 2014, 2014, &csResults)
+	parcelpump.ParcelPump(pgDb, slDb, startYr, endYr, &csResults)
 	os.Exit(0)
 
 	// load up data with cell acres
