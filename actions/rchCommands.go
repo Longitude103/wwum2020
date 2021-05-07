@@ -29,7 +29,7 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	}
 
 	prompt := promptui.Prompt{
-		Label:    "Start Year",
+		Label:    "Start Year of Model Run",
 		Validate: validate,
 	}
 
@@ -42,7 +42,7 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	startYr, _ := strconv.Atoi(result)
 
 	prompt = promptui.Prompt{
-		Label:    "End Year",
+		Label:    "End Year of Model Run",
 		Validate: validate,
 	}
 

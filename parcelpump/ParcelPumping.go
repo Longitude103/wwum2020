@@ -3,9 +3,12 @@ package parcelpump
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar"
+	"os"
 	"wwum2020/database"
 	"wwum2020/fileio"
+	"wwum2020/parcelpump/conveyLoss"
 )
 
 func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults) {
@@ -16,6 +19,27 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 	wStations := database.GetWeatherStations(pgDB)
 
 	// 2. sw deliveries / canal recharge
+	prompt := promptui.Prompt{
+		Label:     "Don't include Excess Flows",
+		IsConfirm: true,
+		Default:   "y",
+	}
+
+	excessFlows := false
+	_, err := prompt.Run()
+	if err != nil {
+		// don't include excess flows
+		excessFlows = true
+	}
+
+	if excessFlows {
+		fmt.Println("Including excess flows")
+	}
+
+	conveyLoss.Conveyance(pgDB)
+
+	os.Exit(0)
+
 	// 3. pumping amounts / parcel
 	// 1. load parcels
 	for y := sYear; y < eYear+1; y++ {
