@@ -11,23 +11,25 @@ import (
 
 type StationResults struct {
 	Station     string
-	soil        int
-	monthlyData []monthlyValues
-	yr          int
-	crop        int
-	tillage     int
-	irrigation  int
+	Soil        int
+	MonthlyData []monthlyValues
+	Yr          int
+	Crop        int
+	Tillage     int
+	Irrigation  int
 }
 
 type monthlyValues struct {
-	et         float64
-	eff_precip float64
-	nir        float64
-	dp         float64
-	ro         float64
-	precip     float64
+	Et         float64
+	Eff_precip float64
+	Nir        float64
+	Dp         float64
+	Ro         float64
+	Precip     float64
 }
 
+// LoadTextFiles loads cropsim text files from a location and returns a map of the results to use in further processing.
+// This should include all the files and results for each station and each year.
 func LoadTextFiles(filePath string) map[string][]StationResults {
 	fmt.Println("File Path:", filePath)
 	fls, err := os.ReadDir(filePath)
@@ -46,6 +48,7 @@ func LoadTextFiles(filePath string) map[string][]StationResults {
 	return dataMap
 }
 
+// getFileData is an function that breaks down the station data and puts it into a struct to work with.
 func getFileData(filePath string) []StationResults {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -62,22 +65,22 @@ func getFileData(filePath string) []StationResults {
 	for scanner.Scan() {
 		elements := strings.Fields(scanner.Text())
 		station := StationResults{Station: elements[0]}
-		station.yr, err = strconv.Atoi(elements[1])
-		station.soil, err = strconv.Atoi(elements[2])
-		station.crop, err = strconv.Atoi(elements[3])
-		station.tillage, err = strconv.Atoi(elements[4])
-		station.irrigation, err = strconv.Atoi(elements[5])
+		station.Yr, err = strconv.Atoi(elements[1])
+		station.Soil, err = strconv.Atoi(elements[2])
+		station.Crop, err = strconv.Atoi(elements[3])
+		station.Tillage, err = strconv.Atoi(elements[4])
+		station.Irrigation, err = strconv.Atoi(elements[5])
 
 		for i := 6; i < 78; i = i + 6 {
 			var mvals monthlyValues
-			mvals.et, err = strconv.ParseFloat(elements[i], 64)
-			mvals.eff_precip, err = strconv.ParseFloat(elements[i+1], 64)
-			mvals.nir, err = strconv.ParseFloat(elements[i+2], 64)
-			mvals.dp, err = strconv.ParseFloat(elements[i+3], 64)
-			mvals.ro, err = strconv.ParseFloat(elements[i+4], 64)
-			mvals.precip, err = strconv.ParseFloat(elements[i+5], 64)
+			mvals.Et, err = strconv.ParseFloat(elements[i], 64)
+			mvals.Eff_precip, err = strconv.ParseFloat(elements[i+1], 64)
+			mvals.Nir, err = strconv.ParseFloat(elements[i+2], 64)
+			mvals.Dp, err = strconv.ParseFloat(elements[i+3], 64)
+			mvals.Ro, err = strconv.ParseFloat(elements[i+4], 64)
+			mvals.Precip, err = strconv.ParseFloat(elements[i+5], 64)
 
-			station.monthlyData = append(station.monthlyData, mvals)
+			station.MonthlyData = append(station.MonthlyData, mvals)
 		}
 
 		stationData = append(stationData, station)

@@ -77,12 +77,29 @@ func InitializeDb(db *sqlx.DB) {
 			on results (id);
 	`)
 	if err != nil {
-		fmt.Println("Error", err)
+		fmt.Println("Error creating results table", err)
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
-		fmt.Println("Error", err)
+		fmt.Println("Error executing results table create", err)
+	}
+
+	// add results table for parcelNIR
+	stmt, err = db.Prepare(`create table if not exists parcelNIR
+									(
+										parcelID integer,
+										nrd text,
+										dt text,
+										nir real
+									);`)
+	if err != nil {
+		fmt.Println("Error creating parcelNIR table", err)
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println("Error executing parcelNIR table create", err)
 	}
 
 }

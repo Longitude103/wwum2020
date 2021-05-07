@@ -5,6 +5,7 @@ import (
 	"github.com/schollz/progressbar"
 	"os"
 	"wwum2020/database"
+	"wwum2020/fileio"
 	"wwum2020/parcelpump"
 	"wwum2020/rchFiles"
 	//"wwum2020/rchFiles"
@@ -14,8 +15,10 @@ func RechargeFiles(debug *bool, startYr *int, endYr *int, CSDir *string) {
 	slDb := database.GetSqlite()
 	pgDb := database.PgConnx()
 
+	csResults := fileio.LoadTextFiles(*CSDir)
+
 	// parcel pumping
-	parcelpump.ParcelPump(pgDb, slDb, 2014, 2014)
+	parcelpump.ParcelPump(pgDb, slDb, 2014, 2014, &csResults)
 	os.Exit(0)
 
 	// load up data with cell acres
