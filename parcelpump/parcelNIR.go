@@ -11,8 +11,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// parcelNIR is a method that adds the NIR for each parcel from the CSResults and weather station data.
-// It produces an intermediate results table in local sqlite for review and adds a map to the parcel struct
+// parcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.
+// It produces an intermediate results table of NIR in local sqlite for review and adds three maps to the parcel struct
 func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.WeatherStation, csResults map[string][]fileio.StationResults) {
 	var parcelNIR, parcelRo, parcelDp [12]float64
 	if p.Nir == nil {
