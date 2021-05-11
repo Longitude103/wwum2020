@@ -38,7 +38,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		fmt.Println("Including excess flows")
 	}
 
-	conveyLoss.Conveyance(pgDB)
+	conveyLoss.Conveyance(pgDB, sYear, eYear, excessFlows)
 
 	os.Exit(0)
 

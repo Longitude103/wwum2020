@@ -44,8 +44,8 @@ extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;
 
 	} else {
 		// get all diversion data
-		divQry := fmt.Sprintf(`select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from wwnp.dailydiversions 
-inner join wwnp.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id 
+		divQry := fmt.Sprintf(`select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from sw.dailydiversions 
+inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id 
 WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt`, sYear, eYear)
 
 		var preDiversions []diversion
@@ -116,8 +116,8 @@ WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt`, s
 
 		remainDiversionQry := fmt.Sprintf(`select canal_id, TO_DATE(concat_ws('-', extract(YEAR from div_dt), 
 extract(MONTH from div_dt), '01'), 'YYYY-MM-DD') as div_dt, sum(div_amnt_cfs) as div_amnt_cfs 
-from (select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from wwnp.dailydiversions 
-inner join wwnp.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id WHERE div_dt >= '%d-01-01' 
+from (select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from sw.dailydiversions 
+inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id WHERE div_dt >= '%d-01-01' 
 AND div_dt <= '%d-12-31' AND cdj.canal_id not in (%v) group by cdj.canal_id, div_dt) as daily_query 
 group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;`, sYear, eYear, strings.Join(strCanal, ", "))
 
