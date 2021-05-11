@@ -44,11 +44,6 @@ extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;
 
 	} else {
 		// get all diversion data
-		//		divQry := fmt.Sprintf(`select cdj.canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int),
-		//cast(extract(MONTH from div_dt) as int), cast(extract(DAY from div_dt) as int), 0, 0, 0) as div_dt, sum(div_amnt_cfs) as div_amnt_cfs
-		//from sw.dailydiversions inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
-		//WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt`, sYear, eYear)
-
 		divQry := fmt.Sprintf(`select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from sw.dailydiversions
 inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
 WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, sYear, eYear)
