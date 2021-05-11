@@ -68,11 +68,11 @@ func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.Weather
 // factor. Used to make CSResults Distribution.
 func distances(parcel Parcel, wStations []database.WeatherStation) []database.StDistances {
 	var dist []database.StDistances
-	var lenghts []float64
+	var lengths []float64
 	for _, v := range wStations {
 		var stDistance database.StDistances
 		d := gisUtils.Distance(parcel.PointY, parcel.PointX, v.Cor.Coordinates[1], v.Cor.Coordinates[0])
-		lenghts = append(lenghts, d)
+		lengths = append(lengths, d)
 		stDistance.Distance = d
 		stDistance.Station = v.Code
 		dist = append(dist, stDistance)
@@ -82,9 +82,9 @@ func distances(parcel Parcel, wStations []database.WeatherStation) []database.St
 		return dist[i].Distance < dist[j].Distance
 	})
 
-	sort.Float64s(lenghts)
+	sort.Float64s(lengths)
 
-	idw, err := gisUtils.InverseDW(lenghts[:3])
+	idw, err := gisUtils.InverseDW(lengths[:3])
 	if err != nil {
 		fmt.Println("Error", err)
 	}
@@ -96,7 +96,7 @@ func distances(parcel Parcel, wStations []database.WeatherStation) []database.St
 	return dist[:3]
 }
 
-// crop function filters the results to the integer crop that is included and returns the NIR, RunOff and DeepPerc from those
+// crop function filters the results to the integer crop that is included and returns the NIR, RunOff and Deep Percolation from those
 // crops as three arrays.
 func crop(c int64, aData []fileio.StationResults) (nir [12]float64, ro [12]float64, dp [12]float64) {
 	var data fileio.StationResults
