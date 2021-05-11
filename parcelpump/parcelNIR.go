@@ -14,7 +14,7 @@ import (
 // parcelNIR is a method that adds the NIR for each parcel from the CSResults and weather station data.
 // It produces an intermediate results table in local sqlite for review and adds a map to the parcel struct
 func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.WeatherStation, csResults map[string][]fileio.StationResults) {
-	var parcelNIR [12]float64
+	var parcelNIR, parcelRo, parcelDp [12]float64
 	if p.Nir == nil {
 		p.Nir = map[int][12]float64{}
 	}
@@ -28,36 +28,40 @@ func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.Weather
 			}
 		}
 
-		var cropsNir [4][12]float64 // 4 crops X 12 months
-		var cropCov [4]float64      // crop_coverage
+		var cropsNir, cropsRo, cropsDp [4][12]float64 // 4 crops X 12 months
+		var cropCov [4]float64                        // crop_coverage
 		if p.Crop1.Valid {
-			cropsNir[0] = crop(p.Crop1.Int64, annData)
+			cropsNir[0], cropsRo[0], cropsDp[0] = crop(p.Crop1.Int64, annData)
 			cropCov[0] = p.Crop1Cov.Float64
 		}
 
 		if p.Crop2.Valid {
-			cropsNir[1] = crop(p.Crop2.Int64, annData)
+			cropsNir[1], cropsRo[1], cropsDp[1] = crop(p.Crop2.Int64, annData)
 			cropCov[1] = p.Crop2Cov.Float64
 		}
 
 		if p.Crop3.Valid {
-			cropsNir[2] = crop(p.Crop3.Int64, annData)
+			cropsNir[2], cropsRo[2], cropsDp[2] = crop(p.Crop3.Int64, annData)
 			cropCov[2] = p.Crop3Cov.Float64
 		}
 
 		if p.Crop4.Valid {
-			cropsNir[3] = crop(p.Crop4.Int64, annData)
+			cropsNir[3], cropsRo[3], cropsDp[3] = crop(p.Crop4.Int64, annData)
 			cropCov[3] = p.Crop4Cov.Float64
 		}
 
 		// weight the crops based on crop_cov and weather station weight
-		parcelNIR = pNIR(parcelNIR, cropsNir, cropCov, st.Weight)
+		parcelNIR = pValues(parcelNIR, cropsNir, cropCov, st.Weight)
+		parcelRo = pValues(parcelRo, cropsRo, cropCov, st.Weight)
+		parcelDp = pValues(parcelDp, cropsDp, cropCov, st.Weight)
 	}
 	//fmt.Printf("Weighted Parcel ID: %d, NIR is: %v\n", parcel.ParcelNo, parcelNIR)
 
-	// save to sqlite
+	// save parcelNIR to sqlite
 	saveSqlite(slDB, p.ParcelNo, p.Nrd, parcelNIR, Year)
 	p.Nir[Year] = parcelNIR
+	p.Ro[Year] = parcelRo
+	p.Dp[Year] = parcelDp
 }
 
 // distances is a function that that returns the top three weather stations from the list with the appropriate weighting
@@ -92,8 +96,9 @@ func distances(parcel Parcel, wStations []database.WeatherStation) []database.St
 	return dist[:3]
 }
 
-// crop function filters the results to the integer crop that is included.
-func crop(c int64, aData []fileio.StationResults) [12]float64 {
+// crop function filters the results to the integer crop that is included and returns the NIR, RunOff and DeepPerc from those
+// crops as three arrays.
+func crop(c int64, aData []fileio.StationResults) (nir [12]float64, ro [12]float64, dp [12]float64) {
 	var data fileio.StationResults
 
 	for _, d := range aData {
@@ -102,26 +107,26 @@ func crop(c int64, aData []fileio.StationResults) [12]float64 {
 		}
 	}
 
-	var nir [12]float64
 	for i, monthly := range data.MonthlyData {
 		nir[i] = monthly.Nir
+		ro[i] = monthly.Ro
+		dp[i] = monthly.Dp
 	}
 
-	return nir
+	return nir, ro, dp
 }
 
-// pNIR creates the parcel nir by multiplying the cropNir with crop coverage by station weight to return a nir portion for that
-// of NIR that should be added to the parcel.
-func pNIR(parcelNIR [12]float64, cropsNIR [4][12]float64, cropCov [4]float64, stWeight float64) [12]float64 {
-	var nir [12]float64
-	for month, v := range parcelNIR {
-		nir[month] += v
+// pValues creates the parcel nir, ro, or dp by multiplying the cropNir with crop coverage by station weight to
+// return a nir, ro, or dp portion for that parcel.
+func pValues(parcelValues [12]float64, cropsNIR [4][12]float64, cropCov [4]float64, stWeight float64) (values [12]float64) {
+	for month, v := range parcelValues {
+		values[month] += v
 		for crop, cropNir := range cropsNIR {
-			nir[month] += cropNir[month] * cropCov[crop] * stWeight
+			values[month] += cropNir[month] * cropCov[crop] * stWeight
 		}
 	}
 
-	return nir
+	return values
 }
 
 // saveSqlite function saves the data for the parcel into local sqlite so that additional error checking can be preformed
