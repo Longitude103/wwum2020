@@ -1,12 +1,12 @@
 package main
 
 import (
-	"clibasic/color"
 	"flag"
 	"fmt"
 	"os"
-	"wwum2020/actions"
-	"wwum2020/actions/distribution"
+
+	"github.com/heath140/wwum2020/actions"
+	"github.com/heath140/wwum2020/actions/distribution"
 )
 
 func main() {
@@ -44,8 +44,10 @@ For help with those functions type: dist -h or convloss -h
 			fmt.Println(help)
 			os.Exit(1)
 		}
-		fmt.Println(color.Red + "Distribution of CropSim Data" + color.Reset)
+		fmt.Println("Distribution of CropSim Data")
 		distribution.Distribution(distDebug, distStartY, distEndY, *distCSDir)
+		distribution.Distribution(distDebug, distStartY, distEndY, *distCSDir)
+
 	case "rch":
 		err := rchCmd.Parse(os.Args[2:])
 		if err != nil {
@@ -53,7 +55,7 @@ For help with those functions type: dist -h or convloss -h
 			fmt.Println(help)
 			os.Exit(1)
 		}
-		fmt.Println(color.Red + "Run Recharge File Creation" + color.Reset)
+		fmt.Println("Run Recharge File Creation")
 		actions.RechargeFiles(rchDebug, rchCSDir)
 	default:
 		fmt.Println(help)

@@ -3,8 +3,8 @@ package rchFiles
 import (
 	"database/sql"
 	"fmt"
+	"github.com/heath140/wwum2020/database"
 	"github.com/jmoiron/sqlx"
-	"wwum2020/database"
 )
 
 func NaturalVeg(sqliteDB *sql.DB, pgDB *sqlx.DB, debug *bool, sYear *int, eYear *int) {

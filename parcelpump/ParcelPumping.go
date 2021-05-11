@@ -2,13 +2,15 @@ package parcelpump
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/manifoldco/promptui"
-	"github.com/schollz/progressbar"
-	"os"
-	"wwum2020/database"
-	"wwum2020/fileio"
-	"wwum2020/parcelpump/conveyLoss"
+	"github.com/schollz/progressbar/v3"
+
+	"github.com/heath140/wwum2020/database"
+	"github.com/heath140/wwum2020/fileio"
+	"github.com/heath140/wwum2020/parcelpump/conveyLoss"
 )
 
 func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults) {
@@ -45,7 +47,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 	for y := sYear; y < eYear+1; y++ {
 		parcels := getParcels(pgDB, y)
 
-		bar := progressbar.Default(int64(len(parcels)), "Parcel NIR")
+		bar := progressbar.Default(int64(len(parcels)), "Parcels")
 
 		for i := 0; i < len(parcels); i++ {
 			(&parcels[i]).parcelNIR(slDB, y, wStations, *csResults) // must be a pointer to work

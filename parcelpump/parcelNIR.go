@@ -2,12 +2,13 @@ package parcelpump
 
 import (
 	"fmt"
-	"gisUtils"
-	"github.com/jmoiron/sqlx"
+	"github.com/heath140/wwum2020/database"
+	"github.com/heath140/wwum2020/fileio"
 	"sort"
 	"time"
-	"wwum2020/database"
-	"wwum2020/fileio"
+
+	"github.com/heath140/gisUtils"
+	"github.com/jmoiron/sqlx"
 )
 
 // parcelNIR is a method that adds the NIR for each parcel from the CSResults and weather station data.

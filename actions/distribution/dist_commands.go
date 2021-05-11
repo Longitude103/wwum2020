@@ -1,17 +1,16 @@
 package distribution
 
 import (
-	"clibasic/color"
 	"fmt"
+	"github.com/heath140/wwum2020/database"
+	"github.com/heath140/wwum2020/fileio"
 	_ "github.com/lib/pq"
-	"wwum2020/database"
-	"wwum2020/fileio"
 )
 
 func Distribution(debug *bool, startYr *int, endYr *int, CSDir string) {
 	fmt.Println("Distribution")
 	if *debug {
-		fmt.Println(color.Red + "Debug Mode" + color.Reset)
+		fmt.Println("Debug Mode")
 	}
 
 	stationData := fileio.LoadTextFiles(CSDir)

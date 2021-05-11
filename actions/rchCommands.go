@@ -3,14 +3,16 @@ package actions
 import (
 	"errors"
 	"fmt"
-	"github.com/manifoldco/promptui"
-	"github.com/schollz/progressbar"
 	"os"
 	"strconv"
-	"wwum2020/database"
-	"wwum2020/fileio"
-	"wwum2020/parcelpump"
-	"wwum2020/rchFiles"
+
+	"github.com/manifoldco/promptui"
+	"github.com/schollz/progressbar/v3"
+
+	"github.com/heath140/wwum2020/database"
+	"github.com/heath140/wwum2020/fileio"
+	"github.com/heath140/wwum2020/parcelpump"
+	"github.com/heath140/wwum2020/rchFiles"
 	//"wwum2020/rchFiles"
 )
 
