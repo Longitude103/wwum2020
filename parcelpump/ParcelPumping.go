@@ -5,6 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
+	"os"
 
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
@@ -13,9 +14,11 @@ import (
 
 func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults) {
 	// cert usage
+	fmt.Println("Getting Parcel usage")
 	usage := getUsage(pgDB)
 	_ = usage
 
+	fmt.Println("Getting Weather Stations")
 	wStations := database.GetWeatherStations(pgDB)
 
 	// 2. sw deliveries / canal recharge
@@ -36,10 +39,13 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		fmt.Println("Including excess flows")
 	}
 
+	fmt.Println("Running Conveyance Loss")
 	err = conveyLoss.Conveyance(pgDB, slDB, sYear, eYear, excessFlows)
 	if err != nil {
 		fmt.Println("Error in Conveyance Loss", err)
 	}
+
+	os.Exit(0)
 
 	// 3. pumping amounts / parcel
 	// 1. load parcels

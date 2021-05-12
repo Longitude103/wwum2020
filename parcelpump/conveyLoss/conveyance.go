@@ -14,15 +14,24 @@ func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow b
 
 	canalCells := getCanalCells(pgDB)
 	//fmt.Println("First 10 Canal Cells")
-	//for _, v := range canalCells[:10] {
-	//	fmt.Println(v)
+	//tCells := 0
+	//for _, v := range canalCells {
+	//	if v.CanalId == 52 {
+	//		tCells += 1
+	//	}
 	//}
 
+	//fmt.Println("Total Canal Cells in 52", tCells)
+
 	diversions := getDiversions(pgDB, sYear, eYear, excessFlow)
-	fmt.Println("First 10 Diversions")
-	for _, v := range diversions[:10] {
-		fmt.Println(v)
-	}
+	//fmt.Println("First 10 Diversions")
+	//for _, v := range diversions {
+	//	if v.CanalId == 52 {
+	//		fmt.Println(v)
+	//	}
+	//}
+	//
+	//fmt.Println("Total Canal Diversions", len(diversions))
 
 	bar := progressbar.Default(int64(len(canalCells)), "Canal Cells")
 	// loop over cells
@@ -34,16 +43,23 @@ func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow b
 
 		// determine efficiency and get total loss factor
 		if cell.CanalType == "Lateral" || cell.CanalType == "Spill" {
-			strLossPercent = (1 / 6) * (1 - cell.CanalEff.Float64)
+			strLossPercent = (1 - cell.CanalEff.Float64) * 1 / 6
 			cellIdDiv = cell.CLinkId
 		} else {
 			cellIdDiv = cell.CanalId
-			if !cell.LatCount.Valid {
+			if cell.LatCount.Int64 == 0 {
 				strLossPercent = 1 - cell.CanalEff.Float64
 			} else {
-				strLossPercent = (5 / 6) * (1 - cell.CanalEff.Float64)
+				strLossPercent = (1 - cell.CanalEff.Float64) * 5 / 6
 			}
 		}
+
+		//if cell.Node == 51030 {
+		//	fmt.Printf("LatCount.Valid: %t, count is: %d\n", cell.LatCount.Valid, cell.LatCount.Int64)
+		//	fmt.Printf("Math should be 5/6 * 1-canaleff: %g\n", (1-cell.CanalEff.Float64)*5/6)
+		//	fmt.Printf("Canal Type: %s\n", cell.CanalType)
+		//	fmt.Printf("StrLossPercent: %g, Cell Canal Eff: %g\n", strLossPercent, cell.CanalEff.Float64)
+		//}
 
 		// determine factor using DNR/USGS/SatThick/Length (Length is default)
 		factor := 0.0
@@ -105,16 +121,31 @@ func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow b
 				ft = 113
 			}
 
-			cellResults = append(cellResults,
-				rchFiles.Result{Node: cell.Node, Dt: div.DivDate.Time, FileType: ft, Result: structureLoss * factor * 1.9835})
+			//if cell.Node == 51030 {
+			//	fmt.Printf("Data for 51030: dt: %v, file: %d, st_loss: %g, factor: %g\n", div.DivDate.Time, ft, structureLoss, factor)
+			//}
+
+			if structureLoss > 0 {
+				cellResults = append(cellResults,
+					rchFiles.Result{Node: cell.Node, Dt: div.DivDate.Time, FileType: ft, Result: structureLoss * factor * 1.9835})
+			}
+
+			if len(cellResults) == 500 {
+				// save the data off, then clear slice
+				err := insertSql(slDB, cellResults)
+				if err != nil {
+					fmt.Println("Error in insert of SQL", err)
+				}
+				cellResults = nil
+			}
 		}
 
 		_ = bar.Add(1)
 	}
 
-	_, err = slDB.NamedExec(`INSERT INTO RESULTS (cell_node, dt, file_type, result) VALUES (:Node, :Dt, :FileType, :Result)`, cellResults)
+	err = insertSql(slDB, cellResults)
 	if err != nil {
-		fmt.Println("Error in insert of Cell Loss", err)
+		fmt.Println("Error in insert of SQL", err)
 	}
 
 	_ = bar.Close()
@@ -129,4 +160,14 @@ func filterCanal(diversions []diversion, canal int) (canalDiversion []diversion)
 		}
 	}
 	return canalDiversion
+}
+
+func insertSql(slDB *sqlx.DB, values []rchFiles.Result) (err error) {
+	_, err = slDB.NamedExec(`INSERT INTO results (cell_node, dt, file_type, result) 
+										VALUES (:cell_node, :dt, :file_type, :result)`, values)
+	if err != nil {
+		fmt.Println("Error in insert of Cell Loss", err)
+	}
+
+	return err
 }

@@ -3,8 +3,8 @@ package rchFiles
 import "time"
 
 type Result struct {
-	Node     int
-	Dt       time.Time
-	FileType int
-	Result   float64
+	Node     int       `db:"cell_node"`
+	Dt       time.Time `db:"dt"`
+	FileType int       `db:"file_type"`
+	Result   float64   `db:"result"`
 }
