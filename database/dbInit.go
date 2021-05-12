@@ -66,11 +66,11 @@ func InitializeDb(db *sqlx.DB) {
 					constraint results_pk
 						primary key autoincrement,
 				cell_node int not null,
+				dt text,
 				file_type int not null
 					constraint results_file_keys_file_key_fk
 					references file_keys,
-				result float,
-				run_type int
+				result float
 			);
 		
 		create unique index results_id_uindex

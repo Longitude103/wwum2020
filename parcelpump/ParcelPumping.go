@@ -2,8 +2,6 @@ package parcelpump
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
@@ -38,9 +36,10 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		fmt.Println("Including excess flows")
 	}
 
-	conveyLoss.Conveyance(pgDB, sYear, eYear, excessFlows)
-
-	os.Exit(0)
+	err = conveyLoss.Conveyance(pgDB, slDB, sYear, eYear, excessFlows)
+	if err != nil {
+		fmt.Println("Error in Conveyance Loss", err)
+	}
 
 	// 3. pumping amounts / parcel
 	// 1. load parcels
