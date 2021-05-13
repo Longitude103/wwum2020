@@ -65,6 +65,30 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		_ = bar.Close()
 
 		// add usage to parcel
+		annUsage := filterUsage(usage, y)
+		for _, u := range annUsage {
+			// filter parcels to this usage cert
+			filteredParcels := filterParcelByCert(&parcels, u.CertNum)
+
+			// get parcel nir values for distribution
+			nirValues := map[int][12]float64{}
+			for _, parcel := range filteredParcels {
+				nirValues[parcel.ParcelNo] = parcel.Nir[y]
+			}
+
+			// distribute the usage by nir of all the parcels
+			distUsage := distributeUsage(nirValues, u.UseAF)
+
+			// check this, might need to be a pointer
+			// save the parcel usage back to the parcel struct
+			for parcel := range distUsage {
+				for _, p := range filteredParcels {
+					if parcel == p.ParcelNo {
+						distUsage[parcel] = p.Usage[y]
+					}
+				}
+			}
+		}
 
 		// add sw delivery to parcel
 

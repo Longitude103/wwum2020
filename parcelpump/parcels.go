@@ -32,6 +32,7 @@ type Parcel struct {
 	Nir      map[int][12]float64
 	Ro       map[int][12]float64
 	Dp       map[int][12]float64
+	Usage    map[int][12]float64
 }
 
 // getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
@@ -72,4 +73,15 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 	}
 
 	return parcels
+}
+
+// filterParcelByCert filters a slice of parcels by the CertNum and returns a slice of the parcels that have that CertNum.
+func filterParcelByCert(p *[]Parcel, c string) (filteredParcels []*Parcel) {
+	for _, v := range *p {
+		if v.CertNum.String == c {
+			filteredParcels = append(filteredParcels, &v)
+		}
+	}
+
+	return filteredParcels
 }
