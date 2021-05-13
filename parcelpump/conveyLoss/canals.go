@@ -24,6 +24,14 @@ type CanalCell struct {
 	TotalCanLn float64         `db:"tot_can_ln"`
 }
 
+type Canal struct {
+	Id   int             `db:"id"`
+	Name string          `db:"name"`
+	Eff  float64         `db:"eff"`
+	Area sql.NullFloat64 `db:"area"`
+	Yr   int             `db:"yr"`
+}
+
 func getCanalCells(pgDb *sqlx.DB) []CanalCell {
 	query := `SELECT c.id, c.type_2, c.district_id, c.eff, a.node,
        ST_Length(ST_Intersection(a.geom, c.geom)), c.c_flag, d.dnr_fact, s.sat_fact, u.usgs_fact, c.clink_id, c1.eff eff2,
@@ -44,4 +52,22 @@ FROM public.model_cells a JOIN sw.canals c ON ST_intersects(c.geom, a.geom)
 	}
 
 	return canalCells
+}
+
+// getCanals returns a slice of Canal with the canal id, name, efficiency and total acres for that all the years that
+// are listed.
+func getCanals(pgDb *sqlx.DB, sYear int, eYear int) (canals []Canal) {
+	for i := sYear; i < eYear+1; i++ {
+		query := fmt.Sprintf(`select id, name, eff, area, %d yr from sw.canals left join (select sw_id, sum(st_area(geom) / 43560) area
+				from np.t%d_irr where sw = true and sw_id is not null group by sw_id UNION ALL select sw_id, 
+				sum(st_area(geom) / 43560) area from sp.t%d_irr where sw = true and sw_id is not null 
+				group by sw_id) a on id = a.sw_id where type_2 = 'Canal' and eff is not null;`, i, i, i)
+
+		err := pgDb.Select(&canals, query)
+		if err != nil {
+			fmt.Println("Error Getting Canal Data", err)
+		}
+	}
+
+	return canals
 }

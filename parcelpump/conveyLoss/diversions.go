@@ -24,6 +24,12 @@ type diversion struct {
 	DivAmount sql.NullFloat64 `db:"div_amnt_cfs"`
 }
 
+// applyEffAcres is a method that multiplies the diversion by the efficiency and acres passed in and converts the day cfs
+// to acre-feet to yield a application in inches per acre from that surface water structure.
+func (d *diversion) applyEffAcres(eff float64, acres float64) {
+	d.DivAmount.Float64 = d.DivAmount.Float64 * eff * 1.9835 / acres
+}
+
 // getDiversions retrieves the diversions from the pg database and returns a slice of diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
 // excess flow from the daily diversions based on excess flow periods.
