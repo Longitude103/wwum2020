@@ -8,7 +8,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
-	"os"
 )
 
 func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults) {
@@ -51,8 +50,6 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		fmt.Println(v)
 	}
 
-	os.Exit(1)
-
 	// 3. pumping amounts / parcel
 	// 1. load parcels
 	for y := sYear; y < eYear+1; y++ {
@@ -66,6 +63,12 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		}
 
 		_ = bar.Close()
+
+		// add usage to parcel
+
+		// add sw delivery to parcel
+
+		// calculate / recalculate RO and DP for the parcel & estimate pumping for years without usage
 
 		for _, v := range parcels[:10] {
 			fmt.Printf("Parce No: %d, NIR is: %v\n", v.ParcelNo, v.Nir[sYear])

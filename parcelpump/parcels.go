@@ -24,6 +24,7 @@ type Parcel struct {
 	Sw       sql.NullBool    `db:"sw"`
 	Gw       sql.NullBool    `db:"gw"`
 	Nrd      string          `db:"nrd"`
+	SwID     sql.NullInt64   `db:"sw_id"`
 	PointX   float64         `db:"pointx"`
 	PointY   float64         `db:"pointy"`
 	SoilArea float64         `db:"s_area"`
@@ -38,7 +39,7 @@ type Parcel struct {
 // Need to implement multiple years
 func getParcels(db *sqlx.DB, Year int) []Parcel {
 	query := fmt.Sprintf(`SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw,
-       irrig_type, sw_fac, cert_num::varchar, model_id, st_area(i.geom)/43560 area, 'np' nrd,
+       irrig_type, sw_fac, cert_num::varchar, model_id, sw_id, st_area(i.geom)/43560 area, 'np' nrd,
        st_x(st_transform(st_centroid(i.geom), 4326)) pointx, st_y(st_transform(st_centroid(i.geom), 4326)) pointy,
        sum(st_area(st_intersection(m.geom, i.geom))/43560) s_area, m.soil_code
 FROM np.t%d_irr i inner join public.model_cells m on st_intersects(i.geom, m.geom)
@@ -51,7 +52,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
          st_y(st_transform(st_centroid(i.geom), 4326)), nrd, m.soil_code
 UNION ALL
 SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw,
-       irr_type as irrig_type, sw_fac, i.id as cert_num, null as model_id, st_area(i.geom)/43560 area, 'np' nrd,
+       irr_type as irrig_type, sw_fac, i.id as cert_num, null as model_id, sw_id, st_area(i.geom)/43560 area, 'sp' nrd,
        st_x(st_transform(st_centroid(i.geom), 4326)) pointx, st_y(st_transform(st_centroid(i.geom), 4326)) pointy,
        sum(st_area(st_intersection(m.geom, i.geom))/43560) s_area, m.soil_code
 FROM sp.t%d_irr i inner join public.model_cells m on st_intersects(i.geom, m.geom)
