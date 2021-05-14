@@ -19,6 +19,14 @@ func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.Weather
 		p.Nir = map[int][12]float64{}
 	}
 
+	if p.Ro == nil {
+		p.Ro = map[int][12]float64{}
+	}
+
+	if p.Dp == nil {
+		p.Dp = map[int][12]float64{}
+	}
+
 	dist := distances(*p, wStations)
 	for _, st := range dist {
 		var annData []fileio.StationResults

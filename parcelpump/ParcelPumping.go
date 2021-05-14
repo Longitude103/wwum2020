@@ -82,9 +82,9 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 			// check this, might need to be a pointer
 			// save the parcel usage back to the parcel struct
 			for parcel := range distUsage {
-				for _, p := range filteredParcels {
-					if parcel == p.ParcelNo {
-						distUsage[parcel] = p.Usage[y]
+				for i := 0; i < len(filteredParcels); i++ {
+					if parcel == filteredParcels[i].ParcelNo {
+						distUsage[parcel] = filteredParcels[i].Usage[y]
 					}
 				}
 			}
@@ -95,7 +95,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		// calculate / recalculate RO and DP for the parcel & estimate pumping for years without usage
 
 		for _, v := range parcels[:10] {
-			fmt.Printf("Parce No: %d, NIR is: %v\n", v.ParcelNo, v.Nir[sYear])
+			fmt.Printf("Parce No: %d, NIR is: %v, Dp is: %v, Usage is: %v\n", v.ParcelNo, v.Nir[sYear], v.Dp[sYear], v.Usage[sYear])
 		}
 	}
 
