@@ -3,6 +3,7 @@ package parcelpump
 import (
 	"database/sql"
 	"fmt"
+	"github.com/heath140/wwum2020/parcelpump/conveyLoss"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -33,6 +34,8 @@ type Parcel struct {
 	Ro       [12]float64
 	Dp       [12]float64
 	Usage    [12]float64
+	SWDel    [12]float64
+	Metered  bool
 }
 
 // getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
@@ -76,12 +79,37 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 }
 
 // filterParcelByCert filters a slice of parcels by the CertNum and returns a slice of the parcels that have that CertNum.
-func filterParcelByCert(p *[]Parcel, c string) (filteredParcels []*Parcel) {
-	for _, v := range *p {
-		if v.CertNum.String == c {
-			filteredParcels = append(filteredParcels, &v)
+func filterParcelByCert(p *[]Parcel, c string) (filteredParcels []Parcel) {
+	for i := 0; i < len(*p); i++ {
+		if (*p)[i].CertNum.String == c {
+			filteredParcels = append(filteredParcels, (*p)[i])
 		}
 	}
 
 	return filteredParcels
+}
+
+func (p *Parcel) parcelSWDelivery(diversions []conveyLoss.Diversion) {
+	canalDivs := filterDivs(diversions, int(p.SwID.Int64))
+
+	var swDelivery [12]float64
+	for m := 0; m < 12; m++ {
+		for _, d := range canalDivs {
+			if int(d.DivDate.Time.Month()) == m+1 {
+				swDelivery[m] = d.DivAmount.Float64 * p.Area
+			}
+		}
+	}
+
+	p.SWDel = swDelivery
+}
+
+func filterDivs(divs []conveyLoss.Diversion, canal int) (d []conveyLoss.Diversion) {
+	for _, v := range divs {
+		if v.CanalId == canal {
+			d = append(d, v)
+		}
+	}
+
+	return d
 }

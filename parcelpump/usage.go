@@ -36,29 +36,15 @@ func filterUsage(u []Usage, yr int) (filteredUsage []Usage) {
 	return filteredUsage
 }
 
-// distributeUsage function takes in a map of parcel id with monthly values and a usage total and distributes the usage
-// by those nir values. Handles multiple parcels and returns the usage in a map of parcel ids with 12 monthly values.
-func distributeUsage(p map[int][12]float64, u float64) map[int][12]float64 {
-	var totalNIR float64
-	var totalMonthlyNIR [12]float64
-	for k := range p {
-		for i := 0; i < 12; i++ {
-			totalMonthlyNIR[i] += p[k][i]
-			totalNIR += p[k][i]
+// distributeUsage method receives the total NIR, monthly NIR values and usage for the cert and distributes that pumping
+// to the parcel. It also sets the parcel metered property to true.
+func (p *Parcel) distributeUsage(totalNIR float64, totalMonthlyNIR [12]float64, u float64) {
+	for m := 0; m < 12; m++ {
+		if totalMonthlyNIR[m] > 0 { // protect from division by zero
+			monthPercent := totalMonthlyNIR[m] / totalNIR
+			p.Usage[m] = p.Nir[m] / totalMonthlyNIR[m] * (monthPercent * u)
 		}
 	}
 
-	distUsage := map[int][12]float64{}
-	for k := range p {
-		monthDistribution := [12]float64{}
-		for i := 0; i < 12; i++ {
-			if totalMonthlyNIR[i] > 0 { // protect from division by zero
-				monthPercent := totalMonthlyNIR[i] / totalNIR
-				monthDistribution[i] = (p[k][i] / totalMonthlyNIR[i]) * (monthPercent * u)
-			}
-		}
-		distUsage[k] = monthDistribution
-	}
-
-	return distUsage
+	p.Metered = true
 }

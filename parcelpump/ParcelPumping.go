@@ -50,15 +50,21 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		fmt.Println(v)
 	}
 
-	// 3. pumping amounts / parcel
 	// 1. load parcels
 	for y := sYear; y < eYear+1; y++ {
 		parcels := getParcels(pgDB, y)
+		filteredDiversions := conveyLoss.FilterSWDeliveryByYear(swDelivery, y)
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")
 
 		for i := 0; i < len(parcels); i++ {
 			(&parcels[i]).parcelNIR(slDB, y, wStations, *csResults) // must be a pointer to work
+
+			// add SW Delivery to the parcels
+			if parcels[i].Sw.Bool == true {
+				(&parcels[i]).parcelSWDelivery(filteredDiversions)
+			}
+
 			_ = bar.Add(1)
 		}
 
@@ -67,35 +73,31 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		// add usage to parcel
 		annUsage := filterUsage(usage, y)
 		for _, u := range annUsage {
+			fmt.Printf("Annual Usage in %v is %g\n", u.CertNum, u.UseAF)
 			// filter parcels to this usage cert
 			filteredParcels := filterParcelByCert(&parcels, u.CertNum)
 
-			// get parcel nir values for distribution
-			nirValues := map[int][12]float64{}
-			for _, parcel := range filteredParcels {
-				nirValues[parcel.ParcelNo] = parcel.Nir
+			totalNIR := 0.0
+			totalMonthlyNIR := [12]float64{}
+
+			for i := 0; i < len(filteredParcels); i++ {
+				for m := 0; m < 12; m++ {
+					totalMonthlyNIR[m] += filteredParcels[i].Nir[m]
+					totalNIR += filteredParcels[i].Nir[m]
+				}
 			}
 
-			// distribute the usage by nir of all the parcels
-			distUsage := distributeUsage(nirValues, u.UseAF)
-
-			// check this, might need to be a pointer
-			// save the parcel usage back to the parcel struct
-			for parcel := range distUsage {
-				for i := 0; i < len(filteredParcels); i++ {
-					if parcel == filteredParcels[i].ParcelNo {
-						distUsage[parcel] = filteredParcels[i].Usage
-					}
-				}
+			for i := 0; i < len(filteredParcels); i++ {
+				filteredParcels[i].distributeUsage(totalNIR, totalMonthlyNIR, u.UseAF)
 			}
 		}
 
-		// add sw delivery to parcel
+		// get all parcels where Metered == false and simulate pumping if GW == true
 
 		// calculate / recalculate RO and DP for the parcel & estimate pumping for years without usage
 
 		for _, v := range parcels[:10] {
-			fmt.Printf("Parce No: %d, NIR is: %v, Dp is: %v, Usage is: %v\n", v.ParcelNo, v.Nir[sYear], v.Dp[sYear], v.Usage[sYear])
+			fmt.Printf("Parce No: %d, NIR is: %v, Dp is: %v, Usage is: %v\n", v.ParcelNo, v.Nir, v.Dp, v.Usage)
 		}
 	}
 

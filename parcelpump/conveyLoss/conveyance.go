@@ -152,8 +152,8 @@ func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow b
 	return err
 }
 
-// filterCanal filters the canal diversions to a specific canal and returns a slice of diversion
-func filterCanal(diversions []diversion, canal int) (canalDiversion []diversion) {
+// filterCanal filters the canal diversions to a specific canal and returns a slice of Diversion
+func filterCanal(diversions []Diversion, canal int) (canalDiversion []Diversion) {
 	for _, v := range diversions {
 		if v.CanalId == canal {
 			canalDiversion = append(canalDiversion, v)

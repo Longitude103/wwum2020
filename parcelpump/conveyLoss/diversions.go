@@ -16,24 +16,24 @@ type efPeriod struct {
 	EndDate   sql.NullTime `db:"end_date"`
 }
 
-// diversion is a struct to hold the dailydiversions table data and also the results are this struct which is a monthly
+// Diversion is a struct to hold the dailydiversions table data and also the results are this struct which is a monthly
 // total using the first day of each month.
-type diversion struct {
+type Diversion struct {
 	CanalId   int             `db:"canal_id"`
 	DivDate   sql.NullTime    `db:"div_dt"`
 	DivAmount sql.NullFloat64 `db:"div_amnt_cfs"`
 }
 
-// applyEffAcres is a method that multiplies the diversion by the efficiency and acres passed in and converts the day cfs
+// applyEffAcres is a method that multiplies the Diversion by the efficiency and acres passed in and converts the day cfs
 // to acre-feet to yield a application in inches per acre from that surface water structure.
-func (d *diversion) applyEffAcres(eff float64, acres float64) {
+func (d *Diversion) applyEffAcres(eff float64, acres float64) {
 	d.DivAmount.Float64 = d.DivAmount.Float64 * eff * 1.9835 / acres
 }
 
-// getDiversions retrieves the diversions from the pg database and returns a slice of diversion struct for each canal
+// getDiversions retrieves the diversions from the pg database and returns a slice of Diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
 // excess flow from the daily diversions based on excess flow periods.
-func getDiversions(pgDb *sqlx.DB, sYear int, eYear int, excessFlow bool) (diversions []diversion) {
+func getDiversions(pgDb *sqlx.DB, sYear int, eYear int, excessFlow bool) (diversions []Diversion) {
 
 	if excessFlow {
 		divQry := fmt.Sprintf(`select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), 
@@ -49,12 +49,12 @@ extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;
 		}
 
 	} else {
-		// get all diversion data
+		// get all Diversion data
 		divQry := fmt.Sprintf(`select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from sw.dailydiversions
 inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
 WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, sYear, eYear)
 
-		var preDiversions []diversion
+		var preDiversions []Diversion
 		err := pgDb.Select(&preDiversions, divQry)
 		if err != nil {
 			fmt.Println("Error in getting all diversions starting Excess Flow Limitation", err)
@@ -78,7 +78,7 @@ WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, 
 		}
 
 		// loop through the list of canals with excess flows
-		var canalMonthlyDiversion []diversion
+		var canalMonthlyDiversion []Diversion
 		for _, canal := range efCanals {
 
 			// generate list of excess flow periods for this canal
@@ -90,7 +90,7 @@ WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, 
 			}
 
 			// filter daily canal diversions to this canal
-			var allCanalDailyDiversion []diversion
+			var allCanalDailyDiversion []Diversion
 			for _, div := range preDiversions {
 				if div.CanalId == canal {
 					allCanalDailyDiversion = append(allCanalDailyDiversion, div)
@@ -99,7 +99,7 @@ WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, 
 
 			// filter out the times when there was excess flow and only return the times the flow wasn't during that
 			// excess flow period
-			var canalDailyDiversion []diversion
+			var canalDailyDiversion []Diversion
 			for _, div := range allCanalDailyDiversion {
 				if findDiversion(div, efCanalPeriods) {
 					canalDailyDiversion = append(canalDailyDiversion, div)
@@ -133,7 +133,7 @@ inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id W
 AND div_dt <= '%d-12-31' %s group by cdj.canal_id, div_dt) as daily_query 
 group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;`, sYear, eYear, canalLimit)
 
-		var remainingDiversions []diversion
+		var remainingDiversions []Diversion
 		err = pgDb.Select(&remainingDiversions, remainDiversionQry)
 		if err != nil {
 			fmt.Println("Error in getting remaining diversions", err)
@@ -155,8 +155,8 @@ func find(slice []int, val int) bool {
 	return false
 }
 
-// FindDiversion is a function to filter if a diversion is within a period
-func findDiversion(div diversion, period []efPeriod) bool {
+// FindDiversion is a function to filter if a Diversion is within a period
+func findDiversion(div Diversion, period []efPeriod) bool {
 	for _, p := range period {
 		if div.DivDate.Time.Before(p.StartDate.Time) || div.DivDate.Time.After(p.EndDate.Time) {
 			return true
@@ -166,8 +166,8 @@ func findDiversion(div diversion, period []efPeriod) bool {
 	return false
 }
 
-// monthlyDiversion is a function to aggregate a slice of dailyDiversion by months and returns a month total diversion
-func monthlyDiversion(dailyDiversion []diversion, m int, y int, cID int) (mDiversion diversion) {
+// monthlyDiversion is a function to aggregate a slice of dailyDiversion by months and returns a month total Diversion
+func monthlyDiversion(dailyDiversion []Diversion, m int, y int, cID int) (mDiversion Diversion) {
 	var totalDiversion float64
 	for _, d := range dailyDiversion {
 		if d.DivDate.Time.Year() == y && int(d.DivDate.Time.Month()) == m && d.DivAmount.Valid {
@@ -175,7 +175,7 @@ func monthlyDiversion(dailyDiversion []diversion, m int, y int, cID int) (mDiver
 		}
 	}
 
-	mDiversion = diversion{DivDate: sql.NullTime{Time: time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC),
+	mDiversion = Diversion{DivDate: sql.NullTime{Time: time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC),
 		Valid: true}, DivAmount: sql.NullFloat64{Float64: totalDiversion, Valid: true}, CanalId: cID}
 
 	return mDiversion
