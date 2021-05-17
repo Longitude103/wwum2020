@@ -15,17 +15,6 @@ import (
 // It produces an intermediate results table of NIR in local sqlite for review and adds three maps to the parcel struct
 func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.WeatherStation, csResults map[string][]fileio.StationResults) {
 	var parcelNIR, parcelRo, parcelDp [12]float64
-	if p.Nir == nil {
-		p.Nir = map[int][12]float64{}
-	}
-
-	if p.Ro == nil {
-		p.Ro = map[int][12]float64{}
-	}
-
-	if p.Dp == nil {
-		p.Dp = map[int][12]float64{}
-	}
 
 	dist := distances(*p, wStations)
 	for _, st := range dist {
@@ -67,9 +56,9 @@ func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.Weather
 
 	// save parcelNIR to sqlite
 	saveSqlite(slDB, p.ParcelNo, p.Nrd, parcelNIR, Year)
-	p.Nir[Year] = parcelNIR
-	p.Ro[Year] = parcelRo
-	p.Dp[Year] = parcelDp
+	p.Nir = parcelNIR
+	p.Ro = parcelRo
+	p.Dp = parcelDp
 }
 
 // distances is a function that that returns the top three weather stations from the list with the appropriate weighting

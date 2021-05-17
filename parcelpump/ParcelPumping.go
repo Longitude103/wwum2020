@@ -73,7 +73,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 			// get parcel nir values for distribution
 			nirValues := map[int][12]float64{}
 			for _, parcel := range filteredParcels {
-				nirValues[parcel.ParcelNo] = parcel.Nir[y]
+				nirValues[parcel.ParcelNo] = parcel.Nir
 			}
 
 			// distribute the usage by nir of all the parcels
@@ -84,7 +84,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 			for parcel := range distUsage {
 				for i := 0; i < len(filteredParcels); i++ {
 					if parcel == filteredParcels[i].ParcelNo {
-						distUsage[parcel] = filteredParcels[i].Usage[y]
+						distUsage[parcel] = filteredParcels[i].Usage
 					}
 				}
 			}

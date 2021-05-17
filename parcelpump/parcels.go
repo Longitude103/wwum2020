@@ -29,10 +29,10 @@ type Parcel struct {
 	PointY   float64         `db:"pointy"`
 	SoilArea float64         `db:"s_area"`
 	SoilCode int             `db:"soil_code"`
-	Nir      map[int][12]float64
-	Ro       map[int][12]float64
-	Dp       map[int][12]float64
-	Usage    map[int][12]float64
+	Nir      [12]float64
+	Ro       [12]float64
+	Dp       [12]float64
+	Usage    [12]float64
 }
 
 // getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
