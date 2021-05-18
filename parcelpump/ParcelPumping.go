@@ -19,6 +19,12 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 	fmt.Println("Getting Weather Stations")
 	wStations := database.GetWeatherStations(pgDB)
 
+	fmt.Println("Getting CoeffCrops Data")
+	cCrops := database.GetCoeffCrops(pgDB)
+
+	fmt.Println("Getting Efficiencies")
+	efficiencies := database.GetAppEfficiency(pgDB)
+
 	// 2. sw deliveries / canal recharge
 	prompt := promptui.Prompt{
 		Label:     "Don't include Excess Flows",
@@ -59,6 +65,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 
 		for i := 0; i < len(parcels); i++ {
 			(&parcels[i]).parcelNIR(slDB, y, wStations, *csResults) // must be a pointer to work
+			(&parcels[i]).setAppEfficiency(efficiencies, y)
 
 			// add SW Delivery to the parcels
 			if parcels[i].Sw.Bool == true {
@@ -93,6 +100,11 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		}
 
 		// get all parcels where Metered == false and simulate pumping if GW == true
+		for p := 0; p < len(parcels); p++ {
+			if (&parcels[p]).Metered == false && (&parcels[p]).Gw.Bool == true {
+				(&parcels[p]).estimatePumping(cCrops)
+			}
+		}
 
 		// calculate / recalculate RO and DP for the parcel & estimate pumping for years without usage
 
