@@ -9,10 +9,18 @@ func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) {
 	nirAdj := adjustmentFactor(p, cCrops)
 
 	// get application efficiency
-	var swAvailableCU [12]float64
+	var swAvailableCU, nirRemaining [12]float64
 	if p.Sw.Bool == true {
 		for i := 0; i < 12; i++ {
-			swAvailableCU[i] = p.SWDel[i] * nirAdj
+			swAvailableCU[i] = p.SWDel[i] * nirAdj * p.AppEff
+		}
+	}
+
+	// set nirRemaining to nir - swAvailableCU if positive, then divide by AppEff to arrive at pumping
+	for m := 0; m < 12; m++ {
+		nirRemaining[m] = p.Nir[m] - swAvailableCU[m]
+		if nirRemaining[m] > 0 {
+			p.Usage[m] = nirRemaining[m] / p.AppEff
 		}
 	}
 }
