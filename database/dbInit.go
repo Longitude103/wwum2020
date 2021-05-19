@@ -1,14 +1,14 @@
 package database
 
 import (
-	"fmt"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 // InitializeDb creates the database results table if it doesn't exist, so the records of the
 // transaction can be stored properly, also creates file_keys table for result file_type integer
 // and a foreign key restriction to results table
-func InitializeDb(db *sqlx.DB) {
+func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 	stmt, err := db.Prepare(`
 		create table if not exists file_keys
 			(
@@ -22,19 +22,19 @@ func InitializeDb(db *sqlx.DB) {
 				on file_keys (file_key);
 	`)
 	if err != nil {
-		fmt.Println("Error in create statement for file keys", err)
+		logger.Errorf("Error in create statement for file keys: %s", err)
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
-		fmt.Println("Error on create file_keys", err)
+		logger.Errorf("Error on create file_keys: %s", err)
 	}
 
 	// if table exists with records, then skip adding data.
 	var count int
 	err = db.QueryRow(`select count(*) from file_keys;`).Scan(&count)
 	if err != nil {
-		fmt.Println("Error in count file_key records", err)
+		logger.Errorf("Error in count file_key records %s", err)
 	}
 
 	if count == 0 {
@@ -50,12 +50,12 @@ func InitializeDb(db *sqlx.DB) {
           (209, 'Steady State'), (210, 'Municipal'), (211, 'Industrial'), (212, 'Other Wells'), (213, 'Western Canal Outside SP');
 	`)
 		if err != nil {
-			fmt.Println("Error", err)
+			logger.Errorf("Error in statement of key records: %s", err)
 		}
 
 		_, err = stmt.Exec()
 		if err != nil {
-			fmt.Println("Error", err)
+			logger.Errorf("Error in insert of key records: %s", err)
 		}
 	}
 
@@ -77,12 +77,12 @@ func InitializeDb(db *sqlx.DB) {
 			on results (id);
 	`)
 	if err != nil {
-		fmt.Println("Error creating results table", err)
+		logger.Errorf("Error in creating results table statement: %s", err)
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
-		fmt.Println("Error executing results table create", err)
+		logger.Errorf("Error in creating results table: %s", err)
 	}
 
 	// add results table for parcelNIR
@@ -94,12 +94,12 @@ func InitializeDb(db *sqlx.DB) {
 										nir real
 									);`)
 	if err != nil {
-		fmt.Println("Error creating parcelNIR table", err)
+		logger.Errorf("Error in statement of parcel nir table: %s", err)
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
-		fmt.Println("Error executing parcelNIR table create", err)
+		logger.Errorf("Error in creating parcel nir table: %s", err)
 	}
 
 }

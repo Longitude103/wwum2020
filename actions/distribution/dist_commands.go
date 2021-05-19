@@ -5,15 +5,16 @@ import (
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
 	_ "github.com/lib/pq"
+	"go.uber.org/zap"
 )
 
-func Distribution(debug *bool, startYr *int, endYr *int, CSDir string) {
+func Distribution(debug *bool, startYr *int, endYr *int, CSDir string, logger *zap.SugaredLogger) {
 	fmt.Println("Distribution")
 	if *debug {
 		fmt.Println("Debug Mode")
 	}
 
-	stationData := fileio.LoadTextFiles(CSDir)
+	stationData := fileio.LoadTextFiles(CSDir, logger)
 	//fmt.Println(stationData["AGAT"])
 	_ = stationData
 

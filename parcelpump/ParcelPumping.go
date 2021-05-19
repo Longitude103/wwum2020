@@ -8,21 +8,22 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
+	"go.uber.org/zap"
 )
 
-func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults) {
+func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults, logger *zap.SugaredLogger) {
 	// cert usage
-	fmt.Println("Getting Parcel usage")
+	logger.Info("Getting Cert Usage")
 	usage := getUsage(pgDB)
 	_ = usage
 
-	fmt.Println("Getting Weather Stations")
+	logger.Info("Getting Weather Stations")
 	wStations := database.GetWeatherStations(pgDB)
 
-	fmt.Println("Getting CoeffCrops Data")
+	logger.Info("Getting CoeffCrops Data")
 	cCrops := database.GetCoeffCrops(pgDB)
 
-	fmt.Println("Getting Efficiencies")
+	logger.Info("Getting Efficiencies")
 	efficiencies := database.GetAppEfficiency(pgDB)
 
 	// 2. sw deliveries / canal recharge
@@ -40,25 +41,22 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 	}
 
 	if excessFlows {
-		fmt.Println("Including excess flows")
+		logger.Info("Including excess flows")
 	}
 
-	fmt.Println("Running Conveyance Loss")
+	logger.Info("Running Conveyance Loss")
 	err = conveyLoss.Conveyance(pgDB, slDB, sYear, eYear, excessFlows)
 	if err != nil {
-		fmt.Println("Error in Conveyance Loss", err)
+		logger.Errorf("Error in Conveyance Losses %s", err)
 	}
 
 	// parcel delivery
+	logger.Info("Getting Surface Water Delivery")
 	swDelivery := conveyLoss.GetSurfaceWaterDelivery(pgDB, sYear, eYear)
-	fmt.Println("First 10 Surface Water Delivery Records")
-	for _, v := range swDelivery[:10] {
-		fmt.Println(v)
-	}
 
 	// 1. load parcels
 	for y := sYear; y < eYear+1; y++ {
-		parcels := getParcels(pgDB, y)
+		parcels := getParcels(pgDB, y, logger)
 		filteredDiversions := conveyLoss.FilterSWDeliveryByYear(swDelivery, y)
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")

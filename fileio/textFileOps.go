@@ -2,7 +2,7 @@ package fileio
 
 import (
 	"bufio"
-	"fmt"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -30,29 +30,30 @@ type monthlyValues struct {
 
 // LoadTextFiles loads cropsim text files from a location and returns a map of the results to use in further processing.
 // This should include all the files and results for each station and each year.
-func LoadTextFiles(filePath string) map[string][]StationResults {
-	fmt.Println("File Path:", filePath)
+func LoadTextFiles(filePath string, logger *zap.SugaredLogger) map[string][]StationResults {
+	logger.Infof("File Path: %s", filePath)
+	//fmt.Println("File Path:", filePath)
 	fls, err := os.ReadDir(filePath)
 	if err != nil {
-		fmt.Println("Error", err)
+		logger.Errorf("Error loading text files %s", err)
 	}
 
 	dataMap := make(map[string][]StationResults)
 	for _, v := range fls {
 		wStationId := v.Name()
-		fmt.Printf("Reading station: %s\n", wStationId[:4])
+		logger.Infof("Reading station: %s\n", wStationId[:4])
 		path := filepath.Join(filePath, v.Name())
-		dataMap[wStationId[:4]] = getFileData(path)
+		dataMap[wStationId[:4]] = getFileData(path, logger)
 	}
 
 	return dataMap
 }
 
 // getFileData is an function that breaks down the station data and puts it into a struct to work with.
-func getFileData(filePath string) []StationResults {
+func getFileData(filePath string, logger *zap.SugaredLogger) []StationResults {
 	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println("Error", err)
+		logger.Errorf("Error in getting %s file data, err: %s", file.Name(), err)
 	}
 
 	scanner := bufio.NewScanner(file)

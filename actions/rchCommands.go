@@ -3,8 +3,10 @@ package actions
 import (
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
@@ -17,15 +19,20 @@ import (
 )
 
 func RechargeFiles(debug *bool, CSDir *string) {
-	slDb := database.GetSqlite()
+	logger, _ := NewLogger()
+	sugar := logger.Sugar()
+
+	sugar.Infow("Setting Up Results database, getting postgres DB Connection.")
+	slDb := database.GetSqlite(sugar)
 	pgDb := database.PgConnx()
 
-	csResults := fileio.LoadTextFiles(*CSDir)
+	csResults := fileio.LoadTextFiles(*CSDir, sugar)
 
 	validate := func(input string) error {
 		_, err := strconv.Atoi(input)
 		if err != nil {
-			return errors.New("Invalid number")
+			sugar.Errorf("Invalid number %s, error: %s", input, err)
+			return errors.New("invalid number")
 		}
 		return nil
 	}
@@ -37,7 +44,7 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 	result, err := prompt.Run()
 	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
+		sugar.Errorf("Prompt failed %v", err)
 		return
 	}
 
@@ -50,14 +57,14 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 	result, err = prompt.Run()
 	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
+		sugar.Errorf("Prompt failed %v", err)
 		return
 	}
 
 	endYr, _ := strconv.Atoi(result)
 
 	// parcel pumping
-	parcelpump.ParcelPump(pgDb, slDb, startYr, endYr, &csResults)
+	parcelpump.ParcelPump(pgDb, slDb, startYr, endYr, &csResults, sugar)
 	os.Exit(0)
 
 	// load up data with cell acres
@@ -111,4 +118,15 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 		bar.Add(1)
 	}
+}
+
+func NewLogger() (*zap.Logger, error) {
+	cfg := zap.NewProductionConfig()
+	path := fmt.Sprintf("./results%s.log", time.Now().Format(time.RFC3339))
+
+	cfg.OutputPaths = []string{
+		path,
+	}
+
+	return cfg.Build()
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/heath140/wwum2020/parcelpump/conveyLoss"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 type Parcel struct {
@@ -43,7 +44,7 @@ type Parcel struct {
 // getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
 // can be multiples of the same parcels listed with different soil types.
 // Need to implement multiple years
-func getParcels(db *sqlx.DB, Year int) []Parcel {
+func getParcels(db *sqlx.DB, Year int, logger *zap.SugaredLogger) []Parcel {
 	query := fmt.Sprintf(`SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw,
        irrig_type, sw_fac, cert_num::varchar, model_id, sw_id, st_area(i.geom)/43560 area, 'np' nrd,
        st_x(st_transform(st_centroid(i.geom), 4326)) pointx, st_y(st_transform(st_centroid(i.geom), 4326)) pointy,
@@ -74,7 +75,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 	var parcels []Parcel
 	err := db.Select(&parcels, query)
 	if err != nil {
-		fmt.Println("Error in getting parcels", err)
+		logger.Errorf("Error in getting parcels for year %d, error: %s", Year, err)
 	}
 
 	return parcels
@@ -91,6 +92,8 @@ func filterParcelByCert(p *[]Parcel, c string) (filteredParcels []Parcel) {
 	return filteredParcels
 }
 
+// parcelSWDelivery method uses the diversions to then calculate the total amount of surface water delivered to a parcel
+// from those diversions. It returns nothing, but sets SWDel inside the Parcel
 func (p *Parcel) parcelSWDelivery(diversions []conveyLoss.Diversion) {
 	canalDivs := filterDivs(diversions, int(p.SwID.Int64))
 
@@ -106,6 +109,7 @@ func (p *Parcel) parcelSWDelivery(diversions []conveyLoss.Diversion) {
 	p.SWDel = swDelivery
 }
 
+// filterDivs function that receives a slice of divs and filters them to a canal that is given as an int
 func filterDivs(divs []conveyLoss.Diversion, canal int) (d []conveyLoss.Diversion) {
 	for _, v := range divs {
 		if v.CanalId == canal {

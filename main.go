@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/heath140/wwum2020/actions"
-	"github.com/heath140/wwum2020/actions/distribution"
 )
 
 func main() {
@@ -45,8 +44,11 @@ For help with those functions type: dist -h or convloss -h
 			os.Exit(1)
 		}
 		fmt.Println("Distribution of CropSim Data")
-		distribution.Distribution(distDebug, distStartY, distEndY, *distCSDir)
-		distribution.Distribution(distDebug, distStartY, distEndY, *distCSDir)
+		_ = distDebug
+		_ = distStartY
+		_ = distEndY
+		_ = distCSDir
+		//distribution.Distribution(distDebug, distStartY, distEndY, *distCSDir)
 
 	case "rch":
 		err := rchCmd.Parse(os.Args[2:])
