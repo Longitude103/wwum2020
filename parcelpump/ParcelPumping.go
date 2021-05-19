@@ -80,7 +80,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		// add usage to parcel
 		annUsage := filterUsage(usage, y)
 		for _, u := range annUsage {
-			fmt.Printf("Annual Usage in %v is %g\n", u.CertNum, u.UseAF)
+			//fmt.Printf("Annual Usage in %v is %g\n", u.CertNum, u.UseAF)
 			// filter parcels to this usage cert
 			filteredParcels := filterParcelByCert(&parcels, u.CertNum)
 
@@ -107,9 +107,8 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		}
 
 		// calculate / recalculate RO and DP for the parcel & estimate pumping for years without usage
-
 		for _, v := range parcels[:10] {
-			fmt.Printf("Parce No: %d, NIR is: %v, Dp is: %v, Usage is: %v\n", v.ParcelNo, v.Nir, v.Dp, v.Usage)
+			fmt.Printf("Parce No: %d, NIR is: %v, Dp is: %v, Usage is: %v\n", v.ParcelNo, v.Nir, v.Dp, v.Pump)
 		}
 	}
 

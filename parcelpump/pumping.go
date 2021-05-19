@@ -20,7 +20,7 @@ func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) {
 	for m := 0; m < 12; m++ {
 		nirRemaining[m] = p.Nir[m] - swAvailableCU[m]
 		if nirRemaining[m] > 0 {
-			p.Usage[m] = nirRemaining[m] / p.AppEff
+			p.Pump[m] = nirRemaining[m] / p.AppEff
 		}
 	}
 }

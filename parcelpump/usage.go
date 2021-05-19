@@ -42,7 +42,7 @@ func (p *Parcel) distributeUsage(totalNIR float64, totalMonthlyNIR [12]float64, 
 	for m := 0; m < 12; m++ {
 		if totalMonthlyNIR[m] > 0 { // protect from division by zero
 			monthPercent := totalMonthlyNIR[m] / totalNIR
-			p.Usage[m] = p.Nir[m] / totalMonthlyNIR[m] * (monthPercent * u)
+			p.Pump[m] = p.Nir[m] / totalMonthlyNIR[m] * (monthPercent * u)
 		}
 	}
 
