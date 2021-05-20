@@ -102,4 +102,21 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 		logger.Errorf("Error in creating parcel nir table: %s", err)
 	}
 
+	// add results table for parcelPumping
+	stmt, err = db.Prepare(`create table if not exists parcelPumping
+									(
+										parcelID integer,
+										nrd text,
+										dt text,
+										pump real
+									);`)
+	if err != nil {
+		logger.Errorf("Error in statement of parcel pumping table: %s", err)
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		logger.Errorf("Error in creating parcel pumping table: %s", err)
+	}
+
 }

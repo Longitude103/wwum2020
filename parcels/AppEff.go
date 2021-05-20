@@ -1,4 +1,4 @@
-package parcelpump
+package parcels
 
 import "github.com/heath140/wwum2020/database"
 

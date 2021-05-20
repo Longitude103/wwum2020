@@ -13,7 +13,7 @@ import (
 
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
-	"github.com/heath140/wwum2020/parcelpump"
+	"github.com/heath140/wwum2020/parcels"
 	"github.com/heath140/wwum2020/rchFiles"
 	//"wwum2020/rchFiles"
 )
@@ -64,9 +64,13 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	endYr, _ := strconv.Atoi(result)
 
 	// parcel pumping
-	parcelpump.ParcelPump(pgDb, slDb, startYr, endYr, &csResults, sugar)
-	os.Exit(0)
+	irrParcels := parcels.ParcelPump(pgDb, slDb, startYr, endYr, &csResults, sugar)
+	_ = irrParcels
 
+	dryParcels := parcels.DryLandParcels(pgDb, slDb, startYr, endYr, &csResults, sugar)
+	_ = dryParcels
+
+	os.Exit(0)
 	// load up data with cell acres
 	cells := database.GetCells(pgDb)
 

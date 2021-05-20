@@ -1,4 +1,4 @@
-package parcelpump
+package parcels
 
 import (
 	"fmt"

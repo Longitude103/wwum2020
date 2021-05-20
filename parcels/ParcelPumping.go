@@ -1,17 +1,17 @@
-package parcelpump
+package parcels
 
 import (
-	"fmt"
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
-	"github.com/heath140/wwum2020/parcelpump/conveyLoss"
+	"github.com/heath140/wwum2020/parcels/conveyLoss"
 	"github.com/jmoiron/sqlx"
 	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
 	"go.uber.org/zap"
+	"time"
 )
 
-func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults, logger *zap.SugaredLogger) {
+func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults, logger *zap.SugaredLogger) (AllParcels []Parcel) {
 	// cert usage
 	logger.Info("Getting Cert Usage")
 	usage := getUsage(pgDB)
@@ -54,9 +54,10 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 	logger.Info("Getting Surface Water Delivery")
 	swDelivery := conveyLoss.GetSurfaceWaterDelivery(pgDB, sYear, eYear)
 
+	var parcels []Parcel
 	// 1. load parcels
 	for y := sYear; y < eYear+1; y++ {
-		parcels := getParcels(pgDB, y, logger)
+		parcels = getParcels(pgDB, y, logger)
 		filteredDiversions := conveyLoss.FilterSWDeliveryByYear(swDelivery, y)
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")
@@ -104,11 +105,21 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 			}
 		}
 
-		// calculate / recalculate RO and DP for the parcel & estimate pumping for years without usage
-		for _, v := range parcels[:10] {
-			fmt.Printf("Parce No: %d, NIR is: %v, Dp is: %v, Usage is: %v\n", v.ParcelNo, v.Nir, v.Dp, v.Pump)
+		// write out parcel pumping for each parcel in sqlite results
+		var pumpingOutput []Pumping
+		for p := 0; p < len(parcels); p++ {
+			// Add data to pumpingStruct and then append
+			for m := 1; m < 13; m++ {
+				dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+				pmp := Pumping{parcelID: parcels[p].ParcelNo, nrd: parcels[p].Nrd, dt: dt, pump: parcels[p].Pump[m]}
+				pumpingOutput = append(pumpingOutput, pmp)
+			}
 		}
+
+		_ = bulkSaveSqlite(slDB, pumpingOutput, logger)
+
+		AllParcels = append(AllParcels, parcels...)
 	}
 
-	// 4. parcel recharge / acre
+	return AllParcels
 }

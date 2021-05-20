@@ -1,9 +1,9 @@
-package parcelpump
+package parcels
 
 import (
 	"database/sql"
 	"fmt"
-	"github.com/heath140/wwum2020/parcelpump/conveyLoss"
+	"github.com/heath140/wwum2020/parcels/conveyLoss"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
@@ -32,6 +32,7 @@ type Parcel struct {
 	SoilArea  float64         `db:"s_area"`
 	SoilCode  int             `db:"soil_code"`
 	CoeffZone int             `db:"coeff_zone"`
+	Yr        int
 	AppEff    float64
 	Nir       [12]float64
 	Ro        [12]float64
@@ -42,8 +43,7 @@ type Parcel struct {
 }
 
 // getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
-// can be multiples of the same parcels listed with different soil types.
-// Need to implement multiple years
+// can be multiples of the same parcels listed with different soil types. It sets the year into a field in the struct.
 func getParcels(db *sqlx.DB, Year int, logger *zap.SugaredLogger) []Parcel {
 	query := fmt.Sprintf(`SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw,
        irrig_type, sw_fac, cert_num::varchar, model_id, sw_id, st_area(i.geom)/43560 area, 'np' nrd,
@@ -76,6 +76,10 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 	err := db.Select(&parcels, query)
 	if err != nil {
 		logger.Errorf("Error in getting parcels for year %d, error: %s", Year, err)
+	}
+
+	for i := 0; i < len(parcels); i++ {
+		parcels[i].Yr = Year
 	}
 
 	return parcels
