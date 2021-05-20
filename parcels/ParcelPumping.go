@@ -62,7 +62,9 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")
 
-		for i := 0; i < len(parcels); i++ {
+		//for i := 0; i < len(parcels); i++ {
+		for i := 0; i < 50; i++ {
+
 			(&parcels[i]).parcelNIR(slDB, y, wStations, *csResults) // must be a pointer to work
 			(&parcels[i]).setAppEfficiency(efficiencies, y)
 
@@ -108,15 +110,27 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		// write out parcel pumping for each parcel in sqlite results
 		var pumpingOutput []Pumping
 		for p := 0; p < len(parcels); p++ {
-			// Add data to pumpingStruct and then append
-			for m := 1; m < 13; m++ {
-				dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
-				pmp := Pumping{parcelID: parcels[p].ParcelNo, nrd: parcels[p].Nrd, dt: dt, pump: parcels[p].Pump[m]}
-				pumpingOutput = append(pumpingOutput, pmp)
+			if parcels[p].Gw.Bool == true {
+				// Add data to pumpingStruct and then append
+				for m := 1; m < 13; m++ {
+					if parcels[p].Pump[m-1] > 0 {
+						dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+						pmp := Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt, Pump: parcels[p].Pump[m-1]}
+						pumpingOutput = append(pumpingOutput, pmp)
+					}
+				}
+
+				if p*12 > 500 {
+					_ = bulkSaveSqlite(slDB, pumpingOutput, logger)
+					pumpingOutput = nil
+				}
 			}
 		}
 
-		_ = bulkSaveSqlite(slDB, pumpingOutput, logger)
+		// save remaining
+		if len(pumpingOutput) > 0 {
+			_ = bulkSaveSqlite(slDB, pumpingOutput, logger)
+		}
 
 		AllParcels = append(AllParcels, parcels...)
 	}

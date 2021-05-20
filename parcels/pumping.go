@@ -6,10 +6,10 @@ import (
 )
 
 type Pumping struct {
-	parcelID int
-	nrd      string
-	dt       time.Time
-	pump     float64
+	ParcelID int       `db:"parcelID"`
+	Nrd      string    `db:"nrd"`
+	Dt       time.Time `db:"dt"`
+	Pump     float64   `db:"pump"`
 }
 
 // estimatePumping is a method that is called on parcels that have metered == false and gw == true so that we can estimate

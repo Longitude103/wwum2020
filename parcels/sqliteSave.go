@@ -24,19 +24,10 @@ func saveSqlite(slDB *sqlx.DB, parcelID int, nrd string, pNIR [12]float64, yr in
 }
 
 func bulkSaveSqlite(slDB *sqlx.DB, values []Pumping, logger *zap.SugaredLogger) (err error) {
-	bulks := len(values) / 500
-	var subVals []Pumping
-
-	for i := 0; i < bulks; i++ {
-		for c := 0; c < 500; c++ {
-			subVals = append(subVals, values[i*500+c])
-		}
-
-		_, err = slDB.NamedExec(`INSERT INTO parcelPumping (parcelID, nrd, dt, pump) 
-										VALUES (:parcelID, :nrd, :dt, :pump)`, subVals)
-		if err != nil {
-			logger.Errorf("Error inserting parcel pumping into sqlite results, error: %s", err)
-		}
+	_, err = slDB.NamedExec(`INSERT INTO parcelPumping (parcelID, nrd, dt, pump)
+										VALUES (:parcelID, :nrd, :dt, :pump)`, values)
+	if err != nil {
+		logger.Errorf("Error inserting parcel pumping into sqlite results, error: %s", err)
 	}
 
 	return err
