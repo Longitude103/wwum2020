@@ -13,8 +13,10 @@ func saveSqlite(slDB *sqlx.DB, parcelID int, nrd string, pNIR [12]float64, yr in
 	tx := slDB.MustBegin()
 
 	for i, v := range pNIR {
-		dt := time.Date(yr, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)
-		tx.MustExec("INSERT INTO parcelNIR (parcelID, nrd, dt, nir) VALUES ($1, $2, $3, $4)", parcelID, nrd, dt.Format(time.RFC3339), v)
+		if v > 0 {
+			dt := time.Date(yr, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)
+			tx.MustExec("INSERT INTO parcelNIR (parcelID, nrd, dt, nir) VALUES ($1, $2, $3, $4)", parcelID, nrd, dt.Format(time.RFC3339), v)
+		}
 	}
 
 	err := tx.Commit()
