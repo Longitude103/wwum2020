@@ -106,3 +106,4 @@ fabric.properties
 .netrc
 
 *.sqlite
+*.log
