@@ -1,8 +1,7 @@
 package conveyLoss
 
 import (
-	"fmt"
-	"github.com/heath140/wwum2020/rchFiles"
+	"github.com/heath140/wwum2020/database"
 	"github.com/jmoiron/sqlx"
 	"github.com/schollz/progressbar/v3"
 )
@@ -11,6 +10,18 @@ import (
 // outputs to the results table in sqlite. Might update to return delivery by canal.
 func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow bool) (err error) {
 	spRates := map[string]float64{"interstate": 0.4869, "highline": 0.2617, "lowline": 0.2513}
+
+	clDB, err := database.ConveyLossDB(slDB)
+	if err != nil {
+		return err
+	}
+
+	defer func(clDB *database.CLDB) {
+		err := clDB.Close()
+		if err != nil {
+			return
+		}
+	}(clDB)
 
 	canalCells := getCanalCells(pgDB)
 	//fmt.Println("First 10 Canal Cells")
@@ -35,7 +46,6 @@ func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow b
 
 	bar := progressbar.Default(int64(len(canalCells)), "Canal Cells")
 	// loop over cells
-	var cellResults []rchFiles.Result
 	for _, cell := range canalCells {
 
 		strLossPercent := 0.0
@@ -126,26 +136,14 @@ func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow b
 			//}
 
 			if structureLoss > 0 {
-				cellResults = append(cellResults,
-					rchFiles.Result{Node: cell.Node, Dt: div.DivDate.Time, FileType: ft, Result: structureLoss * factor * 1.9835})
-			}
-
-			if len(cellResults) == 500 {
-				// save the data off, then clear slice
-				err := insertSql(slDB, cellResults)
+				err := clDB.Add(database.CLResult{Node: cell.Node, Dt: div.DivDate.Time, FileType: ft, Result: structureLoss * factor * 1.9835})
 				if err != nil {
-					fmt.Println("Error in insert of SQL", err)
+					return err
 				}
-				cellResults = nil
 			}
 		}
 
 		_ = bar.Add(1)
-	}
-
-	err = insertSql(slDB, cellResults)
-	if err != nil {
-		fmt.Println("Error in insert of SQL", err)
 	}
 
 	_ = bar.Close()
@@ -160,14 +158,4 @@ func filterCanal(diversions []Diversion, canal int) (canalDiversion []Diversion)
 		}
 	}
 	return canalDiversion
-}
-
-func insertSql(slDB *sqlx.DB, values []rchFiles.Result) (err error) {
-	_, err = slDB.NamedExec(`INSERT INTO results (cell_node, dt, file_type, result) 
-										VALUES (:cell_node, :dt, :file_type, :result)`, values)
-	if err != nil {
-		fmt.Println("Error in insert of Cell Loss", err)
-	}
-
-	return err
 }

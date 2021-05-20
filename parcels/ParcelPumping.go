@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults, logger *zap.SugaredLogger) (AllParcels []Parcel) {
+func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults, logger *zap.SugaredLogger) (AllParcels []Parcel, err error) {
 	// cert usage
 	logger.Info("Getting Cert Usage")
 	usage := getUsage(pgDB)
@@ -34,7 +34,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 	}
 
 	excessFlows := false
-	_, err := prompt.Run()
+	_, err = prompt.Run()
 	if err != nil {
 		// don't include excess flows
 		excessFlows = true
@@ -55,6 +55,30 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 	swDelivery := conveyLoss.GetSurfaceWaterDelivery(pgDB, sYear, eYear)
 
 	var parcels []Parcel
+	pNirDB, err := database.PNirDB(slDB)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(pNirDB *database.DB) {
+		err := pNirDB.Close()
+		if err != nil {
+			return
+		}
+	}(pNirDB)
+
+	pPumpDB, err := database.ParcelPumpDB(slDB)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(pPumpDB *database.PPDB) {
+		err := pPumpDB.Close()
+		if err != nil {
+			return
+		}
+	}(pPumpDB)
+
 	// 1. load parcels
 	for y := sYear; y < eYear+1; y++ {
 		parcels = getParcels(pgDB, y, logger)
@@ -62,10 +86,10 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")
 
-		//for i := 0; i < len(parcels); i++ {
-		for i := 0; i < 50; i++ {
+		for i := 0; i < len(parcels); i++ {
+			//for i := 0; i < 50; i++ {
 
-			(&parcels[i]).parcelNIR(slDB, y, wStations, *csResults) // must be a pointer to work
+			_ = (&parcels[i]).parcelNIR(pNirDB, y, wStations, *csResults) // must be a pointer to work
 			(&parcels[i]).setAppEfficiency(efficiencies, y)
 
 			// add SW Delivery to the parcels
@@ -108,32 +132,20 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		}
 
 		// write out parcel pumping for each parcel in sqlite results
-		var pumpingOutput []Pumping
 		for p := 0; p < len(parcels); p++ {
 			if parcels[p].Gw.Bool == true {
 				// Add data to pumpingStruct and then append
 				for m := 1; m < 13; m++ {
 					if parcels[p].Pump[m-1] > 0 {
 						dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
-						pmp := Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt, Pump: parcels[p].Pump[m-1]}
-						pumpingOutput = append(pumpingOutput, pmp)
+						_ = pPumpDB.Add(database.Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt, Pump: parcels[p].Pump[m-1]})
 					}
 				}
-
-				if p*12 > 500 {
-					_ = bulkSaveSqlite(slDB, pumpingOutput, logger)
-					pumpingOutput = nil
-				}
 			}
-		}
-
-		// save remaining
-		if len(pumpingOutput) > 0 {
-			_ = bulkSaveSqlite(slDB, pumpingOutput, logger)
 		}
 
 		AllParcels = append(AllParcels, parcels...)
 	}
 
-	return AllParcels
+	return AllParcels, nil
 }

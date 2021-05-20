@@ -64,7 +64,10 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	endYr, _ := strconv.Atoi(result)
 
 	// parcel pumping
-	irrParcels := parcels.ParcelPump(pgDb, slDb, startYr, endYr, &csResults, sugar)
+	irrParcels, err := parcels.ParcelPump(pgDb, slDb, startYr, endYr, &csResults, sugar)
+	if err != nil {
+		sugar.Errorf("Error in Parcel Pumping: %s", err)
+	}
 	_ = irrParcels
 
 	dryParcels := parcels.DryLandParcels(pgDb, slDb, startYr, endYr, &csResults, sugar)

@@ -5,13 +5,12 @@ import (
 	"github.com/heath140/gisUtils"
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
-	"github.com/jmoiron/sqlx"
 	"sort"
 )
 
 // parcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.
 // It produces an intermediate results table of NIR in local sqlite for review and adds three maps to the parcel struct
-func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.WeatherStation, csResults map[string][]fileio.StationResults) {
+func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.WeatherStation, csResults map[string][]fileio.StationResults) error {
 	var parcelNIR, parcelRo, parcelDp [12]float64
 
 	dist := distances(*p, wStations)
@@ -53,10 +52,16 @@ func (p *Parcel) parcelNIR(slDB *sqlx.DB, Year int, wStations []database.Weather
 	//fmt.Printf("Weighted Parcel ID: %d, NIR is: %v\n", parcel.ParcelNo, parcelNIR)
 
 	// save parcelNIR to sqlite
-	saveSqlite(slDB, p.ParcelNo, p.Nrd, parcelNIR, Year)
+	err := pNirDB.Add(database.PNir{ParcelNo: p.ParcelNo, Nrd: p.Nrd, ParcelNIR: parcelNIR, Year: Year})
+	if err != nil {
+		return err
+	}
+
 	p.Nir = parcelNIR
 	p.Ro = parcelRo
 	p.Dp = parcelDp
+
+	return nil
 }
 
 // distances is a function that that returns the top three weather stations from the list with the appropriate weighting

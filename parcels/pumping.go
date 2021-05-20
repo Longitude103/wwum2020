@@ -2,15 +2,7 @@ package parcels
 
 import (
 	"github.com/heath140/wwum2020/database"
-	"time"
 )
-
-type Pumping struct {
-	ParcelID int       `db:"parcelID"`
-	Nrd      string    `db:"nrd"`
-	Dt       time.Time `db:"dt"`
-	Pump     float64   `db:"pump"`
-}
 
 // estimatePumping is a method that is called on parcels that have metered == false and gw == true so that we can estimate
 // the amount of pumping that was done at the parcel since a well is present, but not metered. Usually FA area before
