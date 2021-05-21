@@ -11,14 +11,12 @@ import (
 	"time"
 )
 
-func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults, logger *zap.SugaredLogger) (AllParcels []Parcel, err error) {
+func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults,
+	wStations []database.WeatherStation, pNirDB *database.DB, logger *zap.SugaredLogger) (AllParcels []Parcel, err error) {
 	// cert usage
 	logger.Info("Getting Cert Usage")
 	usage := getUsage(pgDB)
 	_ = usage
-
-	logger.Info("Getting Weather Stations")
-	wStations := database.GetWeatherStations(pgDB)
 
 	logger.Info("Getting CoeffCrops Data")
 	cCrops := database.GetCoeffCrops(pgDB)
@@ -55,17 +53,6 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 	swDelivery := conveyLoss.GetSurfaceWaterDelivery(pgDB, sYear, eYear)
 
 	var parcels []Parcel
-	pNirDB, err := database.PNirDB(slDB)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func(pNirDB *database.DB) {
-		err := pNirDB.Close()
-		if err != nil {
-			return
-		}
-	}(pNirDB)
 
 	pPumpDB, err := database.ParcelPumpDB(slDB)
 	if err != nil {
@@ -89,7 +76,7 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		for i := 0; i < len(parcels); i++ {
 			//for i := 0; i < 50; i++ {
 
-			_ = (&parcels[i]).parcelNIR(pNirDB, y, wStations, *csResults) // must be a pointer to work
+			_ = (&parcels[i]).parcelNIR(pNirDB, y, wStations, *csResults, Irrigated) // must be a pointer to work
 			(&parcels[i]).setAppEfficiency(efficiencies, y)
 
 			// add SW Delivery to the parcels
@@ -138,7 +125,8 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 				for m := 1; m < 13; m++ {
 					if parcels[p].Pump[m-1] > 0 {
 						dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
-						_ = pPumpDB.Add(database.Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt, Pump: parcels[p].Pump[m-1]})
+						_ = pPumpDB.Add(database.Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt,
+							Pump: parcels[p].Pump[m-1]})
 					}
 				}
 			}

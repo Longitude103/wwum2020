@@ -20,18 +20,18 @@ import (
 
 func RechargeFiles(debug *bool, CSDir *string) {
 	logger, _ := NewLogger()
-	sugar := logger.Sugar()
+	sLogger := logger.Sugar()
 
-	sugar.Infow("Setting Up Results database, getting postgres DB Connection.")
-	slDb := database.GetSqlite(sugar)
+	sLogger.Infow("Setting Up Results database, getting postgres DB Connection.")
+	slDb := database.GetSqlite(sLogger)
 	pgDb := database.PgConnx()
 
-	csResults := fileio.LoadTextFiles(*CSDir, sugar)
+	csResults := fileio.LoadTextFiles(*CSDir, sLogger)
 
 	validate := func(input string) error {
 		_, err := strconv.Atoi(input)
 		if err != nil {
-			sugar.Errorf("Invalid number %s, error: %s", input, err)
+			sLogger.Errorf("Invalid number %s, error: %s", input, err)
 			return errors.New("invalid number")
 		}
 		return nil
@@ -44,7 +44,7 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 	result, err := prompt.Run()
 	if err != nil {
-		sugar.Errorf("Prompt failed %v", err)
+		sLogger.Errorf("Prompt failed %v", err)
 		return
 	}
 
@@ -57,21 +57,40 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 	result, err = prompt.Run()
 	if err != nil {
-		sugar.Errorf("Prompt failed %v", err)
+		sLogger.Errorf("Prompt failed %v", err)
 		return
 	}
 
 	endYr, _ := strconv.Atoi(result)
 
-	// parcel pumping
-	irrParcels, err := parcels.ParcelPump(pgDb, slDb, startYr, endYr, &csResults, sugar)
+	logger.Info("Getting Weather Stations")
+	wStations := database.GetWeatherStations(pgDb)
+
+	pNirDB, err := database.PNirDB(slDb)
 	if err != nil {
-		sugar.Errorf("Error in Parcel Pumping: %s", err)
+		sLogger.Errorf("Error in connection for Parcel NIR Insert: %s", err)
+	}
+
+	// parcel pumping
+	irrParcels, err := parcels.ParcelPump(pgDb, slDb, startYr, endYr, &csResults, wStations, pNirDB, sLogger)
+	if err != nil {
+		sLogger.Errorf("Error in Parcel Pumping: %s", err)
 	}
 	_ = irrParcels
+	err = pNirDB.Flush()
+	if err != nil {
+		sLogger.Errorf("Error in flush: %s", err)
+	}
 
-	dryParcels := parcels.DryLandParcels(pgDb, slDb, startYr, endYr, &csResults, sugar)
+	dryParcels, err := parcels.DryLandParcels(pgDb, pNirDB, startYr, endYr, &csResults, wStations, sLogger)
+	if err != nil {
+		sLogger.Errorf("Error in Dry Land Parcels: %s", err)
+	}
 	_ = dryParcels
+
+	_ = pNirDB.Close() // close doesn't close the db, that must be call explicitly so we can keep using it.
+
+	_ = slDb.Close() // close the db before ending the program
 
 	os.Exit(0)
 	// load up data with cell acres

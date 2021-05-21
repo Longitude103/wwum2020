@@ -10,14 +10,15 @@ import (
 
 // parcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.
 // It produces an intermediate results table of NIR in local sqlite for review and adds three maps to the parcel struct
-func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.WeatherStation, csResults map[string][]fileio.StationResults) error {
+func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.WeatherStation,
+	csResults map[string][]fileio.StationResults, it IrrType) error {
 	var parcelNIR, parcelRo, parcelDp [12]float64
 
 	dist := distances(*p, wStations)
 	for _, st := range dist {
 		var annData []fileio.StationResults
 		for _, data := range csResults[st.Station] {
-			if data.Yr == Year && data.Soil == p.SoilCode && data.Irrigation == 3 {
+			if data.Yr == Year && data.Soil == p.SoilCode && data.Irrigation == int(it) {
 				annData = append(annData, data)
 			}
 		}
@@ -52,7 +53,7 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 	//fmt.Printf("Weighted Parcel ID: %d, NIR is: %v\n", parcel.ParcelNo, parcelNIR)
 
 	// save parcelNIR to sqlite
-	err := pNirDB.Add(database.PNir{ParcelNo: p.ParcelNo, Nrd: p.Nrd, ParcelNIR: parcelNIR, Year: Year})
+	err := pNirDB.Add(database.PNir{ParcelNo: p.ParcelNo, Nrd: p.Nrd, ParcelNIR: parcelNIR, Year: Year, IrrType: int(it)})
 	if err != nil {
 		return err
 	}

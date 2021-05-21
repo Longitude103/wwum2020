@@ -13,6 +13,7 @@ type PNir struct {
 	Nrd       string
 	ParcelNIR [12]float64
 	Year      int
+	IrrType   int
 }
 
 type DB struct {
@@ -22,7 +23,7 @@ type DB struct {
 }
 
 func PNirDB(sqlDB *sqlx.DB) (*DB, error) {
-	insertSQL := `INSERT INTO parcelNIR (parcelID, nrd, dt, nir) VALUES ($1, $2, $3, $4)`
+	insertSQL := `INSERT INTO parcelNIR (parcelID, nrd, dt, nir, irrtype) VALUES (?, ?, ?, ?, ?)`
 
 	stmt, err := sqlDB.Preparex(insertSQL)
 	if err != nil {
@@ -63,7 +64,7 @@ func (db *DB) Flush() error {
 		for i := 0; i < 12; i++ {
 			if pnir.ParcelNIR[i] > 0 {
 				dt := time.Date(pnir.Year, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)
-				_, err := tx.Stmtx(db.stmt).Exec(pnir.ParcelNo, pnir.Nrd, dt, pnir.ParcelNIR[i])
+				_, err := tx.Stmtx(db.stmt).Exec(pnir.ParcelNo, pnir.Nrd, dt, pnir.ParcelNIR[i], pnir.IrrType)
 				if err != nil {
 					_ = tx.Rollback()
 					return err
@@ -79,7 +80,6 @@ func (db *DB) Flush() error {
 func (db *DB) Close() error {
 	defer func() {
 		_ = db.stmt.Close()
-		_ = db.sql.Close()
 	}()
 
 	if err := db.Flush(); err != nil {

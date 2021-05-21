@@ -71,7 +71,6 @@ func (db *PPDB) Flush() error {
 func (db *PPDB) Close() error {
 	defer func() {
 		_ = db.stmt.Close()
-		_ = db.sql.Close()
 	}()
 
 	if err := db.Flush(); err != nil {

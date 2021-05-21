@@ -91,7 +91,8 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 										parcelID integer,
 										nrd text,
 										dt text,
-										nir real
+										nir real,
+										irrtype integer
 									);`)
 	if err != nil {
 		logger.Errorf("Error in statement of parcel nir table: %s", err)
