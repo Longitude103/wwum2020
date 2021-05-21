@@ -20,7 +20,7 @@ func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) {
 
 	// set nirRemaining to nir - swAvailableCU if positive, then divide by AppEff to arrive at pumping
 	for m := 0; m < 12; m++ {
-		nirRemaining[m] = (p.Nir[m]*p.Area)/12.0 - swAvailableCU[m]
+		nirRemaining[m] = p.Nir[m] - swAvailableCU[m]
 		if nirRemaining[m] > 0 {
 			p.Pump[m] = nirRemaining[m] / p.AppEff
 		}

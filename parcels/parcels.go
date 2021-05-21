@@ -45,8 +45,8 @@ type Parcel struct {
 type IrrType int
 
 const (
-	Irrigated IrrType = 1
-	DryLand   IrrType = 3
+	Irrigated IrrType = 3
+	DryLand   IrrType = 1
 )
 
 // getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There

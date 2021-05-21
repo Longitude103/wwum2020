@@ -46,16 +46,18 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 		}
 
 		// weight the crops based on crop_cov and weather station weight
-		parcelNIR = pValues(parcelNIR, cropsNir, cropCov, st.Weight)
-		parcelRo = pValues(parcelRo, cropsRo, cropCov, st.Weight)
-		parcelDp = pValues(parcelDp, cropsDp, cropCov, st.Weight)
+		parcelNIR = pValues(parcelNIR, cropsNir, cropCov, st.Weight, p.Area)
+		parcelRo = pValues(parcelRo, cropsRo, cropCov, st.Weight, p.Area)
+		parcelDp = pValues(parcelDp, cropsDp, cropCov, st.Weight, p.Area)
 	}
-	//fmt.Printf("Weighted Parcel ID: %d, NIR is: %v\n", parcel.ParcelNo, parcelNIR)
+	//fmt.Printf("Weighted Parcel ID: %d, NIR is: %v\n", p.ParcelNo, parcelNIR)
 
-	// save parcelNIR to sqlite
-	err := pNirDB.Add(database.PNir{ParcelNo: p.ParcelNo, Nrd: p.Nrd, ParcelNIR: parcelNIR, Year: Year, IrrType: int(it)})
-	if err != nil {
-		return err
+	// save parcelNIR to sqlite only for irrigated
+	if it == Irrigated {
+		err := pNirDB.Add(database.PNir{ParcelNo: p.ParcelNo, Nrd: p.Nrd, ParcelNIR: parcelNIR, Year: Year, IrrType: int(it)})
+		if err != nil {
+			return err
+		}
 	}
 
 	p.Nir = parcelNIR
@@ -119,11 +121,12 @@ func crop(c int64, aData []fileio.StationResults) (nir [12]float64, ro [12]float
 
 // pValues creates the parcel nir, ro, or dp by multiplying the cropNir with crop coverage by station weight to
 // return a nir, ro, or dp portion for that parcel.
-func pValues(parcelValues [12]float64, cropsNIR [4][12]float64, cropCov [4]float64, stWeight float64) (values [12]float64) {
+func pValues(parcelValues [12]float64, cropsNIR [4][12]float64, cropCov [4]float64, stWeight float64, area float64) (values [12]float64) {
+	//fmt.Printf("parcelValues: %+v, cropCov: %+v, stWeight: %+v\n", parcelValues, cropCov, stWeight)
 	for month, v := range parcelValues {
 		values[month] += v
 		for crop, cropNir := range cropsNIR {
-			values[month] += cropNir[month] * cropCov[crop] * stWeight
+			values[month] += cropNir[month] * cropCov[crop] * stWeight * area / 12
 		}
 	}
 

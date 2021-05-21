@@ -43,14 +43,17 @@ func LoadTextFiles(filePath string, logger *zap.SugaredLogger) map[string][]Stat
 		wStationId := v.Name()
 		logger.Infof("Reading station: %s\n", wStationId[:4])
 		path := filepath.Join(filePath, v.Name())
-		dataMap[wStationId[:4]] = getFileData(path, logger)
+		dataMap[wStationId[:4]], err = getFileData(path, logger)
+	}
+	if err != nil {
+		logger.Errorf("Error in processing data, %s", err)
 	}
 
 	return dataMap
 }
 
 // getFileData is an function that breaks down the station data and puts it into a struct to work with.
-func getFileData(filePath string, logger *zap.SugaredLogger) []StationResults {
+func getFileData(filePath string, logger *zap.SugaredLogger) ([]StationResults, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		logger.Errorf("Error in getting %s file data, err: %s", file.Name(), err)
@@ -86,6 +89,9 @@ func getFileData(filePath string, logger *zap.SugaredLogger) []StationResults {
 
 		stationData = append(stationData, station)
 	}
+	if err != nil {
+		return nil, err
+	}
 
-	return stationData
+	return stationData, nil
 }

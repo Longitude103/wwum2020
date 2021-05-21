@@ -77,6 +77,7 @@ func RechargeFiles(debug *bool, CSDir *string) {
 		sLogger.Errorf("Error in Parcel Pumping: %s", err)
 	}
 	_ = irrParcels
+
 	err = pNirDB.Flush()
 	if err != nil {
 		sLogger.Errorf("Error in flush: %s", err)
@@ -89,10 +90,10 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	_ = dryParcels
 
 	_ = pNirDB.Close() // close doesn't close the db, that must be call explicitly so we can keep using it.
-
-	_ = slDb.Close() // close the db before ending the program
+	_ = slDb.Close()   // close the db before ending the program
 
 	os.Exit(0)
+
 	// load up data with cell acres
 	cells := database.GetCells(pgDb)
 
