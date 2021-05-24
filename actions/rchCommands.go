@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
-	"os"
 	"strconv"
 	"time"
 
@@ -91,8 +90,6 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 	_ = pNirDB.Close() // close doesn't close the db, that must be call explicitly so we can keep using it.
 	_ = slDb.Close()   // close the db before ending the program
-
-	os.Exit(0)
 
 	// load up data with cell acres
 	cells := database.GetCells(pgDb)
