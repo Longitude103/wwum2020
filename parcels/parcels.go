@@ -6,6 +6,9 @@ import (
 	"github.com/heath140/wwum2020/parcels/conveyLoss"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Parcel struct {
@@ -89,7 +92,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 		parcels[i].Yr = Year
 	}
 
-	return parcels
+	return parcels[:10]
 }
 
 // filterParcelByCert filters a slice of parcels by the CertNum and returns a slice of the parcels that have that CertNum.
@@ -171,4 +174,21 @@ GROUP BY i.id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.crop_i
 	}
 
 	return parcels
+}
+
+func (p *Parcel) String() string {
+	return fmt.Sprintf("Parcel No: %d, NRD: %s, Year: %d", p.ParcelNo, p.Nrd, p.Yr)
+}
+
+func (p *Parcel) PrintNIR() string {
+	str := strings.Builder{}
+
+	for m, v := range p.Nir {
+		str.WriteString(time.Month(m + 1).String())
+		str.WriteString(": ")
+		str.WriteString(strconv.FormatFloat(v, 'f', 2, 64))
+		str.WriteRune('\n')
+	}
+
+	return str.String()
 }

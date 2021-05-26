@@ -1,6 +1,7 @@
 package parcels
 
 import (
+	"fmt"
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
 	"github.com/heath140/wwum2020/parcels/conveyLoss"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults,
+func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, pNirDB *database.DB, logger *zap.SugaredLogger) (AllParcels []Parcel, err error) {
 	// cert usage
 	logger.Info("Getting Cert Usage")
@@ -76,7 +77,11 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults *m
 		for i := 0; i < len(parcels); i++ {
 			//for i := 0; i < 50; i++ {
 
-			_ = (&parcels[i]).parcelNIR(pNirDB, y, wStations, *csResults, Irrigated) // must be a pointer to work
+			fmt.Println("Setting Parcel NIR")
+			err = (&parcels[i]).parcelNIR(pNirDB, y, wStations, csResults, Irrigated) // must be a pointer to work
+			if err != nil {
+				return nil, err
+			}
 			(&parcels[i]).setAppEfficiency(efficiencies, y)
 
 			// add SW Delivery to the parcels

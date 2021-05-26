@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func DryLandParcels(pgDB *sqlx.DB, pNirDB *database.DB, sYear int, eYear int, csResults *map[string][]fileio.StationResults,
+func DryLandParcels(pgDB *sqlx.DB, pNirDB *database.DB, sYear int, eYear int, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, logger *zap.SugaredLogger) (dryParcels []Parcel, err error) {
 
 	logger.Info("Getting parcels")
@@ -15,7 +15,7 @@ func DryLandParcels(pgDB *sqlx.DB, pNirDB *database.DB, sYear int, eYear int, cs
 		dryParcels = getDryParcels(pgDB, y, logger)
 
 		for i := 0; i < len(dryParcels); i++ {
-			err = (&dryParcels[i]).parcelNIR(pNirDB, y, wStations, *csResults, DryLand)
+			err = (&dryParcels[i]).parcelNIR(pNirDB, y, wStations, csResults, DryLand)
 		}
 		if err != nil {
 			return nil, err

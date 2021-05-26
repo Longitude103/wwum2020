@@ -34,6 +34,7 @@ func LoadTextFiles(filePath string, logger *zap.SugaredLogger) (map[string][]Sta
 	logger.Infof("File Path: %s", filePath)
 	//fmt.Println("File Path:", filePath)
 	fls, err := os.ReadDir(filePath)
+	// TODO: Ensure that there are Weather files here, otherwise throw an error
 	if err != nil {
 		logger.Errorf("Error loading text files %s", err)
 		return nil, err
@@ -42,7 +43,7 @@ func LoadTextFiles(filePath string, logger *zap.SugaredLogger) (map[string][]Sta
 	dataMap := make(map[string][]StationResults)
 	for _, v := range fls {
 		wStationId := v.Name()
-		logger.Infof("Reading station: %s\n", wStationId[:4])
+		logger.Infof("Reading station: %s", wStationId[:4])
 		path := filepath.Join(filePath, v.Name())
 		dataMap[wStationId[:4]], err = getFileData(path, logger)
 	}

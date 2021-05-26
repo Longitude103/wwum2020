@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
+	"os"
 	"strconv"
 	"time"
 
@@ -30,7 +31,10 @@ func RechargeFiles(debug *bool, CSDir *string) {
 		fmt.Println("Error in Loading Text Files, check log file")
 		return
 	}
+	//fmt.Println("CSResults in RCH")
+	//fmt.Println(csResults)
 
+	// TODO: Validate should only allow 1953 to current year
 	validate := func(input string) error {
 		_, err := strconv.Atoi(input)
 		if err != nil {
@@ -75,10 +79,15 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	}
 
 	// parcel pumping
-	irrParcels, err := parcels.ParcelPump(pgDb, slDb, startYr, endYr, &csResults, wStations, pNirDB, sLogger)
+	irrParcels, err := parcels.ParcelPump(pgDb, slDb, startYr, endYr, csResults, wStations, pNirDB, sLogger)
 	if err != nil {
 		sLogger.Errorf("Error in Parcel Pumping: %s", err)
 	}
+	//
+	//for i := 0; i < 10; i++ {
+	//	fmt.Println(&irrParcels[i])
+	//	fmt.Println(irrParcels[i].PrintNIR())
+	//}
 	_ = irrParcels
 
 	err = pNirDB.Flush()
@@ -86,7 +95,7 @@ func RechargeFiles(debug *bool, CSDir *string) {
 		sLogger.Errorf("Error in flush: %s", err)
 	}
 
-	dryParcels, err := parcels.DryLandParcels(pgDb, pNirDB, startYr, endYr, &csResults, wStations, sLogger)
+	dryParcels, err := parcels.DryLandParcels(pgDb, pNirDB, startYr, endYr, csResults, wStations, sLogger)
 	if err != nil {
 		sLogger.Errorf("Error in Dry Land Parcels: %s", err)
 	}
@@ -95,6 +104,7 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	_ = pNirDB.Close() // close doesn't close the db, that must be call explicitly so we can keep using it.
 	_ = slDb.Close()   // close the db before ending the program
 
+	os.Exit(0)
 	// load up data with cell acres
 	cells := database.GetCells(pgDb)
 
