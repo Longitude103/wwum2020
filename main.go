@@ -25,9 +25,10 @@ For help with those functions type: dist -h or rch -h`
 
 	rchCmd := flag.NewFlagSet("rch", flag.ExitOnError)
 	rchDebug := rchCmd.Bool("debug", false, "sets debugger for more log information")
-	//rchStartY := rchCmd.Int("StartYr", 1997, "Sets the start year of Command, default = 1997")
-	//rchEndY := rchCmd.Int("EndYr", 2020, "Sets the end year of Command, default = 2020")
+	rchStartY := rchCmd.Int("StartYr", 2014, "Sets the start year of Command, default = 1997")
+	rchEndY := rchCmd.Int("EndYr", 2014, "Sets the end year of Command, default = 2020")
 	rchCSDir := rchCmd.String("CSDir", "", "CropSim Directory path")
+	rchEF := rchCmd.Bool("excessFlow", false, "Sets to use Excess Flow or Not, default = false")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -57,7 +58,7 @@ For help with those functions type: dist -h or rch -h`
 			os.Exit(1)
 		}
 		fmt.Println("Run Recharge File Creation")
-		actions.RechargeFiles(rchDebug, rchCSDir)
+		actions.RechargeFiles(*rchDebug, rchCSDir, *rchStartY, *rchEndY, *rchEF)
 	default:
 		fmt.Println(help)
 	}

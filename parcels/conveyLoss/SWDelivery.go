@@ -7,7 +7,7 @@ import (
 // GetSurfaceWaterDelivery function returns a slice of Diversion that is a monthly amount of surface water delivered to
 // an acre of land. The units of the Diversion are in acre-feet per acre for use in subsequent processes.
 func GetSurfaceWaterDelivery(v database.Setup) []Diversion {
-	diversions := getDiversions(v.PgDb, v.SYear, v.EYear, false)
+	diversions := getDiversions(v)
 	canals := getCanals(v.PgDb, v.SYear, v.EYear)
 
 	for i := 0; i < len(diversions); i++ {

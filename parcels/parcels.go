@@ -91,6 +91,10 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 		parcels[i].Yr = Year
 	}
 
+	if v.AppDebug {
+		return parcels[:10]
+	}
+
 	return parcels
 }
 
@@ -170,6 +174,10 @@ GROUP BY i.id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.crop_i
 
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = Year
+	}
+
+	if v.AppDebug {
+		return parcels[:20]
 	}
 
 	return parcels

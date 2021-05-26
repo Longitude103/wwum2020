@@ -7,7 +7,7 @@ import (
 
 // Conveyance function finds the diversions and calculates the conveyance loss for all cells where there is a canal. This
 // outputs to the results table in sqlite. Might update to return delivery by canal.
-func Conveyance(v database.Setup, excessFlow bool) (err error) {
+func Conveyance(v database.Setup) (err error) {
 	spRates := map[string]float64{"interstate": 0.4869, "highline": 0.2617, "lowline": 0.2513}
 
 	clDB, err := database.ConveyLossDB(v.SlDb)
@@ -23,7 +23,7 @@ func Conveyance(v database.Setup, excessFlow bool) (err error) {
 	}(clDB)
 
 	canalCells := getCanalCells(v.PgDb)
-	diversions := getDiversions(v.PgDb, v.SYear, v.EYear, excessFlow)
+	diversions := getDiversions(v)
 
 	bar := progressbar.Default(int64(len(canalCells)), "Canal Cells")
 	// loop over cells

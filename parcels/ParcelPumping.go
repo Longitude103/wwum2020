@@ -4,7 +4,6 @@ import (
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
 	"github.com/heath140/wwum2020/parcels/conveyLoss"
-	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
 	"time"
 )
@@ -22,26 +21,8 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	v.Logger.Info("Getting Efficiencies")
 	efficiencies := database.GetAppEfficiency(v.PgDb)
 
-	// 2. sw deliveries / canal recharge
-	prompt := promptui.Prompt{
-		Label:     "Don't include Excess Flows",
-		IsConfirm: true,
-		Default:   "y",
-	}
-
-	excessFlows := false
-	_, err = prompt.Run()
-	if err != nil {
-		// don't include excess flows
-		excessFlows = true
-	}
-
-	if excessFlows {
-		v.Logger.Info("Including excess flows")
-	}
-
 	v.Logger.Info("Running Conveyance Loss")
-	err = conveyLoss.Conveyance(v, excessFlows)
+	err = conveyLoss.Conveyance(v)
 	if err != nil {
 		v.Logger.Errorf("Error in Conveyance Losses %s", err)
 	}

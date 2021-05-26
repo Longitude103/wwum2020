@@ -1,22 +1,18 @@
 package actions
 
 import (
-	"errors"
 	"fmt"
-	"github.com/manifoldco/promptui"
-	"github.com/schollz/progressbar/v3"
-	"strconv"
-
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
 	"github.com/heath140/wwum2020/parcels"
 	"github.com/heath140/wwum2020/rchFiles"
+	"github.com/schollz/progressbar/v3"
 	//"wwum2020/rchFiles"
 )
 
-func RechargeFiles(debug *bool, CSDir *string) error {
+func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	v := database.Setup{}
-	if err := v.NewSetup(); err != nil {
+	if err := v.NewSetup(debug, eF); err != nil {
 		return err
 	}
 
@@ -26,46 +22,7 @@ func RechargeFiles(debug *bool, CSDir *string) error {
 		return err
 	}
 
-	//fmt.Println("CSResults in RCH")
-	//fmt.Println(csResults)
-
-	// TODO: Validate should only allow 1953 to current year
-	validate := func(input string) error {
-		_, err := strconv.Atoi(input)
-		if err != nil {
-			v.Logger.Errorf("Invalid number %s, error: %s", input, err)
-			return errors.New("invalid number")
-		}
-		return nil
-	}
-
-	prompt := promptui.Prompt{
-		Label:    "Start Year of Model Run",
-		Validate: validate,
-	}
-
-	result, err := prompt.Run()
-	if err != nil {
-		v.Logger.Errorf("Prompt failed %v", err)
-		return err
-	}
-
-	startYr, _ := strconv.Atoi(result)
-
-	prompt = promptui.Prompt{
-		Label:    "End Year of Model Run",
-		Validate: validate,
-	}
-
-	result, err = prompt.Run()
-	if err != nil {
-		v.Logger.Errorf("Prompt failed %v", err)
-		return err
-	}
-
-	endYr, _ := strconv.Atoi(result)
-
-	err = v.SetYears(startYr, endYr)
+	err = v.SetYears(sY, eY)
 	if err != nil {
 		v.Logger.Errorf("Error Setting Years Error: %s", err)
 		return err
@@ -79,11 +36,6 @@ func RechargeFiles(debug *bool, CSDir *string) error {
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
 	}
-	//
-	//for i := 0; i < 10; i++ {
-	//	fmt.Println(&irrParcels[i])
-	//	fmt.Println(irrParcels[i].PrintNIR())
-	//}
 	_ = irrParcels
 
 	err = v.PNirDB.Flush()

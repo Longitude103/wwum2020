@@ -9,15 +9,17 @@ import (
 )
 
 type Setup struct {
-	PgDb   *sqlx.DB
-	SlDb   *sqlx.DB
-	SYear  int
-	EYear  int
-	Logger *zap.SugaredLogger
-	PNirDB *DB
+	PgDb       *sqlx.DB
+	SlDb       *sqlx.DB
+	SYear      int
+	EYear      int
+	Logger     *zap.SugaredLogger
+	PNirDB     *DB
+	AppDebug   bool
+	ExcessFlow bool
 }
 
-func (s *Setup) NewSetup() error {
+func (s *Setup) NewSetup(debug, ef bool) error {
 	l, err := NewLogger()
 	if err != nil {
 		return err
@@ -25,6 +27,16 @@ func (s *Setup) NewSetup() error {
 
 	s.Logger = l.Sugar()
 	s.Logger.Infow("Setting Up Results database, getting postgres DB Connection.")
+
+	if debug {
+		s.AppDebug = debug
+		s.Logger.Info("Debug is Set, limited records retrieved for speed.")
+	}
+
+	if ef {
+		s.ExcessFlow = ef
+		s.Logger.Info("Using Excess Flows")
+	}
 
 	s.SlDb, err = GetSqlite(s.Logger)
 	if err != nil {
