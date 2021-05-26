@@ -13,10 +13,9 @@ func main() {
 1. dist -> distribution of CropSim data by cell
 2. rch -> create rch files
 -------------------------------------------------------------------------------------------------
-Use one of these two commands: dist or convloss
+Use one of these two commands: dist or rch
 -------------------------------------------------------------------------------------------------
-For help with those functions type: dist -h or convloss -h
-`
+For help with those functions type: dist -h or rch -h`
 
 	distCmd := flag.NewFlagSet("dist", flag.ExitOnError)
 	distDebug := distCmd.Bool("debug", false, "sets debugger to true to not preform actual write")

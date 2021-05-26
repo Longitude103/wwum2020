@@ -25,7 +25,11 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	slDb := database.GetSqlite(sLogger)
 	pgDb := database.PgConnx()
 
-	csResults := fileio.LoadTextFiles(*CSDir, sLogger)
+	csResults, err := fileio.LoadTextFiles(*CSDir, sLogger)
+	if err != nil {
+		fmt.Println("Error in Loading Text Files, check log file")
+		return
+	}
 
 	validate := func(input string) error {
 		_, err := strconv.Atoi(input)

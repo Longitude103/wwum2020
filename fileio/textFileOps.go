@@ -30,12 +30,13 @@ type monthlyValues struct {
 
 // LoadTextFiles loads cropsim text files from a location and returns a map of the results to use in further processing.
 // This should include all the files and results for each station and each year.
-func LoadTextFiles(filePath string, logger *zap.SugaredLogger) map[string][]StationResults {
+func LoadTextFiles(filePath string, logger *zap.SugaredLogger) (map[string][]StationResults, error) {
 	logger.Infof("File Path: %s", filePath)
 	//fmt.Println("File Path:", filePath)
 	fls, err := os.ReadDir(filePath)
 	if err != nil {
 		logger.Errorf("Error loading text files %s", err)
+		return nil, err
 	}
 
 	dataMap := make(map[string][]StationResults)
@@ -47,9 +48,10 @@ func LoadTextFiles(filePath string, logger *zap.SugaredLogger) map[string][]Stat
 	}
 	if err != nil {
 		logger.Errorf("Error in processing data, %s", err)
+		return nil, err
 	}
 
-	return dataMap
+	return dataMap, nil
 }
 
 // getFileData is an function that breaks down the station data and puts it into a struct to work with.

@@ -8,7 +8,7 @@ require (
 	github.com/lib/pq v1.10.1
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-sqlite3 v1.14.7
-	github.com/schollz/progressbar/v3 v3.8.0 // indirect
+	github.com/schollz/progressbar/v3 v3.8.0
 	go.uber.org/multierr v1.7.0 // indirect
-	go.uber.org/zap v1.16.0 // indirect
+	go.uber.org/zap v1.16.0
 )
