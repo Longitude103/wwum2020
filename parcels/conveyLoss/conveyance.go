@@ -2,16 +2,15 @@ package conveyLoss
 
 import (
 	"github.com/heath140/wwum2020/database"
-	"github.com/jmoiron/sqlx"
 	"github.com/schollz/progressbar/v3"
 )
 
 // Conveyance function finds the diversions and calculates the conveyance loss for all cells where there is a canal. This
 // outputs to the results table in sqlite. Might update to return delivery by canal.
-func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow bool) (err error) {
+func Conveyance(v database.Setup, excessFlow bool) (err error) {
 	spRates := map[string]float64{"interstate": 0.4869, "highline": 0.2617, "lowline": 0.2513}
 
-	clDB, err := database.ConveyLossDB(slDB)
+	clDB, err := database.ConveyLossDB(v.SlDb)
 	if err != nil {
 		return err
 	}
@@ -23,26 +22,8 @@ func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow b
 		}
 	}(clDB)
 
-	canalCells := getCanalCells(pgDB)
-	//fmt.Println("First 10 Canal Cells")
-	//tCells := 0
-	//for _, v := range canalCells {
-	//	if v.CanalId == 52 {
-	//		tCells += 1
-	//	}
-	//}
-
-	//fmt.Println("Total Canal Cells in 52", tCells)
-
-	diversions := getDiversions(pgDB, sYear, eYear, excessFlow)
-	//fmt.Println("First 10 Diversions")
-	//for _, v := range diversions {
-	//	if v.CanalId == 52 {
-	//		fmt.Println(v)
-	//	}
-	//}
-	//
-	//fmt.Println("Total Canal Diversions", len(diversions))
+	canalCells := getCanalCells(v.PgDb)
+	diversions := getDiversions(v.PgDb, v.SYear, v.EYear, excessFlow)
 
 	bar := progressbar.Default(int64(len(canalCells)), "Canal Cells")
 	// loop over cells
@@ -64,14 +45,6 @@ func Conveyance(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, excessFlow b
 			}
 		}
 
-		//if cell.Node == 51030 {
-		//	fmt.Printf("LatCount.Valid: %t, count is: %d\n", cell.LatCount.Valid, cell.LatCount.Int64)
-		//	fmt.Printf("Math should be 5/6 * 1-canaleff: %g\n", (1-cell.CanalEff.Float64)*5/6)
-		//	fmt.Printf("Canal Type: %s\n", cell.CanalType)
-		//	fmt.Printf("StrLossPercent: %g, Cell Canal Eff: %g\n", strLossPercent, cell.CanalEff.Float64)
-		//}
-
-		// determine factor using DNR/USGS/SatThick/Length (Length is default)
 		factor := 0.0
 		switch cell.CFlag {
 		case 1: // DNR Factor

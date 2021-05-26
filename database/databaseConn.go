@@ -14,13 +14,13 @@ const (
 	dbname   = "wwum"
 )
 
-func PgConnx() *sqlx.DB {
+func PgConnx() (*sqlx.DB, error) {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
 	db, err := sqlx.Connect("postgres", psqlconn)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return db
+	return db, nil
 }

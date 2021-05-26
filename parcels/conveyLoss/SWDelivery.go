@@ -1,14 +1,14 @@
 package conveyLoss
 
 import (
-	"github.com/jmoiron/sqlx"
+	"github.com/heath140/wwum2020/database"
 )
 
 // GetSurfaceWaterDelivery function returns a slice of Diversion that is a monthly amount of surface water delivered to
 // an acre of land. The units of the Diversion are in acre-feet per acre for use in subsequent processes.
-func GetSurfaceWaterDelivery(pgDb *sqlx.DB, sYear int, eYear int) []Diversion {
-	diversions := getDiversions(pgDb, sYear, eYear, false)
-	canals := getCanals(pgDb, sYear, eYear)
+func GetSurfaceWaterDelivery(v database.Setup) []Diversion {
+	diversions := getDiversions(v.PgDb, v.SYear, v.EYear, false)
+	canals := getCanals(v.PgDb, v.SYear, v.EYear)
 
 	for i := 0; i < len(diversions); i++ {
 		c := filterCnl(canals, (&diversions[i]).CanalId, (&diversions[i]).DivDate.Time.Year())

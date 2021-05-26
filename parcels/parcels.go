@@ -3,9 +3,8 @@ package parcels
 import (
 	"database/sql"
 	"fmt"
+	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/parcels/conveyLoss"
-	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
 	"strconv"
 	"strings"
 	"time"
@@ -54,7 +53,7 @@ const (
 
 // getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
 // can be multiples of the same parcels listed with different soil types. It sets the year into a field in the struct.
-func getParcels(db *sqlx.DB, Year int, logger *zap.SugaredLogger) []Parcel {
+func getParcels(v database.Setup, Year int) []Parcel {
 	query := fmt.Sprintf(`SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw,
        irrig_type, sw_fac, cert_num::varchar, model_id, sw_id, st_area(i.geom)/43560 area, 'np' nrd,
        st_x(st_transform(st_centroid(i.geom), 4326)) pointx, st_y(st_transform(st_centroid(i.geom), 4326)) pointy,
@@ -83,16 +82,16 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 		Year, Year)
 
 	var parcels []Parcel
-	err := db.Select(&parcels, query)
+	err := v.PgDb.Select(&parcels, query)
 	if err != nil {
-		logger.Errorf("Error in getting parcels for year %d, error: %s", Year, err)
+		v.Logger.Errorf("Error in getting parcels for year %d, error: %s", Year, err)
 	}
 
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = Year
 	}
 
-	return parcels[:10]
+	return parcels
 }
 
 // filterParcelByCert filters a slice of parcels by the CertNum and returns a slice of the parcels that have that CertNum.
@@ -134,7 +133,7 @@ func filterDivs(divs []conveyLoss.Diversion, canal int) (d []conveyLoss.Diversio
 	return d
 }
 
-func getDryParcels(db *sqlx.DB, Year int, logger *zap.SugaredLogger) []Parcel {
+func getDryParcels(v database.Setup, Year int) []Parcel {
 	query := fmt.Sprintf(`SELECT i.id parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov,
        st_area(i.geom)/43560 area, 'np' nrd, st_x(st_transform(st_centroid(i.geom), 4326)) pointx,
        st_y(st_transform(st_centroid(i.geom), 4326)) pointy, sum(st_area(st_intersection(m.geom, i.geom))/43560) s_area,
@@ -164,9 +163,9 @@ GROUP BY i.id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.crop_i
          st_x(st_transform(st_centroid(i.geom), 4326)), st_y(st_transform(st_centroid(i.geom), 4326)), nrd, m.soil_code, m.coeff_zone;`, Year, Year)
 
 	var parcels []Parcel
-	err := db.Select(&parcels, query)
+	err := v.PgDb.Select(&parcels, query)
 	if err != nil {
-		logger.Errorf("Error in getting dryland parcels for year %d", Year)
+		v.Logger.Errorf("Error in getting dryland parcels for year %d", Year)
 	}
 
 	for i := 0; i < len(parcels); i++ {

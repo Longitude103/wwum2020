@@ -3,19 +3,18 @@ package parcels
 import (
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
-	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
 )
 
-func DryLandParcels(pgDB *sqlx.DB, pNirDB *database.DB, sYear int, eYear int, csResults map[string][]fileio.StationResults,
-	wStations []database.WeatherStation, logger *zap.SugaredLogger) (dryParcels []Parcel, err error) {
+func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResults,
+	wStations []database.WeatherStation) (dryParcels []Parcel, err error) {
 
-	logger.Info("Getting parcels")
-	for y := sYear; y < eYear+1; y++ {
-		dryParcels = getDryParcels(pgDB, y, logger)
+	v.Logger.Info("Getting parcels")
+	for y := v.SYear; y < v.EYear+1; y++ {
+		dryParcels = getDryParcels(v, y)
 
+		// method is used to set RO and DP, just poorly named.
 		for i := 0; i < len(dryParcels); i++ {
-			err = (&dryParcels[i]).parcelNIR(pNirDB, y, wStations, csResults, DryLand)
+			err = (&dryParcels[i]).parcelNIR(v.PNirDB, y, wStations, csResults, DryLand)
 		}
 		if err != nil {
 			return nil, err

@@ -1,29 +1,26 @@
 package parcels
 
 import (
-	"fmt"
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
 	"github.com/heath140/wwum2020/parcels/conveyLoss"
-	"github.com/jmoiron/sqlx"
 	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
-	"go.uber.org/zap"
 	"time"
 )
 
-func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults map[string][]fileio.StationResults,
-	wStations []database.WeatherStation, pNirDB *database.DB, logger *zap.SugaredLogger) (AllParcels []Parcel, err error) {
+func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
+	wStations []database.WeatherStation) (AllParcels []Parcel, err error) {
 	// cert usage
-	logger.Info("Getting Cert Usage")
-	usage := getUsage(pgDB)
+	v.Logger.Info("Getting Cert Usage")
+	usage := getUsage(v.PgDb)
 	_ = usage
 
-	logger.Info("Getting CoeffCrops Data")
-	cCrops := database.GetCoeffCrops(pgDB)
+	v.Logger.Info("Getting CoeffCrops Data")
+	cCrops := database.GetCoeffCrops(v.PgDb)
 
-	logger.Info("Getting Efficiencies")
-	efficiencies := database.GetAppEfficiency(pgDB)
+	v.Logger.Info("Getting Efficiencies")
+	efficiencies := database.GetAppEfficiency(v.PgDb)
 
 	// 2. sw deliveries / canal recharge
 	prompt := promptui.Prompt{
@@ -40,22 +37,22 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults ma
 	}
 
 	if excessFlows {
-		logger.Info("Including excess flows")
+		v.Logger.Info("Including excess flows")
 	}
 
-	logger.Info("Running Conveyance Loss")
-	err = conveyLoss.Conveyance(pgDB, slDB, sYear, eYear, excessFlows)
+	v.Logger.Info("Running Conveyance Loss")
+	err = conveyLoss.Conveyance(v, excessFlows)
 	if err != nil {
-		logger.Errorf("Error in Conveyance Losses %s", err)
+		v.Logger.Errorf("Error in Conveyance Losses %s", err)
 	}
 
 	// parcel delivery
-	logger.Info("Getting Surface Water Delivery")
-	swDelivery := conveyLoss.GetSurfaceWaterDelivery(pgDB, sYear, eYear)
+	v.Logger.Info("Getting Surface Water Delivery")
+	swDelivery := conveyLoss.GetSurfaceWaterDelivery(v)
 
 	var parcels []Parcel
 
-	pPumpDB, err := database.ParcelPumpDB(slDB)
+	pPumpDB, err := database.ParcelPumpDB(v.SlDb)
 	if err != nil {
 		return nil, err
 	}
@@ -68,17 +65,14 @@ func ParcelPump(pgDB *sqlx.DB, slDB *sqlx.DB, sYear int, eYear int, csResults ma
 	}(pPumpDB)
 
 	// 1. load parcels
-	for y := sYear; y < eYear+1; y++ {
-		parcels = getParcels(pgDB, y, logger)
+	for y := v.SYear; y < v.EYear+1; y++ {
+		parcels = getParcels(v, y)
 		filteredDiversions := conveyLoss.FilterSWDeliveryByYear(swDelivery, y)
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")
 
 		for i := 0; i < len(parcels); i++ {
-			//for i := 0; i < 50; i++ {
-
-			fmt.Println("Setting Parcel NIR")
-			err = (&parcels[i]).parcelNIR(pNirDB, y, wStations, csResults, Irrigated) // must be a pointer to work
+			err = (&parcels[i]).parcelNIR(v.PNirDB, y, wStations, csResults, Irrigated) // must be a pointer to work
 			if err != nil {
 				return nil, err
 			}

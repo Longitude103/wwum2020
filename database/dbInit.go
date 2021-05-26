@@ -8,7 +8,7 @@ import (
 // InitializeDb creates the database results table if it doesn't exist, so the records of the
 // transaction can be stored properly, also creates file_keys table for result file_type integer
 // and a foreign key restriction to results table
-func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
+func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 	stmt, err := db.Prepare(`
 		create table if not exists file_keys
 			(
@@ -23,11 +23,13 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 	`)
 	if err != nil {
 		logger.Errorf("Error in create statement for file keys: %s", err)
+		return err
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
 		logger.Errorf("Error on create file_keys: %s", err)
+		return err
 	}
 
 	// if table exists with records, then skip adding data.
@@ -35,6 +37,7 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 	err = db.QueryRow(`select count(*) from file_keys;`).Scan(&count)
 	if err != nil {
 		logger.Errorf("Error in count file_key records %s", err)
+		return err
 	}
 
 	if count == 0 {
@@ -51,11 +54,13 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 	`)
 		if err != nil {
 			logger.Errorf("Error in statement of key records: %s", err)
+			return err
 		}
 
 		_, err = stmt.Exec()
 		if err != nil {
 			logger.Errorf("Error in insert of key records: %s", err)
+			return err
 		}
 	}
 
@@ -78,11 +83,13 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 	`)
 	if err != nil {
 		logger.Errorf("Error in creating results table statement: %s", err)
+		return err
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
 		logger.Errorf("Error in creating results table: %s", err)
+		return err
 	}
 
 	// add results table for parcelNIR
@@ -96,11 +103,13 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 									);`)
 	if err != nil {
 		logger.Errorf("Error in statement of parcel nir table: %s", err)
+		return err
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
 		logger.Errorf("Error in creating parcel nir table: %s", err)
+		return err
 	}
 
 	// add results table for parcelPumping
@@ -113,11 +122,14 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) {
 									);`)
 	if err != nil {
 		logger.Errorf("Error in statement of parcel pumping table: %s", err)
+		return err
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
 		logger.Errorf("Error in creating parcel pumping table: %s", err)
+		return err
 	}
 
+	return nil
 }

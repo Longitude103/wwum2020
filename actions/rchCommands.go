@@ -3,13 +3,9 @@ package actions
 import (
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
-	"os"
-	"strconv"
-	"time"
-
 	"github.com/manifoldco/promptui"
 	"github.com/schollz/progressbar/v3"
+	"strconv"
 
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
@@ -18,19 +14,18 @@ import (
 	//"wwum2020/rchFiles"
 )
 
-func RechargeFiles(debug *bool, CSDir *string) {
-	logger, _ := NewLogger()
-	sLogger := logger.Sugar()
+func RechargeFiles(debug *bool, CSDir *string) error {
+	v := database.Setup{}
+	if err := v.NewSetup(); err != nil {
+		return err
+	}
 
-	sLogger.Infow("Setting Up Results database, getting postgres DB Connection.")
-	slDb := database.GetSqlite(sLogger)
-	pgDb := database.PgConnx()
-
-	csResults, err := fileio.LoadTextFiles(*CSDir, sLogger)
+	csResults, err := fileio.LoadTextFiles(*CSDir, v.Logger)
 	if err != nil {
 		fmt.Println("Error in Loading Text Files, check log file")
-		return
+		return err
 	}
+
 	//fmt.Println("CSResults in RCH")
 	//fmt.Println(csResults)
 
@@ -38,7 +33,7 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	validate := func(input string) error {
 		_, err := strconv.Atoi(input)
 		if err != nil {
-			sLogger.Errorf("Invalid number %s, error: %s", input, err)
+			v.Logger.Errorf("Invalid number %s, error: %s", input, err)
 			return errors.New("invalid number")
 		}
 		return nil
@@ -51,8 +46,8 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 	result, err := prompt.Run()
 	if err != nil {
-		sLogger.Errorf("Prompt failed %v", err)
-		return
+		v.Logger.Errorf("Prompt failed %v", err)
+		return err
 	}
 
 	startYr, _ := strconv.Atoi(result)
@@ -64,24 +59,25 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 	result, err = prompt.Run()
 	if err != nil {
-		sLogger.Errorf("Prompt failed %v", err)
-		return
+		v.Logger.Errorf("Prompt failed %v", err)
+		return err
 	}
 
 	endYr, _ := strconv.Atoi(result)
 
-	logger.Info("Getting Weather Stations")
-	wStations := database.GetWeatherStations(pgDb)
-
-	pNirDB, err := database.PNirDB(slDb)
+	err = v.SetYears(startYr, endYr)
 	if err != nil {
-		sLogger.Errorf("Error in connection for Parcel NIR Insert: %s", err)
+		v.Logger.Errorf("Error Setting Years Error: %s", err)
+		return err
 	}
 
+	v.Logger.Info("Getting Weather Stations")
+	wStations := database.GetWeatherStations(v.PgDb)
+
 	// parcel pumping
-	irrParcels, err := parcels.ParcelPump(pgDb, slDb, startYr, endYr, csResults, wStations, pNirDB, sLogger)
+	irrParcels, err := parcels.ParcelPump(v, csResults, wStations)
 	if err != nil {
-		sLogger.Errorf("Error in Parcel Pumping: %s", err)
+		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
 	}
 	//
 	//for i := 0; i < 10; i++ {
@@ -90,36 +86,36 @@ func RechargeFiles(debug *bool, CSDir *string) {
 	//}
 	_ = irrParcels
 
-	err = pNirDB.Flush()
+	err = v.PNirDB.Flush()
 	if err != nil {
-		sLogger.Errorf("Error in flush: %s", err)
+		v.Logger.Errorf("Error in flush: %s", err)
 	}
 
-	dryParcels, err := parcels.DryLandParcels(pgDb, pNirDB, startYr, endYr, csResults, wStations, sLogger)
+	dryParcels, err := parcels.DryLandParcels(v, csResults, wStations)
 	if err != nil {
-		sLogger.Errorf("Error in Dry Land Parcels: %s", err)
+		v.Logger.Errorf("Error in Dry Land Parcels: %s", err)
 	}
 	_ = dryParcels
 
-	_ = pNirDB.Close() // close doesn't close the db, that must be call explicitly so we can keep using it.
-	_ = slDb.Close()   // close the db before ending the program
+	_ = v.PNirDB.Close() // close doesn't close the db, that must be call explicitly so we can keep using it.
+	_ = v.SlDb.Close()   // close the db before ending the program
 
-	os.Exit(0)
+	return nil
 	// load up data with cell acres
-	cells := database.GetCells(pgDb)
+	cells := database.GetCells(v.PgDb)
 
 	// will also need parcel sw delivery, gw pumping (if available), distributed nir, rf, eff precip for the required crops
 
 	// Natural Veg 102
-	//rchFiles.NaturalVeg(db, pgDb, debug, startYr, endYr)
+	//rchFiles.NaturalVeg(db, v.PgDb, debug, startYr, endYr)
 
 	// Irr Cells
-	irrCells := rchFiles.GetCellsIrr(pgDb, 2014)
+	irrCells := rchFiles.GetCellsIrr(v.PgDb, 2014)
 	//fmt.Println("First Irrigated Cell:")
 	//fmt.Println(irrCells[0])
 
 	// Dry Cells
-	dryCells := rchFiles.GetDryCells(pgDb, 2014)
+	dryCells := rchFiles.GetDryCells(v.PgDb, 2014)
 	//fmt.Println("First Dry Cell:")
 	//fmt.Println(dryCells[0])
 
@@ -156,15 +152,6 @@ func RechargeFiles(debug *bool, CSDir *string) {
 
 		bar.Add(1)
 	}
-}
 
-func NewLogger() (*zap.Logger, error) {
-	cfg := zap.NewProductionConfig()
-	path := fmt.Sprintf("./results%s.log", time.Now().Format(time.RFC3339))
-
-	cfg.OutputPaths = []string{
-		path,
-	}
-
-	return cfg.Build()
+	return nil
 }

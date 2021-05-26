@@ -18,13 +18,10 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 	for _, st := range dist {
 		var annData []fileio.StationResults
 		for _, data := range csResults[st.Station] {
-			//fmt.Printf("Year: %d, Soil: %d, Irr: %d, IrrType: %d", Year, p.SoilCode, data.Irrigation, int(it))
 			if data.Yr == Year && data.Soil == p.SoilCode && data.Irrigation == int(it) {
 				annData = append(annData, data)
 			}
 		}
-		//
-		//fmt.Println("Annual Data: ", annData)
 
 		var cropsNir, cropsRo, cropsDp [4][12]float64 // 4 crops X 12 months
 		var cropCov [4]float64                        // crop_coverage
