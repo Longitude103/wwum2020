@@ -12,7 +12,7 @@ type CoeffCrop struct {
 	IrrEtAdj     float64 `db:"irretadj"`
 	NirAdjFactor float64 `db:"niradjfactor"`
 	FslGW        float64 `db:"fslgw"`
-	DryEtToro    float64 `db:"dryettoro"`
+	DryEtToRo    float64 `db:"dryettoro"`
 	FslSW        float64 `db:"fslsw"`
 	PerToRch     float64 `db:"pertorch"`
 	DpAdj        float64 `db:"dpadj"`

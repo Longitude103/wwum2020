@@ -52,18 +52,20 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	_ = v.PNirDB.Close() // close doesn't close the db, that must be call explicitly so we can keep using it.
 	_ = v.SlDb.Close()   // close the db before ending the program
 
-	return nil
 	// load up data with cell acres
-	cells, err := database.GetCells(v.PgDb)
+	cells, err := database.GetCells(v)
 	if err != nil {
-		v.Logger.Errorf("Error in Natural Vegatation: %s", err)
+		v.Logger.Errorf("Error getting cells from DB: %s", err)
+		return err
 	}
 
-	// will also need parcel sw delivery, gw pumping (if available), distributed nir, rf, eff precip for the required crops
-
 	// Natural Veg 102
-	//rchFiles.NaturalVeg(db, v.PgDb, debug, startYr, endYr)
+	if err := rchFiles.NaturalVeg(v, wStations, csResults); err != nil {
+		v.Logger.Errorf("Error in Natural Vegatation: %s", err)
+		return err
+	}
 
+	return nil
 	// Irr Cells
 	irrCells := rchFiles.GetCellsIrr(v.PgDb, 2014)
 	//fmt.Println("First Irrigated Cell:")

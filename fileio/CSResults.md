@@ -35,7 +35,8 @@ CropSim results crop number conversion:
 | SoyBeans | 3 |
 | SmallGrain | 1 |
 | Fallow | 15 |
-| Past | 12 |
+| Irr Past | 12 |
+| Nat Past | 13 |
 
 ## Soils
 Soils were greatly simplified, Soils in CropSim are:
