@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fmt"
+	"errors"
 	"github.com/heath140/gisUtils"
 	"github.com/jmoiron/sqlx"
 	"sort"
@@ -47,14 +47,13 @@ type XyPoints interface {
 
 // Distances is a function that that returns the top three weather stations from the list with the appropriate weighting
 // factor. Used to make CSResults Distribution.
-func Distances(points XyPoints, wStations []WeatherStation) []StDistances {
-	var dist []StDistances
-	var lenghts []float64
+func Distances(points XyPoints, wStations []WeatherStation) (dist []StDistances, err error) {
+	var lengths []float64
 	for _, v := range wStations {
 		var stDistance StDistances
 		pX, pY := points.GetXY()
 		d := gisUtils.Distance(pY, pX, v.PointY, v.PointX)
-		lenghts = append(lenghts, d)
+		lengths = append(lengths, d)
 		stDistance.Distance = d
 		stDistance.Station = v.Code
 		dist = append(dist, stDistance)
@@ -64,16 +63,21 @@ func Distances(points XyPoints, wStations []WeatherStation) []StDistances {
 		return dist[i].Distance < dist[j].Distance
 	})
 
-	sort.Float64s(lenghts)
+	sort.Float64s(lengths)
 
-	idw, err := gisUtils.InverseDW(lenghts[:3])
-	if err != nil {
-		fmt.Println("Error", err)
+	var idw []float64
+	if len(lengths) >= 3 {
+		idw, err = gisUtils.InverseDW(lengths[:3])
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("less then three stations present")
 	}
 
 	for i, v := range idw {
 		dist[i].Weight = v
 	}
 
-	return dist[:3]
+	return dist[:3], nil
 }

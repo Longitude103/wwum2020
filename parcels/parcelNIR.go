@@ -11,7 +11,11 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 	csResults map[string][]fileio.StationResults, it IrrType) error {
 	var parcelNIR, parcelRo, parcelDp [12]float64
 
-	dist := database.Distances(p, wStations)
+	dist, err := database.Distances(p, wStations)
+	if err != nil {
+		return err
+	}
+
 	for _, st := range dist {
 		var annData []fileio.StationResults
 		for _, data := range csResults[st.Station] {
