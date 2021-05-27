@@ -1,11 +1,8 @@
 package parcels
 
 import (
-	"fmt"
-	"github.com/heath140/gisUtils"
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/fileio"
-	"sort"
 )
 
 // parcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.
@@ -14,7 +11,7 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 	csResults map[string][]fileio.StationResults, it IrrType) error {
 	var parcelNIR, parcelRo, parcelDp [12]float64
 
-	dist := distances(*p, wStations)
+	dist := database.Distances(p, wStations)
 	for _, st := range dist {
 		var annData []fileio.StationResults
 		for _, data := range csResults[st.Station] {
@@ -65,38 +62,6 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 	p.Dp = parcelDp
 
 	return nil
-}
-
-// distances is a function that that returns the top three weather stations from the list with the appropriate weighting
-// factor. Used to make CSResults Distribution.
-func distances(parcel Parcel, wStations []database.WeatherStation) []database.StDistances {
-	var dist []database.StDistances
-	var lengths []float64
-	for _, v := range wStations {
-		var stDistance database.StDistances
-		d := gisUtils.Distance(parcel.PointY, parcel.PointX, v.Cor.Coordinates[1], v.Cor.Coordinates[0])
-		lengths = append(lengths, d)
-		stDistance.Distance = d
-		stDistance.Station = v.Code
-		dist = append(dist, stDistance)
-	}
-
-	sort.Slice(dist, func(i, j int) bool {
-		return dist[i].Distance < dist[j].Distance
-	})
-
-	sort.Float64s(lengths)
-
-	idw, err := gisUtils.InverseDW(lengths[:3])
-	if err != nil {
-		fmt.Println("Error", err)
-	}
-
-	for i, v := range idw {
-		dist[i].Weight = v
-	}
-
-	return dist[:3]
 }
 
 // crop function filters the results to the integer crop that is included and returns the NIR, RunOff and Deep Percolation from those

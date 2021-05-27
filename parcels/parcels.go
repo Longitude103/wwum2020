@@ -199,3 +199,7 @@ func (p *Parcel) PrintNIR() string {
 
 	return str.String()
 }
+
+func (p *Parcel) GetXY() (x float64, y float64) {
+	return p.PointX, p.PointY
+}

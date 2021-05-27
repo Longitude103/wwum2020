@@ -1,25 +1,24 @@
 package database
 
 import (
-	"encoding/json"
 	"fmt"
-	"sort"
-
 	"github.com/heath140/gisUtils"
 	"github.com/jmoiron/sqlx"
+	"sort"
 )
 
-type ActCell struct {
-	Rw       int
-	Clm      int
-	SoilCode int
-	CellId   int
-	Cor      coord
+type ModelCell struct {
+	Node      int     `db:"node"`
+	SoilCode  int     `db:"soil_code"`
+	CoeffZone int     `db:"coeff_zone"`
+	Zone      int     `db:"zone"`
+	Mtg       float64 `db:"mtg"`
+	PointX    float64 `db:"pointx"`
+	PointY    float64 `db:"pointy"`
 }
 
-type coord struct {
-	T           string    `json:"type"`
-	Coordinates []float64 `json:"coordinates"`
+func (m ModelCell) GetXY() (x float64, y float64) {
+	return m.PointX, m.PointY
 }
 
 type StDistances struct {
@@ -28,48 +27,33 @@ type StDistances struct {
 	Weight   float64
 }
 
-func GetCells(db *sqlx.DB) []ActCell {
-	rows, err := db.Query(`SELECT tfg_cellid as cellid, rw, clm, soil_code, 
-       st_asgeojson(st_transform(st_centroid(geom), 4326)) as cent FROM public.act_cells;`)
+func GetCells(db *sqlx.DB) (cells []ModelCell, err error) {
+
+	const query = `select node, st_x(st_transform(st_centroid(geom), 4326)) pointx, 
+				st_y(st_transform(st_centroid(geom), 4326)) pointy,
+				soil_code, coeff_zone, zone, mtg from public.model_cells;`
+
+	err = db.Select(&cells, query)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	var cells []ActCell // active cells list
-	cell := ActCell{}
-	for rows.Next() {
-		var cellid, rw, clm, soil int
-		var c []byte
-		var cor coord
-
-		err = rows.Scan(&cellid, &rw, &clm, &soil, &c)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		err := json.Unmarshal(c, &cor)
-		if err != nil {
-			fmt.Println("error", err)
-		}
-
-		cell.Rw = rw
-		cell.Clm = clm
-		cell.SoilCode = soil
-		cell.CellId = cellid
-		cell.Cor = cor
-		cells = append(cells, cell)
-	}
-
-	return cells
+	return
 }
 
-// Distances is a function that
-func Distances(cell ActCell, wStations []WeatherStation) []StDistances {
+type XyPoints interface {
+	GetXY() (x float64, y float64)
+}
+
+// Distances is a function that that returns the top three weather stations from the list with the appropriate weighting
+// factor. Used to make CSResults Distribution.
+func Distances(points XyPoints, wStations []WeatherStation) []StDistances {
 	var dist []StDistances
 	var lenghts []float64
 	for _, v := range wStations {
 		var stDistance StDistances
-		d := gisUtils.Distance(cell.Cor.Coordinates[1], cell.Cor.Coordinates[0], v.Cor.Coordinates[1], v.Cor.Coordinates[0])
+		pX, pY := points.GetXY()
+		d := gisUtils.Distance(pY, pX, v.PointY, v.PointX)
 		lenghts = append(lenghts, d)
 		stDistance.Distance = d
 		stDistance.Station = v.Code

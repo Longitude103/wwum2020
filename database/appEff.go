@@ -12,7 +12,9 @@ type Efficiency struct {
 }
 
 func GetAppEfficiency(pgDB *sqlx.DB) (efficiencies []Efficiency) {
-	query := `select * from rswb.appeff;`
+	query := `-- noinspection SqlResolve
+	
+	select * from rswb.appeff;`
 
 	err := pgDB.Select(&efficiencies, query)
 	if err != nil {

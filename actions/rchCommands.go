@@ -15,6 +15,10 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	if err := v.NewSetup(debug, eF); err != nil {
 		return err
 	}
+	if err := v.SetYears(sY, eY); err != nil {
+		v.Logger.Errorf("Error Setting Years Error: %s", err)
+		return err
+	}
 
 	csResults, err := fileio.LoadTextFiles(*CSDir, v.Logger)
 	if err != nil {
@@ -22,14 +26,11 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 		return err
 	}
 
-	err = v.SetYears(sY, eY)
-	if err != nil {
-		v.Logger.Errorf("Error Setting Years Error: %s", err)
-		return err
-	}
-
 	v.Logger.Info("Getting Weather Stations")
-	wStations := database.GetWeatherStations(v.PgDb)
+	wStations, err := database.GetWeatherStations(v.PgDb)
+	if err != nil {
+		v.Logger.Errorf("Error Getting Weather stations: %s", err)
+	}
 
 	// parcel pumping
 	irrParcels, err := parcels.ParcelPump(v, csResults, wStations)
@@ -38,8 +39,7 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	}
 	_ = irrParcels
 
-	err = v.PNirDB.Flush()
-	if err != nil {
+	if err := v.PNirDB.Flush(); err != nil {
 		v.Logger.Errorf("Error in flush: %s", err)
 	}
 
@@ -54,7 +54,10 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 
 	return nil
 	// load up data with cell acres
-	cells := database.GetCells(v.PgDb)
+	cells, err := database.GetCells(v.PgDb)
+	if err != nil {
+		v.Logger.Errorf("Error in Natural Vegatation: %s", err)
+	}
 
 	// will also need parcel sw delivery, gw pumping (if available), distributed nir, rf, eff precip for the required crops
 
@@ -84,7 +87,7 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 
 		// filter irrCells for this cell also get acres and add to total
 		for _, ic := range irrCells {
-			if ic.CellId == cell.CellId {
+			if ic.CellId == cell.Node {
 				irrCellsResult = append(irrCellsResult, ic)
 				totalParcelAcres += ic.IrrArea
 			}
@@ -92,14 +95,14 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 
 		// filter dryCells for this cell also get acres and add to total
 		for _, dc := range dryCells {
-			if dc.CellId == cell.CellId {
+			if dc.CellId == cell.Node {
 				dryCellResult = append(dryCellResult, dc)
 				totalParcelAcres += dc.DryArea
 			}
 		}
 
-		if cell.CellId == 78585 {
-			fmt.Printf("CellId: %d, Total Parcel Acres: %g\n", cell.CellId, totalParcelAcres)
+		if cell.Node == 78585 {
+			fmt.Printf("CellId: %d, Total Parcel Acres: %g\n", cell.Node, totalParcelAcres)
 		}
 
 		bar.Add(1)

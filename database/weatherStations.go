@@ -1,43 +1,24 @@
 package database
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
 type WeatherStation struct {
-	Code string `json:"code"`
-	Cor  coord  `json:"location"`
+	Code   string  `db:"code"`
+	PointX float64 `db:"pointx"`
+	PointY float64 `db:"pointy"`
 }
 
-func GetWeatherStations(db *sqlx.DB) []WeatherStation {
-	rows, err := db.Query(`SELECT code, st_asgeojson(st_transform(geom, 4326)) as location FROM public.weather_stations;`)
+func GetWeatherStations(db *sqlx.DB) (wStations []WeatherStation, err error) {
+	//goland:noinspection ALL
+	query := `SELECT code, st_x(st_transform(st_centroid(geom), 4326)) pointx, 
+				st_y(st_transform(st_centroid(geom), 4326)) pointy FROM public.weather_stations;`
+
+	err = db.Select(&wStations, query)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	var wStations []WeatherStation
-	for rows.Next() {
-		station := WeatherStation{}
-		var code string
-		var c []byte
-		var cor coord
-
-		err = rows.Scan(&code, &c)
-		if err != nil {
-			fmt.Println("error", err)
-		}
-
-		err := json.Unmarshal(c, &cor)
-		if err != nil {
-			fmt.Println("error", err)
-		}
-
-		station.Code = code
-		station.Cor = cor
-		wStations = append(wStations, station)
-	}
-
-	return wStations
+	return
 }
