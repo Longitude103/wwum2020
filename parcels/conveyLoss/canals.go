@@ -3,7 +3,7 @@ package conveyLoss
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
+	"github.com/heath140/wwum2020/database"
 )
 
 type CanalCell struct {
@@ -32,10 +32,11 @@ type Canal struct {
 	Yr   int             `db:"yr"`
 }
 
-func getCanalCells(pgDb *sqlx.DB, debug bool) []CanalCell {
-	query := `-- noinspection SqlResolveForFile
-	
-	SELECT c.id, c.type_2, c.district_id, c.eff, a.node,
+// getCanalCells is a function that gets the cells in the model that the canal passes through and the associated data
+// of canal length and types through that cell. It returns a slice of CanalCell for processing. It also implements AppDebug
+// to reduce the number of cells it returns if the app is in debug mode.
+func getCanalCells(v database.Setup) ([]CanalCell, error) {
+	query := `SELECT c.id, c.type_2, c.district_id, c.eff, a.node,
 		   ST_Length(ST_Intersection(a.geom, c.geom)), c.c_flag, d.dnr_fact, s.sat_fact, u.usgs_fact, c.clink_id, c1.eff eff2,
 		   c2.latcount, c3.tot_lat_ln, c4.tot_can_ln
 	FROM public.model_cells a JOIN sw.canals c ON ST_intersects(c.geom, a.geom)
@@ -48,32 +49,33 @@ func getCanalCells(pgDb *sqlx.DB, debug bool) []CanalCell {
 		LEFT OUTER JOIN sw.factors u on u.node = a.node AND c.c_flag = 2 WHERE c.id NOT IN (12,16,17,42,49,54,55,346,347,348,349,350,351,352,353,355) ORDER BY c.clink_id, a.node;`
 
 	var canalCells []CanalCell
-	err := pgDb.Select(&canalCells, query)
-	if err != nil {
-		fmt.Println("Error in getting cells for canals", err)
+
+	if err := v.PgDb.Select(&canalCells, query); err != nil {
+		v.Logger.Errorf("Error in Getting cells for Canals %s", err)
+		return nil, err
 	}
 
-	if debug {
-		return canalCells[100:200]
+	if v.AppDebug {
+		return canalCells[100:200], nil
 	}
 
-	return canalCells
+	return canalCells, nil
 }
 
 // getCanals returns a slice of Canal with the canal id, name, efficiency and total acres for that all the years that
 // are listed.
-func getCanals(pgDb *sqlx.DB, sYear int, eYear int) (canals []Canal) {
-	for i := sYear; i < eYear+1; i++ {
+func getCanals(v database.Setup) (canals []Canal, err error) {
+	for i := v.SYear; i < v.EYear+1; i++ {
 		query := fmt.Sprintf(`select id, name, eff, area, %d yr from sw.canals left join (select sw_id, sum(st_area(geom) / 43560) area
 				from np.t%d_irr where sw = true and sw_id is not null group by sw_id UNION ALL select sw_id, 
 				sum(st_area(geom) / 43560) area from sp.t%d_irr where sw = true and sw_id is not null 
 				group by sw_id) a on id = a.sw_id where type_2 = 'Canal' and eff is not null;`, i, i, i)
 
-		err := pgDb.Select(&canals, query)
-		if err != nil {
-			fmt.Println("Error Getting Canal Data", err)
+		if err := v.PgDb.Select(&canals, query); err != nil {
+			v.Logger.Errorf("Error getting canals: %s", err)
+			return nil, err
 		}
 	}
 
-	return canals
+	return canals, nil
 }

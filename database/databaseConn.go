@@ -14,6 +14,7 @@ const (
 	dbname   = "wwum"
 )
 
+// PgConnx is a function that returns the sql connection to the postgres database.
 func PgConnx() (*sqlx.DB, error) {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 

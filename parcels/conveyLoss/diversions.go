@@ -33,7 +33,7 @@ func (d *Diversion) applyEffAcres(eff float64, acres float64) {
 // getDiversions retrieves the diversions from the pg database and returns a slice of Diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
 // excess flow from the daily diversions based on excess flow periods.
-func getDiversions(v database.Setup) (diversions []Diversion) {
+func getDiversions(v database.Setup) (diversions []Diversion, err error) {
 
 	if v.ExcessFlow {
 		divQry := fmt.Sprintf(`select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), 
@@ -43,9 +43,9 @@ inner join wwnp.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
 div_dt >= '%d-01-01' AND div_dt <= '%d-12-31' group by cdj.canal_id, div_dt) as daily_query group by canal_id, 
 extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;`, v.SYear, v.EYear)
 
-		err := v.PgDb.Select(&diversions, divQry)
-		if err != nil {
-			fmt.Println("Error in getting all diversions", err)
+		if err := v.PgDb.Select(&diversions, divQry); err != nil {
+			v.Logger.Errorf("Error in getting diversion records with Excess Flow: %s", err)
+			return nil, err
 		}
 
 	} else {
@@ -55,18 +55,18 @@ inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
 WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, v.SYear, v.EYear)
 
 		var preDiversions []Diversion
-		err := v.PgDb.Select(&preDiversions, divQry)
-		if err != nil {
-			fmt.Println("Error in getting all diversions starting Excess Flow Limitation", err)
+
+		if err := v.PgDb.Select(&preDiversions, divQry); err != nil {
+			v.Logger.Errorf("Error getting all diversions starting Excess Flow Limitation: %s", err)
+			return nil, err
 		}
 
 		// remove the excess flows
 		efQuery := "select canal_id, st_date, end_date from sw.excess_flow_periods;"
 
 		var efPeriods []efPeriod
-		err = v.PgDb.Select(&efPeriods, efQuery)
-		if err != nil {
-			fmt.Println("Error in getting Excess Flow Periods", err)
+		if err = v.PgDb.Select(&efPeriods, efQuery); err != nil {
+			v.Logger.Errorf("Error in getting Excess Flow Periods: %s", err)
 		}
 
 		// list of canals that have excess flows
@@ -134,15 +134,14 @@ AND div_dt <= '%d-12-31' %s group by cdj.canal_id, div_dt) as daily_query
 group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;`, v.SYear, v.EYear, canalLimit)
 
 		var remainingDiversions []Diversion
-		err = v.PgDb.Select(&remainingDiversions, remainDiversionQry)
-		if err != nil {
-			fmt.Println("Error in getting remaining diversions", err)
+		if err = v.PgDb.Select(&remainingDiversions, remainDiversionQry); err != nil {
+			v.Logger.Errorf("Error in getting remaining diversions: %s", err)
 		}
-
 		diversions = append(canalMonthlyDiversion, remainingDiversions...)
+
 	}
 
-	return diversions
+	return diversions, nil
 }
 
 // Find is a filter function for slice of int in a int

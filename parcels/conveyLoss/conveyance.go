@@ -22,8 +22,15 @@ func Conveyance(v database.Setup) (err error) {
 		}
 	}(clDB)
 
-	canalCells := getCanalCells(v.PgDb, v.AppDebug)
-	diversions := getDiversions(v)
+	canalCells, err := getCanalCells(v)
+	if err != nil {
+		return err
+	}
+
+	diversions, err := getDiversions(v)
+	if err != nil {
+		return err
+	}
 
 	bar := progressbar.Default(int64(len(canalCells)), "Canal Cells")
 	// loop over cells

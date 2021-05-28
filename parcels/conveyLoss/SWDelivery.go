@@ -6,9 +6,16 @@ import (
 
 // GetSurfaceWaterDelivery function returns a slice of Diversion that is a monthly amount of surface water delivered to
 // an acre of land. The units of the Diversion are in acre-feet per acre for use in subsequent processes.
-func GetSurfaceWaterDelivery(v database.Setup) []Diversion {
-	diversions := getDiversions(v)
-	canals := getCanals(v.PgDb, v.SYear, v.EYear)
+func GetSurfaceWaterDelivery(v database.Setup) ([]Diversion, error) {
+	diversions, err := getDiversions(v)
+	if err != nil {
+		return nil, err
+	}
+
+	canals, err := getCanals(v)
+	if err != nil {
+		return nil, err
+	}
 
 	for i := 0; i < len(diversions); i++ {
 		c := filterCnl(canals, (&diversions[i]).CanalId, (&diversions[i]).DivDate.Time.Year())
@@ -19,7 +26,7 @@ func GetSurfaceWaterDelivery(v database.Setup) []Diversion {
 		}
 	}
 
-	return diversions
+	return diversions, nil
 }
 
 // filterCnl filters the list of canals to a specific one.
