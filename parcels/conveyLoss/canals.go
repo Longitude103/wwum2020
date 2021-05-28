@@ -32,7 +32,7 @@ type Canal struct {
 	Yr   int             `db:"yr"`
 }
 
-func getCanalCells(pgDb *sqlx.DB) []CanalCell {
+func getCanalCells(pgDb *sqlx.DB, debug bool) []CanalCell {
 	query := `-- noinspection SqlResolveForFile
 	
 	SELECT c.id, c.type_2, c.district_id, c.eff, a.node,
@@ -51,6 +51,10 @@ func getCanalCells(pgDb *sqlx.DB) []CanalCell {
 	err := pgDb.Select(&canalCells, query)
 	if err != nil {
 		fmt.Println("Error in getting cells for canals", err)
+	}
+
+	if debug {
+		return canalCells[100:200]
 	}
 
 	return canalCells

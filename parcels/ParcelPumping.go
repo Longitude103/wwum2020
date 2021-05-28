@@ -16,7 +16,11 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	_ = usage
 
 	v.Logger.Info("Getting CoeffCrops Data")
-	cCrops := database.GetCoeffCrops(v.PgDb)
+	cCrops, err := database.GetCoeffCrops(v.PgDb)
+	if err != nil {
+		v.Logger.Error("Cannot get Coefficient of Crops")
+		return nil, err
+	}
 
 	v.Logger.Info("Getting Efficiencies")
 	efficiencies := database.GetAppEfficiency(v.PgDb)

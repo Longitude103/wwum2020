@@ -32,6 +32,12 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 		v.Logger.Errorf("Error Getting Weather stations: %s", err)
 	}
 
+	v.Logger.Info("Getting Coefficients of Crops")
+	cCoefficients, err := database.GetCoeffCrops(v.PgDb)
+	if err != nil {
+		return err
+	}
+
 	// parcel pumping
 	irrParcels, err := parcels.ParcelPump(v, csResults, wStations)
 	if err != nil {
@@ -49,8 +55,9 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	}
 	_ = dryParcels
 
-	_ = v.PNirDB.Close() // close doesn't close the db, that must be call explicitly so we can keep using it.
-	_ = v.SlDb.Close()   // close the db before ending the program
+	if err := v.PNirDB.Close(); err != nil { // close doesn't close the db, that must be call explicitly so we can keep using it.
+		return err
+	}
 
 	// load up data with cell acres
 	cells, err := database.GetCells(v)
@@ -60,11 +67,16 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	}
 
 	// Natural Veg 102
-	if err := rchFiles.NaturalVeg(v, wStations, csResults); err != nil {
+	if err := rchFiles.NaturalVeg(v, wStations, csResults, cCoefficients); err != nil {
 		v.Logger.Errorf("Error in Natural Vegatation: %s", err)
 		return err
 	}
 
+	if err := v.NatVegDB.Close(); err != nil {
+		return err
+	}
+
+	_ = v.SlDb.Close() // close the db before ending the program
 	return nil
 	// Irr Cells
 	irrCells := rchFiles.GetCellsIrr(v.PgDb, 2014)

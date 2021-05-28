@@ -15,8 +15,15 @@ type Setup struct {
 	EYear      int
 	Logger     *zap.SugaredLogger
 	PNirDB     *DB
+	NatVegDB   *NvDB
 	AppDebug   bool
 	ExcessFlow bool
+}
+
+type ResultDataset interface {
+	Add()
+	Flush()
+	Close()
 }
 
 func (s *Setup) NewSetup(debug, ef bool) error {
@@ -49,6 +56,11 @@ func (s *Setup) NewSetup(debug, ef bool) error {
 	}
 
 	s.PNirDB, err = PNirDB(s.SlDb)
+	if err != nil {
+		return err
+	}
+
+	s.NatVegDB, err = NatVegDB(s.SlDb)
 	if err != nil {
 		return err
 	}

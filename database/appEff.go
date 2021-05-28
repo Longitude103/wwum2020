@@ -11,10 +11,9 @@ type Efficiency struct {
 	AeSprinkler float64 `db:"ae_sprinkler"`
 }
 
+// GetAppEfficiency is a function that returns the application efficiency for use in calculations throughout the app.
 func GetAppEfficiency(pgDB *sqlx.DB) (efficiencies []Efficiency) {
-	query := `-- noinspection SqlResolve
-	
-	select * from rswb.appeff;`
+	query := `select * from rswb.appeff;`
 
 	err := pgDB.Select(&efficiencies, query)
 	if err != nil {
