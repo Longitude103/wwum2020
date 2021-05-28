@@ -1,0 +1,35 @@
+package database
+
+import (
+	"fmt"
+)
+
+// IrrCell is a struct to hold the data of each cell and parcel intersect, it includes the cert, crops, and other characteristics
+// important to the calculations.
+type IrrCell struct {
+	node     int     `db:"node"`
+	CellArea float64 `db:"c_area"`
+	IrrArea  float64 `db:"i_area"`
+	ParcelId int     `db:"parcel_id"`
+	Nrd      string  `db:"nrd"`
+}
+
+// GetCellsIrr gets the cells that have irrigation within them and splits them by parcel. If a cell has multiple parcels
+// there will be multiples of the same cell listed. This includes both nrd irrigated acres.
+func GetCellsIrr(v Setup, yr int) ([]IrrCell, error) {
+	query := fmt.Sprintf(`SELECT node, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, parcel_id, nrd
+from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, geom from np.t%d_irr UNION SELECT parcel_id, 'sp' nrd, geom from sp.t%d_irr) i
+        on st_intersects(c.geom, i.geom);`, yr, yr)
+
+	var irrCells []IrrCell
+	if err := v.PgDb.Select(&irrCells, query); err != nil {
+		v.Logger.Errorf("Cannot Get Cells Parcel Split data: %s", err)
+		return nil, err
+	}
+
+	if v.AppDebug {
+		return irrCells[:100], nil
+	}
+
+	return irrCells, nil
+}

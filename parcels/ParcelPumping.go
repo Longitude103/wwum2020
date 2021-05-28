@@ -119,6 +119,9 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 			}
 		}
 
+		// TODO: Water Balance the parcel where if SW or GW or Both was over / under applied, then adjust RO and DP
+		// to account for the difference. Save that back to the parcel to simplify the RCH file Creation later.
+
 		AllParcels = append(AllParcels, parcels...)
 	}
 
