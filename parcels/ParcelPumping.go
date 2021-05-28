@@ -33,7 +33,10 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 
 	// parcel delivery
 	v.Logger.Info("Getting Surface Water Delivery")
-	swDelivery := conveyLoss.GetSurfaceWaterDelivery(v)
+	swDelivery, err := conveyLoss.GetSurfaceWaterDelivery(v)
+	if err != nil {
+		return nil, err
+	}
 
 	var parcels []Parcel
 
