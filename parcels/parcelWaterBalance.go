@@ -1,26 +1,62 @@
 package parcels
 
+import (
+	"github.com/heath140/wwum2020/database"
+	"math"
+)
+
 // waterBalance method takes all the parcel information (SW delivery and GW Pumping) and creates a water balance to
 // determine the amount of Runoff and Deep Percolation that occurs off of each parcel and sets those values within the
-// parcel struct.
-func (p *Parcel) waterBalance() error {
-	// TODO: Get SW AND GW Delivery for parcel
+// parcel struct. This uses the method that is within the WSPP program.
+func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
+	// determine GIRFactor and Fsl_co
+	// GIRFactor = Gross irrigation Requirement factor
+	// girFactor := 1 / 0.75
+	fsl := 0.05
 
-	// TODO: Compare delivery in each month to monthly NIR
+	if p.AppEff >= 0.75 {
+		//girFactor = 1 / 0.95
+		fsl = 0.02
+	}
 
-	// TODO: Look at how TFG used CropSim DP and RO values?
-	// My initial assumption is that CropSim RO and DP are ideal conditions under sprinkler.
-	// If we deviate from those conditions then we have to adjust the RO DP by adding water or subtracting water
+	ro2 := [12]float64{}
+	dp2 := [12]float64{}
+	dap := [12]float64{}
+	appWAT := [12]float64{}                                                           // total applied water
+	sL := [12]float64{}                                                               // surface loss
+	pslIrr := [12]float64{}                                                           // Post Surface Loss Irrigation water
+	roDpWt := [12]float64{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5} // always the same in DB, Runoff Deep Perc weight
+	for i := 0; i < 12; i++ {
+		appWAT[i] = p.Pump[i] + p.SWDel[i]
 
-	// Questions that need to be looked into:
-	// 1. Does CropSim account for the inefficient portion of application efficiency in the RO DP?
-	// 2. If under irrigation, can we just reduce by the amount of under irrigation or should it be under irrigation times eff?
+		if p.Ro[i]+p.Dp[i] > 0 {
+			roDpWt[i] = math.Min(math.Max(p.Ro[i]/(p.Ro[i]+p.Dp[i]), 0.2), 0.8)
+		}
 
-	// TODO: Return RO and DP based upon delivery.
-	// TODO: If Delivery * EFF < NIR then zero additional DP, RO. If CropSim shows DP or RO, then reduce by proportion of under irrigation?
-	// TODO: If Delivery * EFF > NIR then if FLOOD: DP = 75% of Over App and RO = 25%, add to CropSim numbers
-	// TODO: If Delivery * EFF > NIR then if SPRINKLER: DP = 95% of Over App and RO = 5% ass to CropSim numbers
-	// TODO: Over Application has secondary consumption from Coeffcrops.
+		sL[i] = fsl * appWAT[i]
+		pslIrr[i] = appWAT[i] - sL[i]
+
+		// Applied water without needing it...
+		if p.Nir[i] <= 0 && appWAT[i] > 0 {
+			ro2[i] = pslIrr[i] * roDpWt[i]
+			dp2[i] = pslIrr[i] - ro2[i]
+		} else {
+			dap[i] = p.Nir[i] / p.AppEff * (1 - adjustmentFactor(p, cCrops))
+			// TODO: add irrigated ET here
+			// TODO: go to parcelNIR and change to add in the dryland version of the crop and add it's ET
+
+		}
+
+	}
+
+	// RO1irr and DP1irr is RO and DP adjust by the coeffcrops adjustment factor that is always 1 besides native veg handled there.
+
+	return nil
+}
+
+// waterBalanceESC is a method that will be implemented for the escape modeling at a later date. It will not be used at this
+// point but we needed a stub placeholder. It might need to be refactored to it's own file.
+func (p *Parcel) waterBalanceESC() error {
 
 	return nil
 }

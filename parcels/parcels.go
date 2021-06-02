@@ -36,6 +36,7 @@ type Parcel struct {
 	CoeffZone int             `db:"coeff_zone"`
 	Yr        int
 	AppEff    float64
+	Et        [12]float64
 	Nir       [12]float64
 	Ro        [12]float64
 	Dp        [12]float64

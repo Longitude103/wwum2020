@@ -9,7 +9,7 @@ import (
 // It produces an intermediate results table of NIR in local sqlite for review and adds three maps to the parcel struct
 func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.WeatherStation,
 	csResults map[string][]fileio.StationResults, it IrrType) error {
-	var parcelNIR, parcelRo, parcelDp [12]float64
+	var parcelNIR, parcelRo, parcelDp, parcelEt [12]float64
 
 	dist, err := database.Distances(p, wStations)
 	if err != nil {
@@ -24,30 +24,31 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 			}
 		}
 
-		var cropsNir, cropsRo, cropsDp [4][12]float64 // 4 crops X 12 months
-		var cropCov [4]float64                        // crop_coverage
+		var cropsNir, cropsRo, cropsDp, cropsEt [4][12]float64 // 4 crops X 12 months
+		var cropCov [4]float64                                 // crop_coverage
 		if p.Crop1.Valid {
-			cropsNir[0], cropsRo[0], cropsDp[0] = crop(p.Crop1.Int64, annData)
+			cropsNir[0], cropsRo[0], cropsDp[0], cropsEt[0] = crop(p.Crop1.Int64, annData)
 			cropCov[0] = p.Crop1Cov.Float64
 		}
 
 		if p.Crop2.Valid {
-			cropsNir[1], cropsRo[1], cropsDp[1] = crop(p.Crop2.Int64, annData)
+			cropsNir[1], cropsRo[1], cropsDp[1], cropsEt[1] = crop(p.Crop2.Int64, annData)
 			cropCov[1] = p.Crop2Cov.Float64
 		}
 
 		if p.Crop3.Valid {
-			cropsNir[2], cropsRo[2], cropsDp[2] = crop(p.Crop3.Int64, annData)
+			cropsNir[2], cropsRo[2], cropsDp[2], cropsEt[2] = crop(p.Crop3.Int64, annData)
 			cropCov[2] = p.Crop3Cov.Float64
 		}
 
 		if p.Crop4.Valid {
-			cropsNir[3], cropsRo[3], cropsDp[3] = crop(p.Crop4.Int64, annData)
+			cropsNir[3], cropsRo[3], cropsDp[3], cropsEt[3] = crop(p.Crop4.Int64, annData)
 			cropCov[3] = p.Crop4Cov.Float64
 		}
 
 		// weight the crops based on crop_cov and weather station weight
 		parcelNIR = pValues(parcelNIR, cropsNir, cropCov, st.Weight, p.Area)
+		parcelEt = pValues(parcelEt, cropsEt, cropCov, st.Weight, p.Area)
 		parcelRo = pValues(parcelRo, cropsRo, cropCov, st.Weight, p.Area)
 		parcelDp = pValues(parcelDp, cropsDp, cropCov, st.Weight, p.Area)
 	}
@@ -64,13 +65,14 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 	p.Nir = parcelNIR
 	p.Ro = parcelRo
 	p.Dp = parcelDp
+	p.Et = parcelEt
 
 	return nil
 }
 
 // crop function filters the results to the integer crop that is included and returns the NIR, RunOff and Deep Percolation from those
 // crops as three arrays.
-func crop(c int64, aData []fileio.StationResults) (nir [12]float64, ro [12]float64, dp [12]float64) {
+func crop(c int64, aData []fileio.StationResults) (nir [12]float64, ro [12]float64, dp [12]float64, et [12]float64) {
 	var data fileio.StationResults
 
 	for _, d := range aData {
@@ -83,9 +85,10 @@ func crop(c int64, aData []fileio.StationResults) (nir [12]float64, ro [12]float
 		nir[i] = monthly.Nir
 		ro[i] = monthly.Ro
 		dp[i] = monthly.Dp
+		et[i] = monthly.Et
 	}
 
-	return nir, ro, dp
+	return nir, ro, dp, et
 }
 
 // pValues creates the parcel nir, ro, or dp by multiplying the cropNir with crop coverage by station weight to
