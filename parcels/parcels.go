@@ -37,6 +37,7 @@ type Parcel struct {
 	Yr        int
 	AppEff    float64
 	Et        [12]float64
+	DryEt     [12]float64
 	Nir       [12]float64
 	Ro        [12]float64
 	Dp        [12]float64
