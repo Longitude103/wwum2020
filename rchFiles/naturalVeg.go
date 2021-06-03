@@ -27,6 +27,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				return err
 			}
 
+			// TODO: Change to Crop 13, use adjustment from Dryland
 			_, _, aDp, aRo, err := database.FilterCCDryLand(cCoefficients, cells[i].CZone, 12)
 			if err != nil {
 				return err

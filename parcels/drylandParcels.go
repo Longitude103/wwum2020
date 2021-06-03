@@ -19,6 +19,13 @@ func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResul
 		if err != nil {
 			return nil, err
 		}
+
+		// TODO: pull out ETMAXDRY = dryET from CS
+		// TODO: Create ETMAXDRYAdj and set to ETMAXDRY * Adjustment
+		// TODO: RO3 = ETMAXDRY - ETMAXDryAdj * DryETtoRO
+		// TODO: DP3 = (ETMAXDRY - ETMAXADJU) - RO3
+		// TODO: RO = RO1 + RO3
+		// TODO: DP = DP1 + DP3
 	}
 
 	return dryParcels, nil
