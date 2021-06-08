@@ -20,7 +20,8 @@ of flags in the CLI. This is a core go package.
 ### Common CLI Examples
 - Development runs:
   - `go run main.go dist --debug --StartYr 1996 --EndYr 2019`
-  - `go run main.go rch --CSDir "/run/media/heath140/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops"`
+  - `go run main.go rch --CSDir "/run/media/heath/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops"`
+  - `go run main.go rch --CSDir "/run/media/heath/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops" --debug`
 
 ### Output
 To store the large volume of output, we're going to use SQLite3 as the storage container. 

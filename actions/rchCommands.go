@@ -32,13 +32,13 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	}
 
 	v.Logger.Info("Getting Coefficients of Crops")
-	cCoefficients, err := database.GetCoeffCrops(v.PgDb)
+	cCoefficients, err := database.GetCoeffCrops(v)
 	if err != nil {
 		return err
 	}
 
 	// parcel pumping
-	irrParcels, err := parcels.ParcelPump(v, csResults, wStations)
+	irrParcels, err := parcels.ParcelPump(v, csResults, wStations, cCoefficients)
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
 	}
@@ -47,7 +47,7 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 		v.Logger.Errorf("Error in flush: %s", err)
 	}
 
-	dryParcels, err := parcels.DryLandParcels(v, csResults, wStations)
+	dryParcels, err := parcels.DryLandParcels(v, csResults, wStations, cCoefficients)
 	if err != nil {
 		v.Logger.Errorf("Error in Dry Land Parcels: %s", err)
 	}

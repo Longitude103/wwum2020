@@ -9,18 +9,11 @@ import (
 )
 
 func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
-	wStations []database.WeatherStation) (AllParcels []Parcel, err error) {
+	wStations []database.WeatherStation, cCrops []database.CoeffCrop) (AllParcels []Parcel, err error) {
 	// cert usage
 	v.Logger.Info("Getting Cert Usage")
 	usage := getUsage(v.PgDb)
 	_ = usage
-
-	v.Logger.Info("Getting CoeffCrops Data")
-	cCrops, err := database.GetCoeffCrops(v.PgDb)
-	if err != nil {
-		v.Logger.Error("Cannot get Coefficient of Crops")
-		return nil, err
-	}
 
 	v.Logger.Info("Getting Efficiencies")
 	efficiencies := database.GetAppEfficiency(v.PgDb)
