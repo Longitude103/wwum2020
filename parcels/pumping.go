@@ -8,7 +8,7 @@ import (
 // the amount of pumping that was done at the parcel since a well is present, but not metered. Usually FA area before
 // 2017 and other parcels that are not metered. It fills the Pump field of the Parcel struct
 func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) {
-	nirAdj := adjustmentFactor(p, cCrops)
+	nirAdj := adjustmentFactor(p, cCrops, database.NirEt)
 
 	// get application efficiency
 	var swAvailableCU, nirRemaining [12]float64
@@ -29,19 +29,20 @@ func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) {
 
 // adjustmentFactor function calculates the Parcel adjustment factor by weighting the crops and distribution of the
 // crops in a Parcel by calling the nirFactor and then weighting it based on crop distribution
-func adjustmentFactor(p *Parcel, cCrops []database.CoeffCrop) float64 {
+func adjustmentFactor(p *Parcel, cCrops []database.CoeffCrop, adj database.Adjustment) float64 {
 	var c1, c2, c3, c4 float64
-	c1 = nirFactor(cCrops, p.CoeffZone, int(p.Crop1.Int64)) * p.Crop1Cov.Float64
+
+	c1 = adjFactor(cCrops, p.CoeffZone, int(p.Crop1.Int64), adj) * p.Crop1Cov.Float64
 
 	if p.Crop2.Valid {
-		c2 = nirFactor(cCrops, p.CoeffZone, int(p.Crop2.Int64)) * p.Crop2Cov.Float64
+		c2 = adjFactor(cCrops, p.CoeffZone, int(p.Crop2.Int64), adj) * p.Crop2Cov.Float64
 	}
 	if p.Crop3.Valid {
-		c3 = nirFactor(cCrops, p.CoeffZone, int(p.Crop3.Int64)) * p.Crop3Cov.Float64
+		c3 = adjFactor(cCrops, p.CoeffZone, int(p.Crop3.Int64), adj) * p.Crop3Cov.Float64
 	}
 
 	if p.Crop4.Valid {
-		c4 = nirFactor(cCrops, p.CoeffZone, int(p.Crop4.Int64)) * p.Crop4Cov.Float64
+		c4 = adjFactor(cCrops, p.CoeffZone, int(p.Crop4.Int64), adj) * p.Crop4Cov.Float64
 	}
 
 	return c1 + c2 + c3 + c4
@@ -49,10 +50,18 @@ func adjustmentFactor(p *Parcel, cCrops []database.CoeffCrop) float64 {
 
 // nirFactor is a filter function that returns the NirAdjFactor from the CoeffCrop slice and limits it to the zone of the
 // Parcel and the crop type.
-func nirFactor(cCrops []database.CoeffCrop, zone int, crop int) (nf float64) {
+func adjFactor(cCrops []database.CoeffCrop, zone int, crop int, adj database.Adjustment) (nf float64) {
 	for _, v := range cCrops {
 		if v.Zone == zone && v.Crop == crop {
-			nf = v.NirAdjFactor
+			switch adj {
+			case database.NirEt:
+				nf = v.NirAdjFactor
+			case database.DryET:
+				nf = v.DryEtAdj
+			case database.IrrEt:
+				nf = v.IrrEtAdj
+			}
+
 		}
 	}
 

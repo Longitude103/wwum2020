@@ -45,7 +45,7 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 			ro2[i] = pslIrr[i] * roDpWt[i]
 			dp2[i] = pslIrr[i] - ro2[i]
 		} else {
-			dap[i] = p.Nir[i] / p.AppEff * (1 - adjustmentFactor(p, cCrops))
+			dap[i] = p.Nir[i] / p.AppEff * (1 - adjustmentFactor(p, cCrops, database.NirEt))
 			totalIrrEt += p.Nir[i]
 			totalDryEt += p.DryEt[i]
 		}
@@ -67,8 +67,8 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 	et := [12]float64{}
 	det := [12]float64{}
 	for i := 0; i < 12; i++ {
-		et[i] = et1[i] * adjustmentFactor(p, cCrops)
-		det[i] = et1[i] * adjustmentFactor(p, cCrops)
+		et[i] = et1[i] * adjustmentFactor(p, cCrops, database.NirEt)
+		det[i] = et1[i] * adjustmentFactor(p, cCrops, database.NirEt)
 	}
 
 	var (
