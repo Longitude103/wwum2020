@@ -21,10 +21,10 @@ func (p *Parcel) dryWaterBalanceWSPP(cCrops []database.CoeffCrop) error {
 		etDryAdj[i] = p.DryEt[i] * adjFactor
 
 		// RO3 = ETMAXDRY - ETMAXDryAdj * DryETtoRO
-		p.Ro[i] += ((p.DryEt[i] - etDryAdj[i]) * EttoRO) * p.Area
+		p.Ro[i] += ((p.DryEt[i] - etDryAdj[i]) * EttoRO) * p.Area / 12
 
 		// DP3 = (ETMAXDRY - ETMAXADJU) - RO3
-		p.Dp[i] += ((p.DryEt[i] - etDryAdj[i]) - (1 - EttoRO)) * p.Area
+		p.Dp[i] += ((p.DryEt[i] - etDryAdj[i]) - (1 - EttoRO)) * p.Area / 12
 	}
 
 	return nil
