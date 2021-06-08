@@ -7,7 +7,7 @@ import (
 // IrrCell is a struct to hold the data of each cell and parcel intersect, it includes the cert, crops, and other characteristics
 // important to the calculations.
 type IrrCell struct {
-	node     int     `db:"node"`
+	Node     int     `db:"node"`
 	CellArea float64 `db:"c_area"`
 	IrrArea  float64 `db:"i_area"`
 	ParcelId int     `db:"parcel_id"`
