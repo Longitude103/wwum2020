@@ -2,6 +2,7 @@ package rchFiles
 
 import (
 	"errors"
+	"fmt"
 	"github.com/heath140/wwum2020/parcels"
 )
 
@@ -19,16 +20,18 @@ func parcelFilterByYear(parcels []parcels.Parcel, yr int) (p []parcels.Parcel, e
 	return
 }
 
-func parcelFilterById(p []parcels.Parcel, id int) (parcels.Parcel, error) {
+func parcelFilterById(p []parcels.Parcel, id int, nrd string) (parcels.Parcel, error) {
 	if len(p) < 1 {
 		return parcels.Parcel{}, errors.New("no parcels in slice for id")
 	}
 
+	fmt.Println("parcels length", len(p))
 	for i := 0; i < len(p); i++ {
-		if p[i].ParcelNo == id {
+		if p[i].ParcelNo == id && p[i].Nrd == nrd {
 			return p[i], nil
 		}
 	}
 
-	return parcels.Parcel{}, errors.New("no parcel found with that id")
+	errMessage := fmt.Sprintf("no parcel with id: %d", id)
+	return parcels.Parcel{}, errors.New(errMessage)
 }

@@ -76,6 +76,10 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 
 	// Irr Cells
 	if err := rchFiles.IrrigationRCH(v, irrParcels); err != nil {
+		v.Logger.Errorf("Error in Creating Irrigation RCH %s", err)
+		return err
+	}
+	if err := v.RchDb.Close(); err != nil {
 		return err
 	}
 

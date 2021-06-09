@@ -16,6 +16,7 @@ type Setup struct {
 	Logger     *zap.SugaredLogger
 	PNirDB     *DB
 	NatVegDB   *NvDB
+	RchDb      *RchDB
 	AppDebug   bool
 	ExcessFlow bool
 }
@@ -57,6 +58,11 @@ func (s *Setup) NewSetup(debug, ef bool) error {
 	}
 
 	s.NatVegDB, err = NatVegDB(s.SlDb)
+	if err != nil {
+		return err
+	}
+
+	s.RchDb, err = ResultsRchDB(s.SlDb)
 	if err != nil {
 		return err
 	}

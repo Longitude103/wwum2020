@@ -10,18 +10,6 @@ import (
 func Conveyance(v database.Setup) (err error) {
 	spRates := map[string]float64{"interstate": 0.4869, "highline": 0.2617, "lowline": 0.2513}
 
-	clDB, err := database.ConveyLossDB(v.SlDb)
-	if err != nil {
-		return err
-	}
-
-	defer func(clDB *database.CLDB) {
-		err := clDB.Close()
-		if err != nil {
-			return
-		}
-	}(clDB)
-
 	canalCells, err := getCanalCells(v)
 	if err != nil {
 		return err
@@ -116,7 +104,7 @@ func Conveyance(v database.Setup) (err error) {
 			//}
 
 			if structureLoss > 0 {
-				err := clDB.Add(database.CLResult{Node: cell.Node, Dt: div.DivDate.Time, FileType: ft, Result: structureLoss * factor * 1.9835})
+				err := v.RchDb.Add(database.RchResult{Node: cell.Node, Dt: div.DivDate.Time, FileType: ft, Result: structureLoss * factor * 1.9835})
 				if err != nil {
 					return err
 				}
@@ -127,7 +115,7 @@ func Conveyance(v database.Setup) (err error) {
 	}
 
 	_ = bar.Close()
-	return err
+	return nil
 }
 
 // filterCanal filters the canal diversions to a specific canal and returns a slice of Diversion

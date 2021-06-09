@@ -7,20 +7,20 @@ import (
 	"time"
 )
 
-type CLResult struct {
+type RchResult struct {
 	Node     int       `db:"cell_node"`
 	Dt       time.Time `db:"dt"`
 	FileType int       `db:"file_type"`
 	Result   float64   `db:"result"`
 }
 
-type CLDB struct {
+type RchDB struct {
 	sql    *sqlx.DB
 	stmt   *sqlx.Stmt
-	buffer []CLResult
+	buffer []RchResult
 }
 
-func ConveyLossDB(sqlDB *sqlx.DB) (*CLDB, error) {
+func ResultsRchDB(sqlDB *sqlx.DB) (*RchDB, error) {
 	insertSQL := `INSERT INTO results (cell_node, dt, file_type, result) VALUES (?, ?, ?, ?)`
 
 	stmt, err := sqlDB.Preparex(insertSQL)
@@ -28,21 +28,22 @@ func ConveyLossDB(sqlDB *sqlx.DB) (*CLDB, error) {
 		return nil, err
 	}
 
-	db := CLDB{
+	db := RchDB{
 		sql:    sqlDB,
 		stmt:   stmt,
-		buffer: make([]CLResult, 0, 1024),
+		buffer: make([]RchResult, 0, 1024),
 	}
 
 	return &db, nil
 }
 
-func (db *CLDB) Add(conveyLoss CLResult) error {
+func (db *RchDB) Add(conveyLoss RchResult) error {
 	if len(db.buffer) == cap(db.buffer) {
 		return errors.New("conveyance loss buffer is full")
 	}
 
 	db.buffer = append(db.buffer, conveyLoss)
+	fmt.Println("Added to RCH Buffer")
 	if len(db.buffer) == cap(db.buffer) {
 		if err := db.Flush(); err != nil {
 			return fmt.Errorf("unable to flush conveyance loss: %w", err)
@@ -52,7 +53,7 @@ func (db *CLDB) Add(conveyLoss CLResult) error {
 	return nil
 }
 
-func (db *CLDB) Flush() error {
+func (db *RchDB) Flush() error {
 	tx, err := db.sql.Beginx()
 	if err != nil {
 		return err
@@ -70,7 +71,7 @@ func (db *CLDB) Flush() error {
 	return tx.Commit()
 }
 
-func (db *CLDB) Close() error {
+func (db *RchDB) Close() error {
 	defer func() {
 		_ = db.stmt.Close()
 	}()
