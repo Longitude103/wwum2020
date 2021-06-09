@@ -43,7 +43,6 @@ func (db *RchDB) Add(conveyLoss RchResult) error {
 	}
 
 	db.buffer = append(db.buffer, conveyLoss)
-	fmt.Println("Added to RCH Buffer")
 	if len(db.buffer) == cap(db.buffer) {
 		if err := db.Flush(); err != nil {
 			return fmt.Errorf("unable to flush conveyance loss: %w", err)

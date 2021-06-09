@@ -4,12 +4,16 @@ import (
 	"errors"
 	"github.com/heath140/wwum2020/database"
 	"github.com/heath140/wwum2020/parcels"
+	"github.com/schollz/progressbar/v3"
 	"time"
 )
 
 func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 	v.Logger.Info("Starting to write RCH information from Irrigated Parcels")
+
+	irrCellsYearBar := progressbar.Default(int64(v.EYear-v.SYear), "Years of Irr Cells")
 	for y := v.SYear; y < v.EYear+1; y++ {
+		_ = irrCellsYearBar.Add(1)
 		// filter all parcels to this year only
 		parcelList, err := parcelFilterByYear(AllParcels, y)
 		if err != nil {
@@ -21,9 +25,11 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 			return err
 		}
 
+		irrCellsBar := progressbar.Default(int64(len(irrCells)), "Irrigated Cells")
 		// use the RO + DP from parcel and split by acres to get recharge, will need to keep separate files for the various
 		// distributions of scenarios.
 		for i := 0; i < len(irrCells); i++ {
+			_ = irrCellsBar.Add(1)
 			p, err := parcelFilterById(parcelList, irrCells[i].ParcelId, irrCells[i].Nrd)
 			if err != nil {
 				return err
@@ -52,8 +58,10 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 
 			}
 		}
+		_ = irrCellsBar.Close()
 
 	}
+	_ = irrCellsYearBar.Close()
 
 	return nil
 }

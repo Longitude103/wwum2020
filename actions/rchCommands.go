@@ -38,6 +38,7 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	}
 
 	// parcel pumping
+	v.Logger.Info("Preforming Parcel Pumping")
 	irrParcels, err := parcels.ParcelPump(v, csResults, wStations, cCoefficients)
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
@@ -47,6 +48,7 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 		v.Logger.Errorf("Error in flush: %s", err)
 	}
 
+	v.Logger.Info("Preforming Dryland Parcel Operations")
 	dryParcels, err := parcels.DryLandParcels(v, csResults, wStations, cCoefficients)
 	if err != nil {
 		v.Logger.Errorf("Error in Dry Land Parcels: %s", err)
@@ -65,6 +67,7 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	//}
 
 	// Natural Veg 102
+	v.Logger.Info("Preforming Natural Vegetation Operations")
 	if err := rchFiles.NaturalVeg(v, wStations, csResults, cCoefficients); err != nil {
 		v.Logger.Errorf("Error in Natural Vegatation: %s", err)
 		return err
@@ -75,6 +78,7 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool) error {
 	}
 
 	// Irr Cells
+	v.Logger.Info("Preforming Irrigation RCH Operations")
 	if err := rchFiles.IrrigationRCH(v, irrParcels); err != nil {
 		v.Logger.Errorf("Error in Creating Irrigation RCH %s", err)
 		return err

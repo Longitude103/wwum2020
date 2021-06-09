@@ -33,6 +33,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 
 	var parcels []Parcel
 
+	v.Logger.Info("Setting Parcel Pumping")
 	pPumpDB, err := database.ParcelPumpDB(v.SlDb)
 	if err != nil {
 		return nil, err
@@ -46,12 +47,13 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	}(pPumpDB)
 
 	// 1. load parcels
+	parcelYearBar := progressbar.Default(int64(v.EYear-v.SYear), "Years of Parcels")
 	for y := v.SYear; y < v.EYear+1; y++ {
+		_ = parcelYearBar.Add(1)
 		parcels = getParcels(v, y)
 		filteredDiversions := conveyLoss.FilterSWDeliveryByYear(swDelivery, y)
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")
-
 		for i := 0; i < len(parcels); i++ {
 			err = (&parcels[i]).parcelNIR(v.PNirDB, y, wStations, csResults, Irrigated) // must be a pointer to work
 			if err != nil {
@@ -70,6 +72,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		_ = bar.Close()
 
 		// add usage to parcel
+		v.Logger.Info("Setting Annual Usage")
 		annUsage := filterUsage(usage, y)
 		for _, u := range annUsage {
 			//fmt.Printf("Annual Usage in %v is %g\n", u.CertNum, u.UseAF)
@@ -92,6 +95,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		}
 
 		// get all parcels where Metered == false and simulate pumping if GW == true
+		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
 			if (&parcels[p]).Metered == false && (&parcels[p]).Gw.Bool == true {
 				(&parcels[p]).estimatePumping(cCrops)
@@ -112,14 +116,19 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 			}
 		}
 
+		v.Logger.Infof("Simulating parcel WSPP for year %d", y)
+		wbBar := progressbar.Default(int64(len(parcels)), "Water Balance Parcels")
 		for p := 0; p < len(parcels); p++ {
+			_ = wbBar.Add(1)
 			if err := (&parcels[p]).waterBalanceWSPP(cCrops); err != nil {
 				return nil, err
 			}
 		}
+		_ = wbBar.Close()
 
 		AllParcels = append(AllParcels, parcels...)
 	}
+	_ = parcelYearBar.Close()
 
 	return AllParcels, nil
 }
