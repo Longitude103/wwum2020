@@ -9,6 +9,7 @@ import (
 // determine the amount of Runoff and Deep Percolation that occurs off of each parcel and sets those values within the
 // parcel struct. This uses the methodology that is within the WSPP program.
 func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
+	// TODO: Check on this for an infinite loop, seems stuck.
 	var (
 		totalIrrEt, totalDryEt, totalAppWat, totalPSLIrr, totalNir float64
 		ro2, dp2, dap, appWAT, sL, pslIrr                          [12]float64
