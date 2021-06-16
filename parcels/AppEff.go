@@ -1,6 +1,6 @@
 package parcels
 
-import "github.com/heath140/wwum2020/database"
+import "github.com/Longitude103/wwum2020/database"
 
 // setAppEfficiency is a Parcel method that uses the parcel IrrType and year to determine the application efficiency of the
 // parcel and sets that in the Parcel struct. It takes a slice of Efficiency and year as they very through the study period.

@@ -1,7 +1,7 @@
 package parcels
 
 import (
-	"github.com/heath140/wwum2020/database"
+	"github.com/Longitude103/wwum2020/database"
 )
 
 // estimatePumping is a method that is called on parcels that have metered == false and gw == true so that we can estimate

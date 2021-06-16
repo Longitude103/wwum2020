@@ -3,7 +3,7 @@ package rchFiles
 import (
 	"errors"
 	"fmt"
-	"github.com/heath140/wwum2020/parcels"
+	"github.com/Longitude103/wwum2020/parcels"
 )
 
 func parcelFilterByYear(parcels []parcels.Parcel, yr int) (p []parcels.Parcel, err error) {

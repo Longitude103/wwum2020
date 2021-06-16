@@ -3,7 +3,7 @@ package conveyLoss
 import (
 	"database/sql"
 	"fmt"
-	"github.com/heath140/wwum2020/database"
+	"github.com/Longitude103/wwum2020/database"
 	"strconv"
 	"strings"
 	"time"

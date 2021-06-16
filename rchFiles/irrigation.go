@@ -2,8 +2,8 @@ package rchFiles
 
 import (
 	"errors"
-	"github.com/heath140/wwum2020/database"
-	"github.com/heath140/wwum2020/parcels"
+	"github.com/Longitude103/wwum2020/database"
+	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/schollz/progressbar/v3"
 	"time"
 )

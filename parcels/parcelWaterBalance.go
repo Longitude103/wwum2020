@@ -1,7 +1,7 @@
 package parcels
 
 import (
-	"github.com/heath140/wwum2020/database"
+	"github.com/Longitude103/wwum2020/database"
 	"math"
 )
 

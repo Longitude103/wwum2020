@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/heath140/wwum2020/actions"
+	"github.com/Longitude103/wwum2020/actions"
 )
 
 func main() {
