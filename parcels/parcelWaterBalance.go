@@ -1,6 +1,7 @@
 package parcels
 
 import (
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"math"
 )
@@ -27,6 +28,7 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 		girFactor = 1 / 0.95
 		fsl = 0.02
 	}
+	fmt.Printf("AppEff: %g, girFactor: %g, fsl: %g\n", p.AppEff, girFactor, fsl)
 
 	for i := 0; i < 12; i++ {
 		totalNir += p.Nir[i]
@@ -38,7 +40,10 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 		}
 
 		sL[i] = fsl * appWAT[i]
+		//fmt.Printf("Month %d, AppWat is %g\n", i, appWAT[i])
+		//fmt.Printf("Surface Loss: month: %d, surface loss: %g\n", i, sL[i])
 		pslIrr[i] = appWAT[i] - sL[i]
+		//fmt.Printf("Post Surface Loss: month: %d, surface loss: %g\n", i, pslIrr[i])
 		totalPSLIrr += pslIrr[i]
 
 		// Applied water without needing it...
@@ -51,11 +56,13 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 			totalDryEt += p.DryEt[i]
 		}
 	}
+	fmt.Printf("Total PSLIrr: %g\n", totalPSLIrr)
 	// RO1irr and DP1irr is RO and DP adjust by the coeffcrops adjustment factor that is always 1 besides native veg handled there.
 	cIR := math.Max(totalIrrEt-totalDryEt, 0.0001)
 	gIR := totalNir * girFactor
 	beta := cIR / gIR
 	totalEtGain := 0.0
+	fmt.Printf("cIR: %g, gIR: %g, beta: %g, totalETGain: %g\n", cIR, gIR, beta, totalEtGain)
 
 	if totalPSLIrr < gIR {
 		totalEtGain = math.Max(math.Min(cIR*(1-math.Pow(1-totalPSLIrr/gIR, 1/beta)), totalAppWat*p.AppEff), 0)
@@ -63,7 +70,11 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 		totalEtGain = math.Max(totalIrrEt-totalDryEt, 0.0)
 	}
 
+	fmt.Printf("totalETGain after compare with gIR: %g\n", totalEtGain)
+
 	_, _, et1, _, etIrrGain := DistEtCOGain(totalEtGain, pslIrr, p.Et, p.DryEt)
+	fmt.Printf("et1: %g\n", et1)
+	fmt.Printf("etIrrGain: %g\n", etIrrGain)
 
 	et := [12]float64{}
 	det := [12]float64{}
