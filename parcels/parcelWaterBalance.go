@@ -11,68 +11,26 @@ import (
 // parcel struct. This uses the methodology that is within the WSPP program.
 func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 	// TODO: Check on this for an infinite loop, seems stuck.
-	var (
-		totalIrrEt, totalDryEt, totalAppWat, totalPSLIrr, totalNir float64
-		ro2, dp2, dap, appWAT, sL, pslIrr                          [12]float64
-		// ro2 = Runoff per month from Irrigation dp2= Deep Percolation per month from Irrigation
-		//dap = Water delivery required to meet NIR appWAT = total applied water sL = surface loss pslIrr = Post Surface Loss Irrigation Water
-	)
-	roDpWt := [12]float64{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5} // always the same in DB, Runoff Deep Perc weight
 
 	// determine GIRFactor and Fsl_co
 	// GIRFactor = Gross irrigation Requirement factor
-	girFactor := 1 / 0.75
-	fsl := 0.05
-
-	if p.AppEff >= 0.75 {
-		girFactor = 1 / 0.95
-		fsl = 0.02
-	}
+	girFactor, fsl := setGirFact(p.AppEff)
 	fmt.Printf("AppEff: %g, girFactor: %g, fsl: %g\n", p.AppEff, girFactor, fsl)
 
-	for i := 0; i < 12; i++ {
-		totalNir += p.Nir[i]
-		appWAT[i] = p.Pump[i] + p.SWDel[i]
-		totalAppWat += appWAT[i]
+	totalNir := sumAnnual(p.Nir)
+	appWAT, _, pslIrr := setAppWat(p.SWDel, p.Pump, fsl)
+	roDpWt := setRoDpWt(p.Ro, p.Dp)
 
-		if p.Ro[i]+p.Dp[i] > 0 {
-			roDpWt[i] = math.Min(math.Max(p.Ro[i]/(p.Ro[i]+p.Dp[i]), 0.2), 0.8)
-		}
+	ro2, dp2 := setInitialRoDp(p.Nir, appWAT, pslIrr, roDpWt)
 
-		sL[i] = fsl * appWAT[i]
-		//fmt.Printf("Month %d, AppWat is %g\n", i, appWAT[i])
-		//fmt.Printf("Surface Loss: month: %d, surface loss: %g\n", i, sL[i])
-		pslIrr[i] = appWAT[i] - sL[i]
-		//fmt.Printf("Post Surface Loss: month: %d, surface loss: %g\n", i, pslIrr[i])
-		totalPSLIrr += pslIrr[i]
+	gainApWat, gainPsl, gainIrrEt, gainDryEt := setPreGain(p.Et, p.DryEt, appWAT, pslIrr)
 
-		// Applied water without needing it...
-		if p.Nir[i] <= 0 && appWAT[i] > 0 {
-			ro2[i] = pslIrr[i] * roDpWt[i]
-			dp2[i] = pslIrr[i] - ro2[i]
-		} else {
-			dap[i] = p.Nir[i] / p.AppEff * (1 - adjustmentFactor(p, cCrops, database.NirEt))
-			totalIrrEt += p.Nir[i]
-			totalDryEt += p.DryEt[i]
-		}
-	}
-	fmt.Printf("Total PSLIrr: %g\n", totalPSLIrr)
-	// RO1irr and DP1irr is RO and DP adjust by the coeffcrops adjustment factor that is always 1 besides native veg handled there.
-	cIR := math.Max(totalIrrEt-totalDryEt, 0.0001)
+	cIR := math.Max(gainIrrEt-gainDryEt, 0.0001)
 	gIR := totalNir * girFactor
-	beta := cIR / gIR
-	totalEtGain := 0.0
-	fmt.Printf("cIR: %g, gIR: %g, beta: %g, totalETGain: %g\n", cIR, gIR, beta, totalEtGain)
 
-	if totalPSLIrr < gIR {
-		totalEtGain = math.Max(math.Min(cIR*(1-math.Pow(1-totalPSLIrr/gIR, 1/beta)), totalAppWat*p.AppEff), 0)
-	} else {
-		totalEtGain = math.Max(totalIrrEt-totalDryEt, 0.0)
-	}
+	eTGain := setEtGain(cIR, gainPsl, gIR, gainApWat, p.AppEff, gainIrrEt, gainDryEt)
 
-	fmt.Printf("totalETGain after compare with gIR: %g\n", totalEtGain)
-
-	_, _, et1, _, etIrrGain := DistEtCOGain(totalEtGain, pslIrr, p.Et, p.DryEt)
+	_, _, et1, _, etIrrGain := DistEtCOGain(eTGain, pslIrr, p.Et, p.DryEt)
 	fmt.Printf("et1: %g\n", et1)
 	fmt.Printf("etIrrGain: %g\n", etIrrGain)
 
@@ -227,6 +185,97 @@ func DistEtCOGain(totalEtGain float64, pslIrr [12]float64, irrEt [12]float64, dr
 	for i := 0; i < 12; i++ {
 		eT1[i] = eTIrrGain[i] + irrEt[i]
 		eTBase[i] = irrEt[i]
+	}
+
+	return
+}
+
+// setGirFact is a function that sets the gross irrigation factor for the WSPP program and the fraction of surface loss
+// amount depending on the efficiency passed in. It returns two float64 values used within the app.
+func setGirFact(eff float64) (gir float64, fsl float64) {
+	if eff >= 0.75 {
+		gir = 1 / 0.95
+		fsl = 0.02
+	} else {
+		gir = 1 / 0.75
+		fsl = 0.05
+	}
+
+	return
+}
+
+// sumAnnual is a function to get the annual amount from a 12 month array of float64s, it returns a float64 total
+func sumAnnual(data [12]float64) (total float64) {
+	for _, d := range data {
+		total += d
+	}
+
+	return
+}
+
+// setAppWat is a function that sets the applied water (appWat), surface loss of water (sL) and
+// post surface loss of water (pSL) for each month of the parcel. It takes in surface water applied (sw),
+// ground water applied (gw) and fraction of surface loss (fsl) and returns three arrays of monthly results.
+func setAppWat(sw [12]float64, gw [12]float64, fsl float64) (appWat [12]float64, sL [12]float64, pSL [12]float64) {
+	for i := 0; i < 12; i++ {
+		appWat[i] = sw[i] + gw[i]
+		sL[i] = appWat[i] * fsl
+		pSL[i] = appWat[i] - sL[i]
+	}
+
+	return
+}
+
+// setRoDpWt sets the weight of the runoff to deep percolation values for each month but is bound by 0.2 to 0.8. It returns
+// a monthly array of percent that is runoff of the total of runoff + deep percolation; has a default value of 0.5.
+func setRoDpWt(ro [12]float64, dp [12]float64) [12]float64 {
+	wt := [12]float64{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5} // always the same in DB, Runoff Deep Perc weight
+
+	for i := 0; i < 12; i++ {
+		if ro[i]+dp[i] > 0 {
+			wt[i] = math.Min(math.Max(ro[i]/(ro[i]+dp[i]), 0.2), 0.8)
+		}
+	}
+
+	return wt
+}
+
+// setInitialRoDp is a function to set the initial run off (Ro2) and Deep Perc (Dp2) from irrigation in the model of zero and handle the
+// condition where water was applied but no nir was calculated so that all the water goes back to Ro and DP.
+func setInitialRoDp(nir [12]float64, appWat [12]float64, pslIrr [12]float64, RoDpWt [12]float64) (ro [12]float64, dp [12]float64) {
+	for i := 0; i < 12; i++ {
+		if nir[i] <= 0 && appWat[i] > 0 {
+			ro[i] = pslIrr[i] * RoDpWt[i]
+			dp[i] = pslIrr[i] - ro[i]
+		}
+	}
+
+	return
+}
+
+// setPreGain is a function to set some total variables if there is a presance of ETGain where irrEt > DryEt. This sums the
+// irrigated ET, Dry ET, Applied Water, and Post Surface Loss Water during those months where the condition is met.
+func setPreGain(et [12]float64, dryEt [12]float64, appWat [12]float64, pslIrr [12]float64) (gainApWat float64, gainPsl float64, gainIrrEt float64, gainDryEt float64) {
+	for i := 0; i < 12; i++ {
+		if et[i] > dryEt[i] {
+			// it's etgain
+			gainIrrEt += et[i]
+			gainDryEt += dryEt[i]
+			gainApWat += appWat[i]
+			gainPsl += pslIrr[i]
+		}
+	}
+
+	return
+}
+
+// setEtGain sets the annual gain for the parcel using a diminishing returns production function. Returns the amount of gain
+func setEtGain(cIR float64, psl float64, gir float64, appWat float64, eff float64, irrEt float64, dryEt float64) (gain float64) {
+	beta := cIR / gir
+	if psl < gir {
+		gain = math.Max(math.Min(cIR*(1-math.Pow(1-psl/gir, 1/beta)), appWat*eff), 0)
+	} else {
+		gain = irrEt - dryEt
 	}
 
 	return
