@@ -1,6 +1,7 @@
 package parcels
 
 import (
+	"errors"
 	"fmt"
 	"math"
 )
@@ -16,7 +17,11 @@ func (p *Parcel) waterBalanceWSPP(verbose bool) error {
 
 	totalNir := sumAnnual(p.Nir)
 	appWAT, _, pslIrr := setAppWat(p.SWDel, p.Pump, fsl)
-	roDpWt := setRoDpWt(p.Ro, p.Dp)
+	roDpWt, err := setRoDpWt(p.Ro, p.Dp)
+	if err != nil {
+		return err
+	}
+
 	if verbose {
 		fmt.Println("AppWat:", appWAT)
 		fmt.Println("pslIrr:", pslIrr)
@@ -37,8 +42,15 @@ func (p *Parcel) waterBalanceWSPP(verbose bool) error {
 		fmt.Printf("cIR: %g, gIR: %g\n", cIR, gIR)
 	}
 
-	eTGain := setEtGain(cIR, gainPsl, gIR, gainApWat, p.AppEff, gainIrrEt, gainDryEt)
-	distGain := distEtGain(eTGain, pslIrr, p.Et, p.DryEt)
+	eTGain, err := setEtGain(cIR, gainPsl, gIR, gainApWat, p.AppEff, gainIrrEt, gainDryEt)
+	if err != nil {
+		return err
+	}
+
+	distGain, err := distEtGain(eTGain, pslIrr, p.Et, p.DryEt)
+	if err != nil {
+		return err
+	}
 	etBase := setEtBase(pslIrr, p.Et, p.DryEt)
 	et := setET(etBase, distGain)
 	deltaET := setDeltaET(et, 0.95)
@@ -112,16 +124,21 @@ func setAppWat(sw [12]float64, gw [12]float64, fsl float64) (appWat [12]float64,
 
 // setRoDpWt sets the weight of the runoff to deep percolation values for each month but is bound by 0.2 to 0.8. It returns
 // a monthly array of percent that is runoff of the total of runoff + deep percolation; has a default value of 0.5.
-func setRoDpWt(ro [12]float64, dp [12]float64) [12]float64 {
+func setRoDpWt(ro [12]float64, dp [12]float64) ([12]float64, error) {
 	wt := [12]float64{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5} // always the same in DB, Runoff Deep Perc weight
 
 	for i := 0; i < 12; i++ {
 		if ro[i]+dp[i] > 0 {
-			wt[i] = math.Min(math.Max(ro[i]/(ro[i]+dp[i]), 0.2), 0.8)
+			if ro[i]+dp[i] > 0 {
+				wt[i] = math.Min(math.Max(ro[i]/(ro[i]+dp[i]), 0.2), 0.8)
+			} else {
+				return wt, errors.New("division by zero in setRoDpWt")
+			}
+
 		}
 	}
 
-	return wt
+	return wt, nil
 }
 
 // setInitialRoDp is a function to set the initial run off (Ro2) and Deep Perc (Dp2) from irrigation in the model of zero and handle the
@@ -151,7 +168,11 @@ func setPreGain(et [12]float64, dryEt [12]float64, appWat [12]float64, pslIrr [1
 }
 
 // setEtGain sets the annual gain for the parcel using a diminishing returns production function. Returns the amount of gain
-func setEtGain(cIR float64, psl float64, gir float64, appWat float64, eff float64, irrEt float64, dryEt float64) (gain float64) {
+func setEtGain(cIR float64, psl float64, gir float64, appWat float64, eff float64, irrEt float64, dryEt float64) (gain float64, err error) {
+	if gir == 0 {
+		return 0, errors.New("gir cannot be zero in setEtGain")
+	}
+
 	beta := cIR / gir
 	if psl < gir {
 		gain = math.Max(math.Min(cIR*(1-math.Pow(1-psl/gir, 1/beta)), appWat*eff), 0)
@@ -159,12 +180,12 @@ func setEtGain(cIR float64, psl float64, gir float64, appWat float64, eff float6
 		gain = irrEt - dryEt
 	}
 
-	return
+	return gain, nil
 }
 
 // distEtGain distributes the ET Gain by the monthly gain listed by post surface loss water, and if there are any
 // remaining, it apportions it again to months without PSL but with ET differences.
-func distEtGain(etGain float64, psl [12]float64, etIrr [12]float64, etDry [12]float64) (distEtGain [12]float64) {
+func distEtGain(etGain float64, psl [12]float64, etIrr [12]float64, etDry [12]float64) (distEtGain [12]float64, err error) {
 	// three criteria, leftover falls to next distribution
 	var (
 		totalDiff       float64 // total difference when psl > 0
@@ -192,6 +213,9 @@ func distEtGain(etGain float64, psl [12]float64, etIrr [12]float64, etDry [12]fl
 	}
 
 	if len(diffMonths) > 0 {
+		if totalDiff <= 0 {
+			return distEtGain, errors.New("totalDiff cannot be zero in distEtGain")
+		}
 		for _, v := range diffMonths {
 			distEtGain[v] = math.Min(etGain*(etIrr[v]-etDry[v])/totalDiff, psl[v])
 			remainGain -= distEtGain[v]
@@ -200,19 +224,27 @@ func distEtGain(etGain float64, psl [12]float64, etIrr [12]float64, etDry [12]fl
 
 	if remainGain > 0.001 {
 		if len(nonPslMonths) > 0 {
+			if totalNonPslDiff <= 0 {
+				return distEtGain, errors.New("totalNonPslDiff cannot be zero in distEtGain")
+			}
+
 			// psl = 0 but ETirr > ETdry || remainingGain left
 			for _, v := range nonPslMonths {
 				distEtGain[v] += remainGain * (etIrr[v] - etDry[v]) / totalNonPslDiff
 			}
 		} else {
 			// no other diff months, add back by weight of ETirr
+			if totalEtIrr <= 0 {
+				return distEtGain, errors.New("totalEtIrr cannot be zero in distEtGain")
+			}
+
 			for _, v := range diffMonths {
 				distEtGain[v] += remainGain * (etIrr[v] / totalEtIrr)
 			}
 		}
 	}
 
-	return
+	return distEtGain, nil
 }
 
 // setEtBase is a function that uses post surface loss irrigation to determine the etBase from etIrr and etDry and returns

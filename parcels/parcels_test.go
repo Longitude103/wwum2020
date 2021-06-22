@@ -144,7 +144,7 @@ func TestFilterParcelByCertNoneFound(t *testing.T) {
 func TestParcel_GetXY(t *testing.T) {
 	x, y := p.GetXY()
 
-	if x != 40.21 || y != 103.0 {
+	if x != 41.4 || y != 103.0 {
 		t.Error("not returning the correct X, Y")
 	}
 }
@@ -160,7 +160,7 @@ func TestParcel_setGirFact(t *testing.T) {
 	eff = 0.65
 	gir, fsl = setGirFact(eff)
 
-	if gir != 1 || fsl != 0.05 {
+	if gir != 1/0.75 || fsl != 0.05 {
 		t.Errorf("Error in setGirFact with eff of %g, gir got: %g, should be 1.3333..; fsl got: %g, should be 0.05", eff, gir, fsl)
 	}
 }
@@ -199,7 +199,11 @@ func TestParcel_setRoDpWt(t *testing.T) {
 	ro := [12]float64{10, 75, 5, 100, 0, 0, 0, 0, 0, 0, 0, 0}
 	dp := [12]float64{30, 25, 100, 5, 0, 0, 0, 0, 0, 0, 0, 0}
 
-	result := setRoDpWt(ro, dp)
+	result, err := setRoDpWt(ro, dp)
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	if result[0] != 0.25 || result[1] != 0.75 || result[2] != 0.2 || result[3] != 0.8 || result[4] != 0.5 {
 		t.Errorf("wieights shoudl be 0.25, 0.75, 0.2, 0.8, 0.5... and got %v", result)
@@ -209,12 +213,12 @@ func TestParcel_setRoDpWt(t *testing.T) {
 func TestParcel_setInitialRoDp(t *testing.T) {
 	ro, dp := setInitialRoDp(p3.Ro, p3.Dp, 1, 1)
 
-	if ro[0] != 0 || ro[1] != 0 || ro[2] != 0 || roundTo(ro[3], 2) != 1.04 {
-		t.Errorf("incorrect initial values for RO, should be 0, 0, 0, 1.04, 0.73... and got %v", ro)
+	if roundTo(ro[0], 3) != 0.007 || roundTo(ro[1], 3) != 0.008 || roundTo(ro[2], 3) != 0.021 || roundTo(ro[3], 3) != 1.094 {
+		t.Errorf("incorrect initial values for RO, should be 0.007, 0.008, 0.021, 1.094... and got %v", ro)
 	}
 
-	if dp[0] != 0 || dp[1] != 0 || dp[2] != 0 || dp[3] != 0 {
-		t.Errorf("incorrect initial values for DP, should be 0, 0, 0, 0, 0... and got %v", dp)
+	if roundTo(dp[0], 3) != 0.007 || roundTo(dp[1], 3) != 0.008 || roundTo(dp[2], 3) != 0.021 || roundTo(dp[3], 3) != 0.014 {
+		t.Errorf("incorrect initial values for DP, should be 0.007, 0.008, 0.021, 0.014... and got %v", dp)
 	}
 }
 
@@ -226,7 +230,6 @@ func TestParcel_setPreGain(t *testing.T) {
 
 	gainApWat, gainPsl, gainIrrEt, gainDryEt := setPreGain(et, dryEt, appWat, psl)
 
-	fmt.Println(gainApWat, gainPsl, gainIrrEt, gainDryEt)
 	if gainApWat != 3 || gainPsl != 2 || gainIrrEt != 12 || gainDryEt != 6 {
 		t.Errorf("error in setPreGain, gainApWat: %g, expecting 3; gainPsl: %g, expecting 2; gainIrrEt: %g, "+
 			"expecting 12; gainDryEt: %g, expecting 6", gainApWat, gainPsl, gainIrrEt, gainDryEt)
@@ -251,7 +254,10 @@ func TestParcel_setEtGain(t *testing.T) {
 	irrEt := 19.00
 	dryEt := 8.78
 
-	gain := setEtGain(cir, psl, gir, appWat, eff, irrEt, dryEt)
+	gain, err := setEtGain(cir, psl, gir, appWat, eff, irrEt, dryEt)
+	if err != nil {
+		t.Error(err)
+	}
 
 	if roundTo(gain, 2) != 3.95 {
 		t.Errorf("error in gain function, got: %g, expected 3.95", roundTo(gain, 2))
@@ -264,7 +270,10 @@ func TestParcel_distEtGain(t *testing.T) {
 	psl := [12]float64{0, 0, 0, 0, 0, 0, 2.22, 2.21, 1.33, 0, 0, 0}
 	gain := 3.94
 
-	dist := distEtGain(gain, psl, etIrr, etDry)
+	dist, err := distEtGain(gain, psl, etIrr, etDry)
+	if err != nil {
+		t.Error(err)
+	}
 
 	if roundTo(dist[6], 3) != 1.193 || roundTo(dist[7], 3) != 1.686 {
 		t.Errorf("distETGain calculated incorrectly: July %g, expected 1.193; August %g, expected 1.686", roundTo(dist[6], 3), roundTo(dist[7], 3))
@@ -273,7 +282,10 @@ func TestParcel_distEtGain(t *testing.T) {
 	psl = [12]float64{0, 0, 0, 0, 0.98, 24.794, 35.672, 32.242, 4.9, 0, 0, 0}
 	gain = 15.05
 
-	dist = distEtGain(gain, psl, p.Et, p.DryEt)
+	dist, err = distEtGain(gain, psl, p.Et, p.DryEt)
+	if err != nil {
+		t.Error(err)
+	}
 
 	if roundTo(dist[3], 3) != 0.170 {
 		t.Errorf("distETGain calculated incorrectly when remaining gain present: April %g, expected 0.170", roundTo(dist[3], 3))
