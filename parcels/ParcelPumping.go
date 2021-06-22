@@ -120,7 +120,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		wbBar := progressbar.Default(int64(len(parcels)), "Water Balance Parcels")
 		for p := 0; p < len(parcels); p++ {
 			_ = wbBar.Add(1)
-			if err := (&parcels[p]).waterBalanceWSPP(cCrops); err != nil {
+			if err := (&parcels[p]).waterBalanceWSPP(false); err != nil {
 				return nil, err
 			}
 		}

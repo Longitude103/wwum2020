@@ -8,46 +8,60 @@ import (
 // waterBalanceWSPP method takes all the parcel information (SW delivery and GW Pumping) and creates a water balance to
 // determine the amount of Runoff and Deep Percolation that occurs off of each parcel and sets those values within the
 // parcel struct. This uses the methodology that is within the WSPP program.
-func (p *Parcel) waterBalanceWSPP() error {
+func (p *Parcel) waterBalanceWSPP(verbose bool) error {
 	girFactor, fsl := setGirFact(p.AppEff)
+	if verbose {
+		fmt.Printf("GIR: %g, fsl: %g\n", girFactor, fsl)
+	}
 
 	totalNir := sumAnnual(p.Nir)
 	appWAT, _, pslIrr := setAppWat(p.SWDel, p.Pump, fsl)
-	fmt.Println("AppWat:", appWAT)
-	fmt.Println("pslIrr:", pslIrr)
 	roDpWt := setRoDpWt(p.Ro, p.Dp)
-	fmt.Println("RoDpWt:", roDpWt)
+	if verbose {
+		fmt.Println("AppWat:", appWAT)
+		fmt.Println("pslIrr:", pslIrr)
+		fmt.Println("RoDpWt:", roDpWt)
+	}
 
 	ro1, dp1 := setInitialRoDp(p.Ro, p.Dp, 1, 1)
-	fmt.Println("RO1:", ro1)
-	fmt.Println("DP1:", dp1)
+	if verbose {
+		fmt.Println("RO1:", ro1)
+		fmt.Println("DP1:", dp1)
+	}
 
 	gainApWat, gainPsl, gainIrrEt, gainDryEt := setPreGain(p.Et, p.DryEt, appWAT, pslIrr)
-	fmt.Printf("gainApWat: %g, gainPsl: %g, gainIrrEt: %g, gainDryEt: %g\n", gainApWat, gainPsl, gainIrrEt, gainDryEt)
-
 	cIR := math.Max(gainIrrEt-gainDryEt, 0.0001)
 	gIR := totalNir * girFactor
-	fmt.Printf("cIR: %g, gIR: %g\n", cIR, gIR)
+	if verbose {
+		fmt.Printf("gainApWat: %g, gainPsl: %g, gainIrrEt: %g, gainDryEt: %g\n", gainApWat, gainPsl, gainIrrEt, gainDryEt)
+		fmt.Printf("cIR: %g, gIR: %g\n", cIR, gIR)
+	}
 
 	eTGain := setEtGain(cIR, gainPsl, gIR, gainApWat, p.AppEff, gainIrrEt, gainDryEt)
-	fmt.Println("etGain:", eTGain)
-
 	distGain := distEtGain(eTGain, pslIrr, p.Et, p.DryEt)
-	fmt.Println("distGain:", distGain)
 	etBase := setEtBase(pslIrr, p.Et, p.DryEt)
-	fmt.Println("EtBase:", etBase)
 	et := setET(etBase, distGain)
-	fmt.Println("ET:", et)
 	deltaET := setDeltaET(et, 0.95)
-	fmt.Println("deltaET:", deltaET)
+
+	if verbose {
+		fmt.Println("etGain:", eTGain)
+		fmt.Println("distGain:", distGain)
+		fmt.Println("EtBase:", etBase)
+		fmt.Println("ET:", et)
+		fmt.Println("deltaET:", deltaET)
+	}
 
 	ro3, dp3 := distDeltaET(deltaET, roDpWt)
-	fmt.Println("RO3:", ro3)
-	fmt.Println("DP3:", dp3)
+	if verbose {
+		fmt.Println("RO3:", ro3)
+		fmt.Println("DP3:", dp3)
+	}
 
 	ro2, dp2 := excessIrrReturnFlow(pslIrr, distGain, roDpWt)
-	fmt.Println("RO2:", ro2)
-	fmt.Println("DP2:", dp2)
+	if verbose {
+		fmt.Println("RO2:", ro2)
+		fmt.Println("DP2:", dp2)
+	}
 
 	p.Ro = sumReturnFlows(ro1, ro2, ro3)
 	p.Dp = sumReturnFlows(dp1, dp2, dp3)

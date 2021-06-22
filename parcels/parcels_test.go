@@ -3,8 +3,8 @@ package parcels
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Longitude103/wwum2020/database"
 	"math"
+	"strings"
 	"testing"
 )
 
@@ -64,46 +64,45 @@ func TestParcel_String(t *testing.T) {
 }
 
 func TestParcel_WaterBalanceWWSP(t *testing.T) {
-	cCrops := []database.CoeffCrop{{Zone: 3, Crop: 8, NirAdjFactor: 0.95}, {Zone: 3, Crop: 5, NirAdjFactor: 0.95}}
-
+	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p.Ro)
 	fmt.Println("Dp is:", p.Dp)
 
 	var err error
-	err = p.waterBalanceWSPP(cCrops)
+	err = p.waterBalanceWSPP(true)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
 
 	fmt.Println("Post Process RO is:", p.Ro)
 	fmt.Println("Post Process Dp is:", p.Dp)
+	fmt.Println(strings.Repeat("=", 120))
 
 }
 
 func TestParcel_WaterBalanceWWSP_SWOnly(t *testing.T) {
-	cCrops := []database.CoeffCrop{{Zone: 3, Crop: 8, NirAdjFactor: 0.95}, {Zone: 3, Crop: 5, NirAdjFactor: 0.95}}
-
+	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p2.Ro)
 	fmt.Println("Dp is:", p2.Dp)
 
 	var err error
-	err = p2.waterBalanceWSPP(cCrops)
+	err = p2.waterBalanceWSPP(true)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
 
 	fmt.Println("Post Process RO is:", p2.Ro)
 	fmt.Println("Post Process Dp is:", p2.Dp)
+	fmt.Println(strings.Repeat("=", 120))
 }
 
 func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
-	cCrops := []database.CoeffCrop{{Zone: 3, Crop: 8, NirAdjFactor: 0.95}, {Zone: 3, Crop: 5, NirAdjFactor: 0.95}}
-
+	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p3.Ro)
 	fmt.Println("Dp is:", p3.Dp)
 
 	var err error
-	err = p3.waterBalanceWSPP(cCrops)
+	err = p3.waterBalanceWSPP(true)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
@@ -121,6 +120,7 @@ func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
 		t.Errorf("July DP got %g, expected 0.66", roundTo(p3.Dp[6], 2))
 		t.Errorf("August DP got %g, expected 0.15", roundTo(p3.Dp[7], 2))
 	}
+	fmt.Println(strings.Repeat("=", 120))
 }
 
 func TestFilterParcelByCert(t *testing.T) {
