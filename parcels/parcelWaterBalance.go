@@ -2,14 +2,13 @@ package parcels
 
 import (
 	"fmt"
-	"github.com/Longitude103/wwum2020/database"
 	"math"
 )
 
 // waterBalanceWSPP method takes all the parcel information (SW delivery and GW Pumping) and creates a water balance to
 // determine the amount of Runoff and Deep Percolation that occurs off of each parcel and sets those values within the
 // parcel struct. This uses the methodology that is within the WSPP program.
-func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
+func (p *Parcel) waterBalanceWSPP() error {
 	girFactor, fsl := setGirFact(p.AppEff)
 
 	totalNir := sumAnnual(p.Nir)
@@ -43,7 +42,12 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 	fmt.Println("deltaET:", deltaET)
 
 	ro3, dp3 := distDeltaET(deltaET, roDpWt)
+	fmt.Println("RO3:", ro3)
+	fmt.Println("DP3:", dp3)
+
 	ro2, dp2 := excessIrrReturnFlow(pslIrr, distGain, roDpWt)
+	fmt.Println("RO2:", ro2)
+	fmt.Println("DP2:", dp2)
 
 	p.Ro = sumReturnFlows(ro1, ro2, ro3)
 	p.Dp = sumReturnFlows(dp1, dp2, dp3)
@@ -217,7 +221,7 @@ func setEtBase(psl [12]float64, etIrr [12]float64, etDry [12]float64) (etBase [1
 
 // setET combines the distributed ET Gain with the base ET for a final ET Value
 func setET(etBase [12]float64, distEtGain [12]float64) (et [12]float64) {
-	for i, _ := range etBase {
+	for i := range etBase {
 		et[i] = etBase[i] + distEtGain[i]
 	}
 
@@ -247,8 +251,10 @@ func distDeltaET(deltaET [12]float64, roDpWt [12]float64) (ro [12]float64, dp [1
 // with et gain and then distributed to ro and dp using the weighted values
 func excessIrrReturnFlow(psl [12]float64, distEtGain [12]float64, roDpWt [12]float64) (ro [12]float64, dp [12]float64) {
 	for i, v := range psl {
-		ro[i] = (v - distEtGain[i]) * roDpWt[i]
-		dp[i] = (v - distEtGain[i]) - ro[i]
+		if v > 0 { // protect against zero psl
+			ro[i] = (v - distEtGain[i]) * roDpWt[i]
+			dp[i] = (v - distEtGain[i]) - ro[i]
+		}
 	}
 
 	return
