@@ -13,7 +13,6 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	// cert usage
 	v.Logger.Info("Getting Cert Usage")
 	usage := getUsage(v.PgDb)
-	_ = usage
 
 	v.Logger.Info("Getting Efficiencies")
 	efficiencies := database.GetAppEfficiency(v.PgDb)
