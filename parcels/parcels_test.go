@@ -32,15 +32,17 @@ var p2 = Parcel{ParcelNo: 1234, AppEff: 0.85, Nir: [12]float64{0, 0, 0, 0, 0.2, 
 	Sw: sql.NullBool{Bool: true, Valid: true}, Gw: sql.NullBool{Bool: false, Valid: true}}
 
 // p3 is the groundwater only cell made into a parcel from the TFG Example document
-var p3 = Parcel{ParcelNo: 159988, AppEff: 0.65, Nir: [12]float64{0, 0, 0, 0, 0, 0, 4.98, 4.31, 1.65, 0, 0, 0},
-	DryEt: [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.70, 0.66, 0.19},
-	Et:    [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23},
-	Pump:  [12]float64{0, 0, 0, 0, 0, 0, 2.34, 2.32, 1.40, 0, 0, 0}, Ro: [12]float64{0, 0, 0, 1.04, 0.73, 1.81, 0, 0.11, 0, 0.03, 0, 0},
+var p3 = Parcel{ParcelNo: 159988, AppEff: 0.65,
+	Nir:       [12]float64{0, 0, 0, 0, 0, 0, 4.98, 4.31, 1.65, 0, 0, 0},
+	DryEt:     [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.70, 0.66, 0.19},
+	Et:        [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23},
+	Pump:      [12]float64{0, 0, 0, 0, 0, 0, 2.34, 2.32, 1.4, 0, 0, 0},
+	Ro:        [12]float64{0, 0, 0, 1.04, 0.73, 1.81, 0, 0.11, 0, 0.03, 0, 0},
 	Dp:        [12]float64{0, 0, 0, 0, 0, 0.39, 0, 0, 0, 0.01, 0, 0},
 	CoeffZone: 2, SoilCode: 622, Area: 40.0, IrrType: sql.NullString{String: "FLOOD", Valid: true},
-	Crop1: sql.NullInt64{Int64: 8, Valid: true}, Crop1Cov: sql.NullFloat64{Float64: 0.5, Valid: true},
-	Crop2:    sql.NullInt64{Int64: 5, Valid: true},
-	Crop2Cov: sql.NullFloat64{Float64: 0.5, Valid: true}, Crop3: sql.NullInt64{Int64: 0, Valid: false},
+	Crop1: sql.NullInt64{Int64: 1, Valid: true}, Crop1Cov: sql.NullFloat64{Float64: 1, Valid: true},
+	Crop2:    sql.NullInt64{Int64: 0, Valid: false},
+	Crop2Cov: sql.NullFloat64{Float64: 0, Valid: false}, Crop3: sql.NullInt64{Int64: 0, Valid: false},
 	Crop3Cov: sql.NullFloat64{Float64: 0, Valid: false}, Crop4: sql.NullInt64{Int64: 0, Valid: false},
 	Crop4Cov: sql.NullFloat64{Float64: 0, Valid: false}, Nrd: "np", Yr: 2014,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 102.5,
@@ -66,6 +68,7 @@ func TestParcel_WaterBalanceWWSP(t *testing.T) {
 
 	fmt.Println("Post Process RO is:", p.Ro)
 	fmt.Println("Post Process Dp is:", p.Dp)
+
 }
 
 func TestParcel_WaterBalanceWWSP_SWOnly(t *testing.T) {
@@ -98,6 +101,17 @@ func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
 
 	fmt.Println("Post Process RO is:", p3.Ro)
 	fmt.Println("Post Process Dp is:", p3.Dp)
+
+	// need to test July and August
+	if roundTo(p3.Ro[6], 2) != 0.66 || roundTo(p3.Ro[7], 2) != 0.70 {
+		t.Errorf("July RO got %g, expected 0.66", roundTo(p3.Ro[6], 2))
+		t.Errorf("August RO got %g, expected 0.70", roundTo(p3.Ro[7], 2))
+	}
+
+	if roundTo(p3.Dp[6], 2) != 0.66 || roundTo(p3.Dp[7], 2) != 0.15 {
+		t.Errorf("July DP got %g, expected 0.66", roundTo(p3.Dp[6], 2))
+		t.Errorf("August DP got %g, expected 0.15", roundTo(p3.Dp[7], 2))
+	}
 }
 
 func TestFilterParcelByCert(t *testing.T) {
@@ -184,19 +198,14 @@ func TestParcel_setRoDpWt(t *testing.T) {
 }
 
 func TestParcel_setInitialRoDp(t *testing.T) {
-	nir := [12]float64{0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}
-	appWat := [12]float64{0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	psl := [12]float64{1, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0}
-	roDpWt := [12]float64{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5}
+	ro, dp := setInitialRoDp(p3.Ro, p3.Dp, 1, 1)
 
-	ro, dp := setInitialRoDp(nir, appWat, psl, roDpWt)
-
-	if ro[0] != 0 || ro[1] != 2 || ro[2] != 0 || ro[3] != 0 {
-		t.Errorf("incorrect initial values for RO, should be 0, 2, 0, 0, 0... and got %v", ro)
+	if ro[0] != 0 || ro[1] != 0 || ro[2] != 0 || roundTo(ro[3], 2) != 1.04 {
+		t.Errorf("incorrect initial values for RO, should be 0, 0, 0, 1.04, 0.73... and got %v", ro)
 	}
 
-	if dp[0] != 0 || dp[1] != 2 || dp[2] != 0 || dp[3] != 0 {
-		t.Errorf("incorrect initial values for DP, should be 0, 2, 0, 0, 0... and got %v", dp)
+	if dp[0] != 0 || dp[1] != 0 || dp[2] != 0 || dp[3] != 0 {
+		t.Errorf("incorrect initial values for DP, should be 0, 0, 0, 0, 0... and got %v", dp)
 	}
 }
 
@@ -283,5 +292,49 @@ func TestParcel_setDeltaET(t *testing.T) {
 
 	if roundTo(delta[0], 3) != 0.013 || roundTo(delta[5], 3) != 0.244 {
 		t.Errorf("setDelta calculated incorrect: Jan delta: %g, expected 0.013; June delat: %g, expected 0.244", roundTo(delta[0], 3), roundTo(delta[5], 3))
+	}
+}
+
+func TestParcel_distDeltaET(t *testing.T) {
+	deltaET := [12]float64{0.01, 0.02, 0.04, 0.07, 0.09, 0.26, 0.29, 0.22, 0.11, 0.02, 0.03, 0.01}
+	roDpWt := [12]float64{0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 0.5, 0.8, 0.5, 0.8, 0.5, 0.5}
+
+	ro, dp := distDeltaET(deltaET, roDpWt)
+
+	if roundTo(ro[3], 3) != 0.056 || roundTo(ro[5], 3) != 0.208 {
+		t.Errorf("distDeltaET calculated RO incorrect: April: %g, expected 0.056; Jun: %g, expected 0.208", roundTo(ro[3], 3), roundTo(ro[5], 3))
+	}
+
+	if roundTo(dp[3], 3) != 0.014 || roundTo(dp[5], 3) != 0.052 {
+		t.Errorf("distDeltaET calculated DP incorrect: April: %g, expected 0.014; Jun: %g, expected 0.052", roundTo(dp[3], 3), roundTo(dp[5], 3))
+	}
+}
+
+func TestParcel_excessIrrReturnFlow(t *testing.T) {
+	roDpWt := [12]float64{0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 0.5, 0.8, 0.5, 0.8, 0.5, 0.5}
+	etGain := [12]float64{0, 0, 0, 0, 0, 0, 1.19, 1.69, 1.06, 0, 0, 0}
+	psl := [12]float64{0, 0, 0, 0, 0, 0, 2.22, 2.21, 1.33, 0, 0, 0}
+
+	ro, dp := excessIrrReturnFlow(psl, etGain, roDpWt)
+
+	if roundTo(ro[6], 3) != 0.515 || roundTo(ro[7], 3) != 0.416 {
+		t.Errorf("excessIrrReturnFlow RO calculated incorrect: July %g, expected 0.515; Aug %g, expected 0.416", roundTo(ro[6], 3), roundTo(ro[7], 3))
+	}
+
+	if roundTo(dp[6], 3) != 0.515 || roundTo(dp[7], 3) != 0.104 {
+		t.Errorf("excessIrrReturnFlow DP calculated incorrect: July %g, expected 0.515; Aug %g, expected 0.104", roundTo(dp[6], 3), roundTo(dp[7], 3))
+	}
+
+}
+
+func TestParcel_sumReturnFlows(t *testing.T) {
+	v1 := [12]float64{1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	v2 := [12]float64{1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	v3 := [12]float64{1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+	v4 := sumReturnFlows(v1, v2, v3)
+
+	if v4[0] != 3 || v4[1] != 6 || v4[2] != 9 || v4[3] != 0 {
+		t.Errorf("sumReturnFlows not correct: got %v, expected 3, 6, 9, 0, 0, ...", v4)
 	}
 }

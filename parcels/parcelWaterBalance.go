@@ -1,7 +1,6 @@
 package parcels
 
 import (
-	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"math"
 )
@@ -10,18 +9,13 @@ import (
 // determine the amount of Runoff and Deep Percolation that occurs off of each parcel and sets those values within the
 // parcel struct. This uses the methodology that is within the WSPP program.
 func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
-	// TODO: Check on this for an infinite loop, seems stuck.
-
-	// determine GIRFactor and Fsl_co
-	// GIRFactor = Gross irrigation Requirement factor
 	girFactor, fsl := setGirFact(p.AppEff)
-	fmt.Printf("AppEff: %g, girFactor: %g, fsl: %g\n", p.AppEff, girFactor, fsl)
 
 	totalNir := sumAnnual(p.Nir)
 	appWAT, _, pslIrr := setAppWat(p.SWDel, p.Pump, fsl)
 	roDpWt := setRoDpWt(p.Ro, p.Dp)
 
-	ro2, dp2 := setInitialRoDp(p.Nir, appWAT, pslIrr, roDpWt)
+	ro1, dp1 := setInitialRoDp(p.Ro, p.Dp, 1, 1)
 
 	gainApWat, gainPsl, gainIrrEt, gainDryEt := setPreGain(p.Et, p.DryEt, appWAT, pslIrr)
 
@@ -30,12 +24,16 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 
 	eTGain := setEtGain(cIR, gainPsl, gIR, gainApWat, p.AppEff, gainIrrEt, gainDryEt)
 
-	// TODO: finish pass through of methods starting here
-	_ = eTGain
-	_ = ro2
-	_ = dp2
+	distGain := distEtGain(eTGain, pslIrr, p.Et, p.DryEt)
+	etBase := setEtBase(pslIrr, p.Et, p.DryEt)
+	et := setET(etBase, distGain)
+	deltaET := setDeltaET(et, 0.95)
 
-	// TODO: ended at bullet 12 in example at equation 51
+	ro3, dp3 := distDeltaET(deltaET, roDpWt)
+	ro2, dp2 := excessIrrReturnFlow(pslIrr, distGain, roDpWt)
+
+	p.Ro = sumReturnFlows(ro1, ro2, ro3)
+	p.Dp = sumReturnFlows(dp1, dp2, dp3)
 
 	return nil
 }
@@ -97,12 +95,10 @@ func setRoDpWt(ro [12]float64, dp [12]float64) [12]float64 {
 
 // setInitialRoDp is a function to set the initial run off (Ro2) and Deep Perc (Dp2) from irrigation in the model of zero and handle the
 // condition where water was applied but no nir was calculated so that all the water goes back to Ro and DP.
-func setInitialRoDp(nir [12]float64, appWat [12]float64, pslIrr [12]float64, RoDpWt [12]float64) (ro [12]float64, dp [12]float64) {
+func setInitialRoDp(csRo [12]float64, csDp [12]float64, adjRo float64, adjDp float64) (ro [12]float64, dp [12]float64) {
 	for i := 0; i < 12; i++ {
-		if nir[i] <= 0 && appWat[i] > 0 {
-			ro[i] = pslIrr[i] * RoDpWt[i]
-			dp[i] = pslIrr[i] - ro[i]
-		}
+		ro[i] = csRo[i] * adjRo
+		dp[i] = csDp[i] * adjDp
 	}
 
 	return
@@ -210,6 +206,36 @@ func setET(etBase [12]float64, distEtGain [12]float64) (et [12]float64) {
 func setDeltaET(et [12]float64, adjFactor float64) (deltaET [12]float64) {
 	for i, v := range et {
 		deltaET[i] = v * (1 - adjFactor)
+	}
+
+	return
+}
+
+// distDeltaET is a function that returns the run off and deep percolation of the delta ET
+func distDeltaET(deltaET [12]float64, roDpWt [12]float64) (ro [12]float64, dp [12]float64) {
+	for i, v := range deltaET {
+		ro[i] = v * roDpWt[i]
+		dp[i] = v - ro[i]
+	}
+
+	return
+}
+
+// excessIrrReturnFlow is a function that returns the excess irrigation return flows using the post surface loss irrigation
+// with et gain and then distributed to ro and dp using the weighted values
+func excessIrrReturnFlow(psl [12]float64, distEtGain [12]float64, roDpWt [12]float64) (ro [12]float64, dp [12]float64) {
+	for i, v := range psl {
+		ro[i] = (v - distEtGain[i]) * roDpWt[i]
+		dp[i] = (v - distEtGain[i]) - ro[i]
+	}
+
+	return
+}
+
+// sumReturnFlows is a function to sum the three return flow sub variables into one.
+func sumReturnFlows(v1 [12]float64, v2 [12]float64, v3 [12]float64) (sumValues [12]float64) {
+	for i := 0; i < 12; i++ {
+		sumValues[i] = v1[i] + v2[i] + v3[i]
 	}
 
 	return
