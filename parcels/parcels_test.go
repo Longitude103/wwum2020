@@ -8,22 +8,31 @@ import (
 	"testing"
 )
 
-var p = Parcel{ParcelNo: 1234, AppEff: 0.85, Nir: [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
-	DryEt: [12]float64{0, 0, 0, 0, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0}, Et: [12]float64{0, 0, 0, 0, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
-	Pump: [12]float64{0, 0, 0, 0, 0, 12.3, 21.4, 18.9, 0, 0, 0, 0}, Ro: [12]float64{0, 0, 0, 0, 0, 0, 0, 0.35, 0.87, 0, 0, 0},
-	Dp: [12]float64{0, 0, 0, 0, 0, 0, 1.5, 1.1, 1.3, 0, 0, 0}, SWDel: [12]float64{0, 0, 0, 0, 1, 13, 15, 14, 5, 0, 0, 0},
-	CoeffZone: 3, Crop1: sql.NullInt64{Int64: 8, Valid: true},
-	Crop1Cov: sql.NullFloat64{Float64: 0.5, Valid: true}, Crop2: sql.NullInt64{Int64: 5, Valid: true},
-	Crop2Cov: sql.NullFloat64{Float64: 0.5, Valid: true}, Crop3: sql.NullInt64{Int64: 0, Valid: false},
+var p = Parcel{ParcelNo: 1234, AppEff: 0.85,
+	Nir:       [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
+	DryEt:     [12]float64{0, 0, 0, 1.1, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0},
+	Et:        [12]float64{0, 0, 0, 1.2, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
+	Pump:      [12]float64{0, 0, 0, 0, 0, 12.3, 21.4, 18.9, 0, 0, 0, 0},
+	Ro:        [12]float64{0, 0, 0, 0, 0, 0, 0, 0.35, 0.87, 0, 0, 0},
+	Dp:        [12]float64{0, 0, 0, 0, 0, 0, 1.5, 1.1, 1.3, 0, 0, 0},
+	SWDel:     [12]float64{0, 0, 0, 0, 1, 13, 15, 14, 5, 0, 0, 0},
+	CoeffZone: 2, SoilCode: 622, Area: 40.0, IrrType: sql.NullString{String: "SPRINKLER", Valid: true},
+	Crop1:    sql.NullInt64{Int64: 1, Valid: true},
+	Crop1Cov: sql.NullFloat64{Float64: 1, Valid: true}, Crop2: sql.NullInt64{Int64: 0, Valid: false},
+	Crop2Cov: sql.NullFloat64{Float64: 0, Valid: false}, Crop3: sql.NullInt64{Int64: 0, Valid: false},
 	Crop3Cov: sql.NullFloat64{Float64: 0, Valid: false}, Crop4: sql.NullInt64{Int64: 0, Valid: false},
 	Crop4Cov: sql.NullFloat64{Float64: 0, Valid: false}, Nrd: "np", Yr: 2014,
-	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 40.21, PointY: 103.0,
+	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 103.0,
 	Sw: sql.NullBool{Bool: true, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
-var p2 = Parcel{ParcelNo: 1234, AppEff: 0.85, Nir: [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
-	DryEt: [12]float64{0, 0, 0, 0, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0}, Et: [12]float64{0, 0, 0, 0, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
-	SWDel: [12]float64{0, 0, 0, 0, 0, 12, 15, 14, 5, 0, 0, 0}, Ro: [12]float64{0, 0, 0, 0, 0, 0, 0, 0.35, 0.87, 0, 0, 0},
-	Dp: [12]float64{0, 0, 0, 0, 0, 0, 1.5, 1.1, 1.3, 0, 0, 0}, CoeffZone: 3, Crop1: sql.NullInt64{Int64: 8, Valid: true},
+var p2 = Parcel{ParcelNo: 1234, AppEff: 0.85,
+	Nir:       [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
+	DryEt:     [12]float64{0, 0, 0, 0, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0},
+	Et:        [12]float64{0, 0, 0, 0, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
+	SWDel:     [12]float64{0, 0, 0, 0, 0, 12, 15, 14, 5, 0, 0, 0},
+	Ro:        [12]float64{0, 0, 0, 0, 0, 0, 0, 0.35, 0.87, 0, 0, 0},
+	Dp:        [12]float64{0, 0, 0, 0, 0, 0, 1.5, 1.1, 1.3, 0, 0, 0},
+	CoeffZone: 3, Crop1: sql.NullInt64{Int64: 8, Valid: true},
 	Crop1Cov: sql.NullFloat64{Float64: 0.5, Valid: true}, Crop2: sql.NullInt64{Int64: 5, Valid: true},
 	Crop2Cov: sql.NullFloat64{Float64: 0.5, Valid: true}, Crop3: sql.NullInt64{Int64: 0, Valid: false},
 	Crop3Cov: sql.NullFloat64{Float64: 0, Valid: false}, Crop4: sql.NullInt64{Int64: 0, Valid: false},
@@ -257,8 +266,18 @@ func TestParcel_distEtGain(t *testing.T) {
 
 	dist := distEtGain(gain, psl, etIrr, etDry)
 
-	fmt.Println(dist)
+	if roundTo(dist[6], 3) != 1.193 || roundTo(dist[7], 3) != 1.686 {
+		t.Errorf("distETGain calculated incorrectly: July %g, expected 1.193; August %g, expected 1.686", roundTo(dist[6], 3), roundTo(dist[7], 3))
+	}
 
+	psl = [12]float64{0, 0, 0, 0, 0.98, 24.794, 35.672, 32.242, 4.9, 0, 0, 0}
+	gain = 15.05
+
+	dist = distEtGain(gain, psl, p.Et, p.DryEt)
+
+	if roundTo(dist[3], 3) != 0.170 {
+		t.Errorf("distETGain calculated incorrectly when remaining gain present: April %g, expected 0.170", roundTo(dist[3], 3))
+	}
 }
 
 func TestParcel_setEtBase(t *testing.T) {

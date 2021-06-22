@@ -1,6 +1,7 @@
 package parcels
 
 import (
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"math"
 )
@@ -13,21 +14,33 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 
 	totalNir := sumAnnual(p.Nir)
 	appWAT, _, pslIrr := setAppWat(p.SWDel, p.Pump, fsl)
+	fmt.Println("AppWat:", appWAT)
+	fmt.Println("pslIrr:", pslIrr)
 	roDpWt := setRoDpWt(p.Ro, p.Dp)
+	fmt.Println("RoDpWt:", roDpWt)
 
 	ro1, dp1 := setInitialRoDp(p.Ro, p.Dp, 1, 1)
+	fmt.Println("RO1:", ro1)
+	fmt.Println("DP1:", dp1)
 
 	gainApWat, gainPsl, gainIrrEt, gainDryEt := setPreGain(p.Et, p.DryEt, appWAT, pslIrr)
+	fmt.Printf("gainApWat: %g, gainPsl: %g, gainIrrEt: %g, gainDryEt: %g\n", gainApWat, gainPsl, gainIrrEt, gainDryEt)
 
 	cIR := math.Max(gainIrrEt-gainDryEt, 0.0001)
 	gIR := totalNir * girFactor
+	fmt.Printf("cIR: %g, gIR: %g\n", cIR, gIR)
 
 	eTGain := setEtGain(cIR, gainPsl, gIR, gainApWat, p.AppEff, gainIrrEt, gainDryEt)
+	fmt.Println("etGain:", eTGain)
 
 	distGain := distEtGain(eTGain, pslIrr, p.Et, p.DryEt)
+	fmt.Println("distGain:", distGain)
 	etBase := setEtBase(pslIrr, p.Et, p.DryEt)
+	fmt.Println("EtBase:", etBase)
 	et := setET(etBase, distGain)
+	fmt.Println("ET:", et)
 	deltaET := setDeltaET(et, 0.95)
+	fmt.Println("deltaET:", deltaET)
 
 	ro3, dp3 := distDeltaET(deltaET, roDpWt)
 	ro2, dp2 := excessIrrReturnFlow(pslIrr, distGain, roDpWt)
@@ -138,6 +151,7 @@ func distEtGain(etGain float64, psl [12]float64, etIrr [12]float64, etDry [12]fl
 	var (
 		totalDiff       float64 // total difference when psl > 0
 		totalNonPslDiff float64 // total difference when psl <= 0
+		totalEtIrr      float64
 		diffMonths      []int   // months when psl > 0
 		nonPslMonths    []int   // months when psl <= 0
 		remainGain      float64 // gain after first distribution
@@ -149,10 +163,13 @@ func distEtGain(etGain float64, psl [12]float64, etIrr [12]float64, etDry [12]fl
 	for i := 0; i < 12; i++ {
 		if psl[i] > 0 {
 			totalDiff += etIrr[i] - etDry[i]
+			totalEtIrr += etIrr[i]
 			diffMonths = append(diffMonths, i)
 		} else {
-			totalNonPslDiff += etIrr[i] - etDry[i]
-			nonPslMonths = append(nonPslMonths, i)
+			if etIrr[i]-etDry[i] > 0 {
+				totalNonPslDiff += etIrr[i] - etDry[i]
+				nonPslMonths = append(nonPslMonths, i)
+			}
 		}
 	}
 
@@ -164,15 +181,20 @@ func distEtGain(etGain float64, psl [12]float64, etIrr [12]float64, etDry [12]fl
 	}
 
 	if remainGain > 0.001 {
-		// psl = 0 but ETirr > ETdry || remainingGain left
-		for _, v := range nonPslMonths {
-			distEtGain[v] += remainGain * (etIrr[v] - etDry[v]) / totalNonPslDiff
+		if len(nonPslMonths) > 0 {
+			// psl = 0 but ETirr > ETdry || remainingGain left
+			for _, v := range nonPslMonths {
+				distEtGain[v] += remainGain * (etIrr[v] - etDry[v]) / totalNonPslDiff
+			}
+		} else {
+			// no other diff months, add back by weight of ETirr
+			for _, v := range diffMonths {
+				distEtGain[v] += remainGain * (etIrr[v] / totalEtIrr)
+			}
 		}
 	}
 
 	return
-	// psl > 0 && ETdry > ETirr ?? Strange, not covered
-
 }
 
 // setEtBase is a function that uses post surface loss irrigation to determine the etBase from etIrr and etDry and returns
