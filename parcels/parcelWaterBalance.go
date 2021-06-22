@@ -30,37 +30,12 @@ func (p *Parcel) waterBalanceWSPP(cCrops []database.CoeffCrop) error {
 
 	eTGain := setEtGain(cIR, gainPsl, gIR, gainApWat, p.AppEff, gainIrrEt, gainDryEt)
 
-	_, _, et1, _, etIrrGain := DistEtCOGain(eTGain, pslIrr, p.Et, p.DryEt)
-	fmt.Printf("et1: %g\n", et1)
-	fmt.Printf("etIrrGain: %g\n", etIrrGain)
+	// TODO: finish pass through of methods starting here
+	_ = eTGain
+	_ = ro2
+	_ = dp2
 
-	et := [12]float64{}
-	det := [12]float64{}
-	for i := 0; i < 12; i++ {
-		et[i] = et1[i] * adjustmentFactor(p, cCrops, database.NirEt)
-		det[i] = et1[i] * adjustmentFactor(p, cCrops, database.NirEt)
-	}
-
-	var (
-		ro3, dp3 [12]float64
-	)
-	for i := 0; i < 12; i++ {
-
-		ro3[i] = det[i] * roDpWt[i]
-		//dp3[i] = ro3[i] * (1-roDpWt[i])/roDpWt[i]
-		dp3[i] = det[i] - ro3[i]
-
-		if p.Nir[i] > 0 {
-			ro2[i] = math.Max((pslIrr[i]-etIrrGain[i])*roDpWt[i], -(p.Ro[i] + ro3[i]))
-			dp2[i] = math.Max((pslIrr[i]-etIrrGain[i])*(1-roDpWt[i]), -(p.Dp[i] + dp3[i]))
-		}
-	}
-
-	// Line 762 in WSPP
-	for i := 0; i < 12; i++ {
-		p.Ro[i] += ro2[i] + ro3[i]
-		p.Dp[i] += dp2[i] + dp3[i]
-	}
+	// TODO: ended at bullet 12 in example at equation 51
 
 	return nil
 }
@@ -213,6 +188,11 @@ func sumAnnual(data [12]float64) (total float64) {
 	return
 }
 
+// roundTo rounds a float number to a specified number of decimal places.
+func roundTo(n float64, decimals uint32) float64 {
+	return math.Round(n*math.Pow(10, float64(decimals))) / math.Pow(10, float64(decimals))
+}
+
 // setAppWat is a function that sets the applied water (appWat), surface loss of water (sL) and
 // post surface loss of water (pSL) for each month of the parcel. It takes in surface water applied (sw),
 // ground water applied (gw) and fraction of surface loss (fsl) and returns three arrays of monthly results.
@@ -257,8 +237,7 @@ func setInitialRoDp(nir [12]float64, appWat [12]float64, pslIrr [12]float64, RoD
 // irrigated ET, Dry ET, Applied Water, and Post Surface Loss Water during those months where the condition is met.
 func setPreGain(et [12]float64, dryEt [12]float64, appWat [12]float64, pslIrr [12]float64) (gainApWat float64, gainPsl float64, gainIrrEt float64, gainDryEt float64) {
 	for i := 0; i < 12; i++ {
-		if et[i] > dryEt[i] {
-			// it's etgain
+		if et[i] > dryEt[i] { // it's ET Gain
 			gainIrrEt += et[i]
 			gainDryEt += dryEt[i]
 			gainApWat += appWat[i]
@@ -276,6 +255,86 @@ func setEtGain(cIR float64, psl float64, gir float64, appWat float64, eff float6
 		gain = math.Max(math.Min(cIR*(1-math.Pow(1-psl/gir, 1/beta)), appWat*eff), 0)
 	} else {
 		gain = irrEt - dryEt
+	}
+
+	return
+}
+
+// distEtGain distributes the ET Gain by the monthly gain listed by post surface loss water, and if there are any
+// remaining, it apportions it again to months without PSL but with ET differences.
+func distEtGain(etGain float64, psl [12]float64, etIrr [12]float64, etDry [12]float64) (distEtGain [12]float64) {
+	// three criteria, leftover falls to next distribution
+	var (
+		totalDiff       float64 // total difference when psl > 0
+		totalNonPslDiff float64 // total difference when psl <= 0
+		diffMonths      []int   // months when psl > 0
+		nonPslMonths    []int   // months when psl <= 0
+		remainGain      float64 // gain after first distribution
+	)
+
+	remainGain = etGain
+
+	// find total difference
+	for i := 0; i < 12; i++ {
+		if psl[i] > 0 {
+			totalDiff += etIrr[i] - etDry[i]
+			diffMonths = append(diffMonths, i)
+		} else {
+			totalNonPslDiff += etIrr[i] - etDry[i]
+			nonPslMonths = append(nonPslMonths, i)
+		}
+	}
+
+	if len(diffMonths) > 0 {
+		for _, v := range diffMonths {
+			distEtGain[v] = math.Min(etGain*(etIrr[v]-etDry[v])/totalDiff, psl[v])
+			remainGain -= distEtGain[v]
+		}
+	}
+
+	if remainGain > 0.001 {
+		// psl = 0 but ETirr > ETdry || remainingGain left
+		for _, v := range nonPslMonths {
+			distEtGain[v] += remainGain * (etIrr[v] - etDry[v]) / totalNonPslDiff
+		}
+	}
+
+	return
+	// psl > 0 && ETdry > ETirr ?? Strange, not covered
+
+}
+
+// setEtBase is a function that uses post surface loss irrigation to determine the etBase from etIrr and etDry and returns
+// a monthly etBase value
+func setEtBase(psl [12]float64, etIrr [12]float64, etDry [12]float64) (etBase [12]float64) {
+	for i := 0; i < 12; i++ {
+		if psl[i] <= 0 {
+			etBase[i] = etIrr[i]
+		} else {
+			if etIrr[i] > etDry[i] {
+				etBase[i] = etDry[i]
+			} else {
+				etBase[i] = etIrr[i]
+			}
+		}
+	}
+
+	return
+}
+
+// setET combines the distributed ET Gain with the base ET for a final ET Value
+func setET(etBase [12]float64, distEtGain [12]float64) (et [12]float64) {
+	for i, _ := range etBase {
+		et[i] = etBase[i] + distEtGain[i]
+	}
+
+	return
+}
+
+// setDeltaET returns the monthly amount of adjustment of ET that is created from the adjustment factor application
+func setDeltaET(et [12]float64, adjFactor float64) (deltaET [12]float64) {
+	for i, v := range et {
+		deltaET[i] = v * (1 - adjFactor)
 	}
 
 	return

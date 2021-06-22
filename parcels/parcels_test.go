@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Longitude103/wwum2020/database"
+	"math"
 	"testing"
 )
 
@@ -200,5 +201,87 @@ func TestParcel_setInitialRoDp(t *testing.T) {
 }
 
 func TestParcel_setPreGain(t *testing.T) {
+	et := [12]float64{12, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	dryEt := [12]float64{6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	appWat := [12]float64{3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0}
+	psl := [12]float64{2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0}
 
+	gainApWat, gainPsl, gainIrrEt, gainDryEt := setPreGain(et, dryEt, appWat, psl)
+
+	fmt.Println(gainApWat, gainPsl, gainIrrEt, gainDryEt)
+	if gainApWat != 3 || gainPsl != 2 || gainIrrEt != 12 || gainDryEt != 6 {
+		t.Errorf("error in setPreGain, gainApWat: %g, expecting 3; gainPsl: %g, expecting 2; gainIrrEt: %g, "+
+			"expecting 12; gainDryEt: %g, expecting 6", gainApWat, gainPsl, gainIrrEt, gainDryEt)
+	}
+}
+
+func TestParcel_roundTo(t *testing.T) {
+	pi := math.Pi
+
+	if roundTo(pi, 3) != 3.142 {
+		t.Errorf("round function not working: got %g, expected 3.142", roundTo(pi, 3))
+	}
+
+}
+
+func TestParcel_setEtGain(t *testing.T) {
+	appWat := 6.07
+	psl := 5.76
+	cir := 10.22
+	gir := 14.59
+	eff := 0.65
+	irrEt := 19.00
+	dryEt := 8.78
+
+	gain := setEtGain(cir, psl, gir, appWat, eff, irrEt, dryEt)
+
+	if roundTo(gain, 2) != 3.95 {
+		t.Errorf("error in gain function, got: %g, expected 3.95", roundTo(gain, 2))
+	}
+}
+
+func TestParcel_distEtGain(t *testing.T) {
+	etDry := [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.7, 0.66, 0.19}
+	etIrr := [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23}
+	psl := [12]float64{0, 0, 0, 0, 0, 0, 2.22, 2.21, 1.33, 0, 0, 0}
+	gain := 3.94
+
+	dist := distEtGain(gain, psl, etIrr, etDry)
+
+	fmt.Println(dist)
+
+}
+
+func TestParcel_setEtBase(t *testing.T) {
+	etDry := [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.7, 0.66, 0.19}
+	etIrr := [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23}
+	psl := [12]float64{0, 0, 0, 0, 0, 0, 2.22, 2.21, 1.33, 0, 0, 0}
+
+	base := setEtBase(psl, etIrr, etDry)
+
+	if base[5] != 5.13 || base[6] != 4.55 {
+		t.Errorf("base calculated incorrect: June base: %g, expecting 5.13; July base: %g, expecting 4.55", base[5], base[6])
+	}
+}
+
+func TestParcel_setET(t *testing.T) {
+	etBase := [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.44, 0.51, 0.23}
+	etGain := [12]float64{0, 0, 0, 0, 0, 0, 1.19, 1.69, 1.06, 0, 0, 0}
+
+	et := setET(etBase, etGain)
+
+	if et[5] != 5.13 || et[6] != 5.74 {
+		t.Errorf("et calculated incorrect: June ET: %g, expecting 5.13; July ET: %g, expecting 5.74", et[5], et[6])
+	}
+}
+
+func TestParcel_setDeltaET(t *testing.T) {
+	etIrr := [12]float64{0.26, 0.31, 0.78, 1.29, 1.73, 4.87, 5.46, 4.13, 2.11, 0.42, 0.48, 0.22}
+	factor := 0.95
+
+	delta := setDeltaET(etIrr, factor)
+
+	if roundTo(delta[0], 3) != 0.013 || roundTo(delta[5], 3) != 0.244 {
+		t.Errorf("setDelta calculated incorrect: Jan delta: %g, expected 0.013; June delat: %g, expected 0.244", roundTo(delta[0], 3), roundTo(delta[5], 3))
+	}
 }
