@@ -23,7 +23,7 @@ type Setup struct {
 
 // NewSetup is an initialization function for the Setup struct that sets the initial database connections, logger, and stores
 // the flags for excess flow and debug.
-func (s *Setup) NewSetup(debug, ef bool) error {
+func (s *Setup) NewSetup(debug, ef bool, myEnv map[string]string) error {
 	l, err := NewLogger()
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (s *Setup) NewSetup(debug, ef bool) error {
 		return err
 	}
 
-	s.PgDb, err = PgConnx()
+	s.PgDb, err = PgConnx(myEnv)
 	if err != nil {
 		return err
 	}

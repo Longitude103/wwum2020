@@ -129,12 +129,9 @@ func setRoDpWt(ro [12]float64, dp [12]float64) ([12]float64, error) {
 
 	for i := 0; i < 12; i++ {
 		if ro[i]+dp[i] > 0 {
-			if ro[i]+dp[i] > 0 {
-				wt[i] = math.Min(math.Max(ro[i]/(ro[i]+dp[i]), 0.2), 0.8)
-			} else {
-				return wt, errors.New("division by zero in setRoDpWt")
-			}
-
+			wt[i] = math.Min(math.Max(ro[i]/(ro[i]+dp[i]), 0.2), 0.8)
+		} else {
+			return wt, errors.New("division by zero in setRoDpWt")
 		}
 	}
 
@@ -152,7 +149,7 @@ func setInitialRoDp(csRo [12]float64, csDp [12]float64, adjRo float64, adjDp flo
 	return
 }
 
-// setPreGain is a function to set some total variables if there is a presance of ETGain where irrEt > DryEt. This sums the
+// setPreGain is a function to set some total variables if there is a presence of ETGain where irrEt > DryEt. This sums the
 // irrigated ET, Dry ET, Applied Water, and Post Surface Loss Water during those months where the condition is met.
 func setPreGain(et [12]float64, dryEt [12]float64, appWat [12]float64, pslIrr [12]float64) (gainApWat float64, gainPsl float64, gainIrrEt float64, gainDryEt float64) {
 	for i := 0; i < 12; i++ {

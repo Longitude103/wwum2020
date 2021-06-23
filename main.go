@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/joho/godotenv"
 	"os"
 
 	"github.com/Longitude103/wwum2020/actions"
@@ -17,6 +18,12 @@ Use one of these two commands: dist or rch
 -------------------------------------------------------------------------------------------------
 For help with those functions type: dist -h or rch -h`
 
+	var myEnv map[string]string
+	myEnv, err := godotenv.Read()
+	if err != nil {
+		fmt.Println("Cannot load Env Variables:", err)
+		os.Exit(1)
+	}
 	distCmd := flag.NewFlagSet("dist", flag.ExitOnError)
 	distDebug := distCmd.Bool("debug", false, "sets debugger to true to not preform actual write")
 	distStartY := distCmd.Int("StartYr", 1997, "Sets the start year of Command, default = 1997")
@@ -58,7 +65,8 @@ For help with those functions type: dist -h or rch -h`
 			os.Exit(1)
 		}
 		fmt.Println("Run Recharge File Creation")
-		actions.RechargeFiles(*rchDebug, rchCSDir, *rchStartY, *rchEndY, *rchEF)
+
+		actions.RechargeFiles(*rchDebug, rchCSDir, *rchStartY, *rchEndY, *rchEF, myEnv)
 	default:
 		fmt.Println(help)
 	}
