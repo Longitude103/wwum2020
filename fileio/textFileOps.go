@@ -12,14 +12,14 @@ import (
 type StationResults struct {
 	Station     string
 	Soil        int
-	MonthlyData []monthlyValues
+	MonthlyData []MonthlyValues
 	Yr          int
 	Crop        int
 	Tillage     int
 	Irrigation  int
 }
 
-type monthlyValues struct {
+type MonthlyValues struct {
 	Et         float64
 	Eff_precip float64
 	Nir        float64
@@ -79,7 +79,7 @@ func getFileData(filePath string, logger *zap.SugaredLogger) ([]StationResults, 
 		station.Irrigation, err = strconv.Atoi(elements[5])
 
 		for i := 6; i < 78; i = i + 6 {
-			var mvals monthlyValues
+			var mvals MonthlyValues
 			mvals.Et, err = strconv.ParseFloat(elements[i], 64)
 			mvals.Eff_precip, err = strconv.ParseFloat(elements[i+1], 64)
 			mvals.Nir, err = strconv.ParseFloat(elements[i+2], 64)

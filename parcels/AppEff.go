@@ -1,13 +1,18 @@
 package parcels
 
-import "github.com/Longitude103/wwum2020/database"
+import (
+	"github.com/Longitude103/wwum2020/database"
+	"strings"
+)
 
 // setAppEfficiency is a Parcel method that uses the parcel IrrType and year to determine the application efficiency of the
 // parcel and sets that in the Parcel struct. It takes a slice of Efficiency and year as they very through the study period.
 func (p *Parcel) setAppEfficiency(efficiencies []database.Efficiency, year int) {
 	f, s := filterEff(efficiencies, year)
 
-	if p.IrrType.String == "Flood" {
+	compareString := strings.ToLower(p.IrrType.String)
+
+	if compareString == "flood" {
 		p.AppEff = f
 	} else {
 		p.AppEff = s
