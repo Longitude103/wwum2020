@@ -7,24 +7,24 @@ The CLI uses the WWUM postgres database hosted at `long103-wwum.clmtjoquajav.us-
 the `postgres` username and the normal connection to the various schemas.
 
 ## CLI functions
-There are serveral CLI functions called with the CLI and this is a list of them. You can 
+There are several CLI functions called with the CLI and this is a list of them. You can 
 also get a list by running the program without anything. The "flag" package is used for the CLI which enables the use
 of flags in the CLI. This is a core go package.
 
-- dist -> is the operation to start the distribution of the Cropsim data files by cell and weather station.
- It includes the following flags:
-  - --debug -> run in debug mode with more log output and no write operations
-  - --StartYr -> start year of the distribution
-  - --EndYr -> end year of the distribution 
+- runModel -> is the operation to start the main model run function, and it includes the following flags:
+  - --debug -> run in debug mode with more log output and limited write operations
+  - --StartYr -> start year of the distribution, defaults to 2014
+  - --EndYr -> end year of the distribution, defaults to 2015
+  - --CSDir -> location of the CropSim results files directory  
     
 ### Common CLI Examples
+- Production runs:
+  - `go run main.go runModel --CSDir "/run/media/heath/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops"`
 - Development runs:
-  - `go run main.go dist --debug --StartYr 1996 --EndYr 2019`
-  - `go run main.go rch --CSDir "/run/media/heath/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops"`
-  - `go run main.go rch --CSDir "/run/media/heath/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops" --debug`
+  - `go run main.go runModel --CSDir "/run/media/heath/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops" --debug`
 
 ### Output
 To store the large volume of output, we're going to use SQLite3 as the storage container. 
-This gives the ability to still be SQL enabled, but also allow to compress and store the data in Binary Format.
+This gives the ability to still be SQL enabled, but also allow compressing and store the data in Binary Format.
 The only text files that are output are the rch and wel files. The package used is the [go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) package in the repo.
 The file is named results.db that will be in the same dir as the executable.
