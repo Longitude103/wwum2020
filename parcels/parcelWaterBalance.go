@@ -130,8 +130,6 @@ func setRoDpWt(ro [12]float64, dp [12]float64) ([12]float64, error) {
 	for i := 0; i < 12; i++ {
 		if ro[i]+dp[i] > 0 {
 			wt[i] = math.Min(math.Max(ro[i]/(ro[i]+dp[i]), 0.2), 0.8)
-		} else {
-			return wt, errors.New("division by zero in setRoDpWt")
 		}
 	}
 

@@ -1,14 +1,19 @@
 package parcels
 
 import (
+	"errors"
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 )
 
 // estimatePumping is a method that is called on parcels that have metered == false and gw == true so that we can estimate
 // the amount of pumping that was done at the parcel since a well is present, but not metered. Usually FA area before
 // 2017 and other parcels that are not metered. It fills the Pump field of the Parcel struct
-func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) {
-	nirAdj := adjustmentFactor(p, cCrops, database.NirEt)
+func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) error {
+	nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
+	if err != nil {
+		return err
+	}
 
 	// get application efficiency
 	var swAvailableCU, nirRemaining [12]float64
@@ -25,45 +30,54 @@ func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) {
 			p.Pump[m] = nirRemaining[m] / p.AppEff
 		}
 	}
+
+	return nil
 }
 
 // adjustmentFactor function calculates the Parcel adjustment factor by weighting the crops and distribution of the
 // crops in a Parcel by calling the nirFactor and then weighting it based on crop distribution
-func adjustmentFactor(p *Parcel, cCrops []database.CoeffCrop, adj database.Adjustment) float64 {
-	var c1, c2, c3, c4 float64
-
-	c1 = adjFactor(cCrops, p.CoeffZone, int(p.Crop1.Int64), adj) * p.Crop1Cov.Float64
+func adjustmentFactor(p *Parcel, cCrops []database.CoeffCrop, adj database.Adjustment) (float64, error) {
+	var (
+		c2, c3, c4 float64
+	)
+	c1, err := adjFactor(cCrops, p.CoeffZone, int(p.Crop1.Int64), adj)
 
 	if p.Crop2.Valid {
-		c2 = adjFactor(cCrops, p.CoeffZone, int(p.Crop2.Int64), adj) * p.Crop2Cov.Float64
+		c2, err = adjFactor(cCrops, p.CoeffZone, int(p.Crop2.Int64), adj)
 	}
 	if p.Crop3.Valid {
-		c3 = adjFactor(cCrops, p.CoeffZone, int(p.Crop3.Int64), adj) * p.Crop3Cov.Float64
+		c3, err = adjFactor(cCrops, p.CoeffZone, int(p.Crop3.Int64), adj)
 	}
 
 	if p.Crop4.Valid {
-		c4 = adjFactor(cCrops, p.CoeffZone, int(p.Crop4.Int64), adj) * p.Crop4Cov.Float64
+		c4, err = adjFactor(cCrops, p.CoeffZone, int(p.Crop4.Int64), adj)
+	}
+	if err != nil {
+		return 0, err
 	}
 
-	return c1 + c2 + c3 + c4
+	return c1*p.Crop1Cov.Float64 + c2*p.Crop2Cov.Float64 + c3*p.Crop3Cov.Float64 + c4*p.Crop4Cov.Float64, nil
 }
 
 // nirFactor is a filter function that returns the NirAdjFactor from the CoeffCrop slice and limits it to the zone of the
 // Parcel and the crop type.
-func adjFactor(cCrops []database.CoeffCrop, zone int, crop int, adj database.Adjustment) (nf float64) {
+func adjFactor(cCrops []database.CoeffCrop, zone int, crop int, adj database.Adjustment) (nf float64, err error) {
 	for _, v := range cCrops {
 		if v.Zone == zone && v.Crop == crop {
 			switch adj {
 			case database.NirEt:
 				nf = v.NirAdjFactor
+				return nf, nil
 			case database.DryET:
 				nf = v.DryEtAdj
+				return nf, nil
 			case database.IrrEt:
 				nf = v.IrrEtAdj
+				return nf, nil
 			}
-
 		}
 	}
 
-	return nf
+	errorText := fmt.Sprintf("zone %d and crop %d not found", zone, crop)
+	return 0, errors.New(errorText)
 }

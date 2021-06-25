@@ -6,7 +6,10 @@ import "github.com/Longitude103/wwum2020/database"
 // information and a slice of database.CoeffCrop and the adjustment factor within it. This method is the WSPP approach
 // to the calculation
 func (p *Parcel) dryWaterBalanceWSPP(cCrops []database.CoeffCrop) error {
-	adjFactor := adjustmentFactor(p, cCrops, database.DryET)
+	adjFactor, err := adjustmentFactor(p, cCrops, database.DryET)
+	if err != nil {
+		return err
+	}
 
 	// Create ETMAXDRYAdj and set to ETMAXDRY * Adjustment
 	var (

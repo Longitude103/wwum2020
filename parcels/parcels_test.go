@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var p = Parcel{ParcelNo: 1234, AppEff: 0.85,
+var p1 = Parcel{ParcelNo: 1234, AppEff: 0.85,
 	Nir:       [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
 	DryEt:     [12]float64{0, 0, 0, 1.1, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0},
 	Et:        [12]float64{0, 0, 0, 1.2, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
@@ -58,24 +58,24 @@ var p3 = Parcel{ParcelNo: 159988, AppEff: 0.65,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
 func TestParcel_String(t *testing.T) {
-	if p.String() != "Parcel No: 1234, NRD: np, Year: 2014" {
+	if p1.String() != "Parcel No: 1234, NRD: np, Year: 2014" {
 		t.Error("string doesn't produce correct result")
 	}
 }
 
 func TestParcel_WaterBalanceWWSP(t *testing.T) {
 	fmt.Println(strings.Repeat("=", 120))
-	fmt.Println("RO is:", p.Ro)
-	fmt.Println("Dp is:", p.Dp)
+	fmt.Println("RO is:", p1.Ro)
+	fmt.Println("Dp is:", p1.Dp)
 
 	var err error
-	err = p.waterBalanceWSPP(true)
+	err = p1.waterBalanceWSPP(true)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
 
-	fmt.Println("Post Process RO is:", p.Ro)
-	fmt.Println("Post Process Dp is:", p.Dp)
+	fmt.Println("Post Process RO is:", p1.Ro)
+	fmt.Println("Post Process Dp is:", p1.Dp)
 	fmt.Println(strings.Repeat("=", 120))
 
 }
@@ -124,7 +124,7 @@ func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
 }
 
 func TestFilterParcelByCert(t *testing.T) {
-	sliceP := []Parcel{p}
+	sliceP := []Parcel{p1}
 	fp := filterParcelByCert(&sliceP, "3456")
 
 	if fp[0].ParcelNo != 1234 {
@@ -133,7 +133,7 @@ func TestFilterParcelByCert(t *testing.T) {
 }
 
 func TestFilterParcelByCertNoneFound(t *testing.T) {
-	sliceP := []Parcel{p}
+	sliceP := []Parcel{p1}
 	fp := filterParcelByCert(&sliceP, "6789")
 
 	if fp != nil {
@@ -142,7 +142,7 @@ func TestFilterParcelByCertNoneFound(t *testing.T) {
 }
 
 func TestParcel_GetXY(t *testing.T) {
-	x, y := p.GetXY()
+	x, y := p1.GetXY()
 
 	if x != 41.4 || y != 103.0 {
 		t.Error("not returning the correct X, Y")
@@ -213,12 +213,12 @@ func TestParcel_setRoDpWt(t *testing.T) {
 func TestParcel_setInitialRoDp(t *testing.T) {
 	ro, dp := setInitialRoDp(p3.Ro, p3.Dp, 1, 1)
 
-	if roundTo(ro[0], 3) != 0.007 || roundTo(ro[1], 3) != 0.008 || roundTo(ro[2], 3) != 0.021 || roundTo(ro[3], 3) != 1.094 {
-		t.Errorf("incorrect initial values for RO, should be 0.007, 0.008, 0.021, 1.094... and got %v", ro)
+	if roundTo(ro[0], 3) != 0.0 || roundTo(ro[1], 3) != 0.0 || roundTo(ro[2], 3) != 0.0 || roundTo(ro[3], 3) != 1.040 {
+		t.Errorf("incorrect initial values for RO, should be 0.0, 0.0, 0.0, 1.040... and got %v", ro)
 	}
 
-	if roundTo(dp[0], 3) != 0.007 || roundTo(dp[1], 3) != 0.008 || roundTo(dp[2], 3) != 0.021 || roundTo(dp[3], 3) != 0.014 {
-		t.Errorf("incorrect initial values for DP, should be 0.007, 0.008, 0.021, 0.014... and got %v", dp)
+	if roundTo(dp[0], 3) != 0.0 || roundTo(dp[1], 3) != 0.0 || roundTo(dp[2], 3) != 0.0 || roundTo(dp[5], 3) != 0.390 {
+		t.Errorf("incorrect initial values for DP, should be 0.0, 0.0, 0.0, 0.390... and got %v", dp)
 	}
 }
 
@@ -282,7 +282,7 @@ func TestParcel_distEtGain(t *testing.T) {
 	psl = [12]float64{0, 0, 0, 0, 0.98, 24.794, 35.672, 32.242, 4.9, 0, 0, 0}
 	gain = 15.05
 
-	dist, err = distEtGain(gain, psl, p.Et, p.DryEt)
+	dist, err = distEtGain(gain, psl, p1.Et, p1.DryEt)
 	if err != nil {
 		t.Error(err)
 	}
