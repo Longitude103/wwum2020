@@ -1,4 +1,6 @@
 # WWUMM 2020 CLI
+[![Go Reference](https://pkg.go.dev/badge/github.com/Longitude103/wwum2020.svg)](https://pkg.go.dev/github.com/Longitude103/wwum2020)
+
 This CLI is the major starting point for the 2020 model operations. It's written mostly in Go or Python
 and includes several operations required for the model function.
 
