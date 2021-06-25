@@ -322,7 +322,7 @@ func TestParcel_setDeltaET(t *testing.T) {
 	delta := setDeltaET(etIrr, factor)
 
 	if roundTo(delta[0], 3) != 0.013 || roundTo(delta[5], 3) != 0.244 {
-		t.Errorf("setDelta calculated incorrect: Jan delta: %g, expected 0.013; June delat: %g, expected 0.244", roundTo(delta[0], 3), roundTo(delta[5], 3))
+		t.Errorf("setDeltaET calculated incorrect: Jan delta: %g, expected 0.013; June delat: %g, expected 0.244", roundTo(delta[0], 3), roundTo(delta[5], 3))
 	}
 }
 

@@ -53,6 +53,8 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map
 	if err != nil {
 		v.Logger.Errorf("Error in Dry Land Parcels: %s", err)
 	}
+
+	// TODO: Write Dryland Parcel RCH Values to Results DB
 	_ = dryParcels
 
 	if err := v.PNirDB.Close(); err != nil { // close doesn't close the db, that must be call explicitly so we can keep using it.
@@ -72,8 +74,7 @@ func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map
 		v.Logger.Errorf("Error in Natural Vegatation: %s", err)
 		return err
 	}
-
-	if err := v.NatVegDB.Close(); err != nil {
+	if err := v.RchDb.Flush(); err != nil {
 		return err
 	}
 

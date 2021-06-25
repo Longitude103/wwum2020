@@ -6,7 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// DryCell is a stuct that holds the data for each cell and the parcel data asscociated with it including crops and
+// DryCell is a struct that holds the data for each cell and the parcel data associated with it including crops and
 // the amount of crop that is included.
 type DryCell struct {
 	CellId   int             `db:"cellid"`

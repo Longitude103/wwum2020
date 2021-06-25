@@ -5,6 +5,7 @@ import (
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/schollz/progressbar/v3"
+	"time"
 )
 
 // NaturalVeg is a function that calculates the area of each cell the is natural vegetation and applies the dryland pasture
@@ -17,8 +18,6 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 	nVegBarYears := progressbar.Default(int64(v.EYear-v.SYear), "Years of Natural Veg")
 	for yr := v.SYear; yr < v.EYear+1; yr++ {
 		_ = nVegBarYears.Add(1)
-		var cellResults []database.NPastCellStruct
-		_ = cellResults
 		cells, err := database.GetCellAreas(v, yr)
 		if err != nil {
 			return err
@@ -27,6 +26,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 		nVegBarCells := progressbar.Default(int64(len(cells)), "Natural Veg Cells")
 		for i := 0; i < len(cells); i++ {
 			_ = nVegBarCells.Add(1)
+			var cellResult database.RchResult
 			dist, err := database.Distances(cells[i], wStations)
 			if err != nil {
 				return err
@@ -37,7 +37,6 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				return err
 			}
 
-			cellResult := database.NPastCellStruct{Node: cells[i].Node, Yr: yr}
 			for _, st := range dist {
 				var annData fileio.StationResults
 				for _, data := range csResults[st.Station] {
@@ -49,13 +48,14 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				}
 
 				for m := 0; m < 12; m++ {
-					cellResult.RO[m] = annData.MonthlyData[m].Ro * st.Weight * cells[i].CellArea / 12 * aRo
-					cellResult.DP[m] = annData.MonthlyData[m].Dp * st.Weight * cells[i].CellArea / 12 * aDp
+					cellResult = database.RchResult{Node: cells[i].Node,
+						Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, nil), FileType: 102,
+						Result: annData.MonthlyData[m].Ro*st.Weight*cells[i].CellArea/12*aRo + annData.MonthlyData[m].Dp*st.Weight*cells[i].CellArea/12*aDp}
 				}
 
 			}
 
-			if err := v.NatVegDB.Add(cellResult); err != nil {
+			if err := v.RchDb.Add(cellResult); err != nil {
 				return err
 			}
 		}
