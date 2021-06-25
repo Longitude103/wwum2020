@@ -1,4 +1,4 @@
-package rchFiles
+package database
 
 import (
 	"database/sql"

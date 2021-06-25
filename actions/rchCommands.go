@@ -9,7 +9,7 @@ import (
 	//"wwum2020/rchFiles"
 )
 
-func RechargeFiles(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[string]string) error {
+func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[string]string) error {
 	v := database.Setup{}
 	if err := v.NewSetup(debug, eF, myEnv); err != nil {
 		return err
