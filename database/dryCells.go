@@ -7,11 +7,11 @@ import (
 // DryCell is a struct that holds the data for each cell and the parcel data associated with it including crops and
 // the amount of crop that is included.
 type DryCell struct {
-	node     int     `db:"node"`
+	Node     int     `db:"node"`
 	CellArea float64 `db:"c_area"`
 	DryArea  float64 `db:"d_area"`
-	pId      int64   `db:"parcel_id"`
-	nrd      string  `db:"nrd"`
+	PId      int64   `db:"parcel_id"`
+	Nrd      string  `db:"nrd"`
 }
 
 // GetDryCells is a function that returns a struct of cells with parcels that are within it including the crops and acres
