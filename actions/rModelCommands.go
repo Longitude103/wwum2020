@@ -54,9 +54,6 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 		v.Logger.Errorf("Error in Dry Land Parcels: %s", err)
 	}
 
-	// TODO: Write Dryland Parcel RCH Values to Results DB
-	_ = dryParcels
-
 	if err := v.PNirDB.Close(); err != nil { // close doesn't close the db, that must be call explicitly so we can keep using it.
 		return err
 	}
@@ -74,6 +71,13 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 		v.Logger.Errorf("Error in Natural Vegatation: %s", err)
 		return err
 	}
+
+	// Dryland 101
+	if err := rchFiles.Dryland(v, dryParcels); err != nil {
+		v.Logger.Errorf("Error in Dryland: %s", err)
+		return err
+	}
+
 	if err := v.RchDb.Flush(); err != nil {
 		return err
 	}

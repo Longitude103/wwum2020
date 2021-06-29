@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func dryland(v database.Setup, dryParcels []parcels.Parcel) error {
+func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 	for y := v.SYear; y < v.EYear+1; y++ {
 
 		dryCells := database.GetDryCells(v, y) // will need to iterate through years

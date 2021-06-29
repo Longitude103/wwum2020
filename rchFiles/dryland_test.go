@@ -111,7 +111,7 @@ func Test_dryland(t *testing.T) {
 	//mockSqlite.ExpectExec("INSERT INTO results").WithArgs(1, AnyTime{}, 101, 0)
 
 	v := database.Setup{SYear: 2014, EYear: 2014, RchDb: rchDB, PgDb: sqlxDB}
-	if err2 := dryland(v, sliceDryParcels); err2 != nil {
+	if err2 := Dryland(v, sliceDryParcels); err2 != nil {
 		t.Errorf("Error in dryland function: %s", err2)
 	}
 
