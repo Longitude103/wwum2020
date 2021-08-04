@@ -6,32 +6,77 @@ import (
 	"github.com/Longitude103/wwum2020/database"
 )
 
-// estimatePumping is a method that is called on parcels that have metered == false and gw == true so that we can estimate
-// the amount of pumping that was done at the parcel since a well is present, but not metered. Usually FA area before
-// 2017 and other parcels that are not metered. It fills the Pump field of the Parcel struct
+// estimatePumping is a method that is called on parcels that shouldEstimate == true so that we can estimate
+// the amount of pumping that was done at the parcel since a well is present, but not metered. It fills the Pump field of the Parcel struct
 func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) error {
-	nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
-	if err != nil {
-		return err
-	}
 
-	// get application efficiency
-	var swAvailableCU, nirRemaining [12]float64
-	if p.Sw.Bool == true {
-		for i := 0; i < 12; i++ {
-			swAvailableCU[i] = p.SWDel[i] * nirAdj * p.AppEff
+	if se, err := p.shouldEstimate(); err != nil && se {
+		nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
+		if err != nil {
+			return err
 		}
-	}
 
-	// set nirRemaining to nir - swAvailableCU if positive, then divide by AppEff to arrive at pumping
-	for m := 0; m < 12; m++ {
-		nirRemaining[m] = p.Nir[m] - swAvailableCU[m]
-		if nirRemaining[m] > 0 {
-			p.Pump[m] = nirRemaining[m] / p.AppEff
+		// get application efficiency
+		var swAvailableCU, nirRemaining [12]float64
+		if p.Sw.Bool == true {
+			for i := 0; i < 12; i++ {
+				swAvailableCU[i] = p.SWDel[i] * nirAdj * p.AppEff
+			}
 		}
+
+		// set nirRemaining to nir - swAvailableCU if positive, then divide by AppEff to arrive at pumping
+		for m := 0; m < 12; m++ {
+			nirRemaining[m] = p.Nir[m] - swAvailableCU[m]
+			if nirRemaining[m] > 0 {
+				p.Pump[m] = nirRemaining[m] / p.AppEff
+			}
+		}
+
+		return nil
 	}
 
 	return nil
+}
+
+// shouldEstimate is a method that determines if the parcel should estimate pumping or if the pumping should not be estimated
+// as it will have a pumping value assigned from the data.
+func (p *Parcel) shouldEstimate() (bool, error) {
+	if p.Nrd == "np" { // NPNRD parcel
+		if p.Yr > 2016 {
+			return false, nil
+		}
+
+		if p.Yr > 2008 {
+			// have reads for OA areas
+			if p.Subarea.Valid {
+				if p.Subarea.String == "North Platte" || p.Subarea.String == "Pumpkin Creek" {
+					// areas not FA
+					return false, nil
+				}
+			}
+
+			// outside the OA Subareas
+			return true, nil
+		} else {
+			// no reads, estimate
+			return true, nil
+		}
+	}
+
+	if p.Nrd == "sp" {
+		// spnrd
+		if p.Yr > 2009 {
+			return false, nil
+		} else {
+			if p.Yr > 2006 && (p.Subarea.String[2:] != "FA" || p.Subarea.String[3:] != "SPV") {
+				return false, nil
+			} else {
+				return true, nil
+			}
+		}
+	}
+
+	return true, errors.New("couldn't find if it should estimate pumping, will estimate")
 }
 
 // adjustmentFactor function calculates the Parcel adjustment factor by weighting the crops and distribution of the

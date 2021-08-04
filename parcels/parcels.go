@@ -28,6 +28,7 @@ type Parcel struct {
 	Crop4Cov  sql.NullFloat64 `db:"crop4_cov"`
 	Sw        sql.NullBool    `db:"sw"`
 	Gw        sql.NullBool    `db:"gw"`
+	Subarea   sql.NullString  `db:"subarea"`
 	Nrd       string          `db:"nrd"`
 	SwID      sql.NullInt64   `db:"sw_id"`
 	PointX    float64         `db:"pointx"`
@@ -56,7 +57,7 @@ const (
 // getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
 // can be multiples of the same parcels listed with different soil types. It sets the year into a field in the struct.
 func getParcels(v database.Setup, Year int) []Parcel {
-	query := fmt.Sprintf(`SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw,
+	query := fmt.Sprintf(`SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw, subarea,
        irrig_type, sw_fac, first_irr, cert_num::varchar, model_id, sw_id, st_area(i.geom)/43560 area, 'np' nrd,
        st_x(st_transform(st_centroid(i.geom), 4326)) pointx, st_y(st_transform(st_centroid(i.geom), 4326)) pointy,
        sum(st_area(st_intersection(m.geom, i.geom))/43560) s_area, m.soil_code, m.coeff_zone
@@ -69,7 +70,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
          sw_fac, first_irr, cert_num::varchar, model_id, st_area(i.geom)/43560, st_x(st_transform(st_centroid(i.geom), 4326)),
          st_y(st_transform(st_centroid(i.geom), 4326)), nrd, m.soil_code, m.coeff_zone
 UNION ALL
-SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw,
+SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw, subarea,
        irr_type as irrig_type, sw_fac, first_irr, i.id as cert_num, null as model_id, sw_id, st_area(i.geom)/43560 area, 'sp' nrd,
        st_x(st_transform(st_centroid(i.geom), 4326)) pointx, st_y(st_transform(st_centroid(i.geom), 4326)) pointy,
        sum(st_area(st_intersection(m.geom, i.geom))/43560) s_area, m.soil_code, m.coeff_zone
