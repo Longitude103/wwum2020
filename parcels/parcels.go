@@ -44,7 +44,6 @@ type Parcel struct {
 	Dp        [12]float64
 	Pump      [12]float64
 	SWDel     [12]float64
-	Metered   bool
 }
 
 type IrrType int

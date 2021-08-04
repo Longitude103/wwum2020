@@ -45,6 +45,4 @@ func (p *Parcel) distributeUsage(totalNIR float64, totalMonthlyNIR [12]float64, 
 			p.Pump[m] = p.Nir[m] / totalMonthlyNIR[m] * (monthPercent * u)
 		}
 	}
-
-	p.Metered = true
 }

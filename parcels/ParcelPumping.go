@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+// ParcelPump is the main function for the parcels, it gets the usage, efficiencies, operates the surface water convayance
+// loss and then calls the surface water delivery. I also creates the parcels then calls the ParcelPumpDB method to set
+// the parcel pumping, it then loops through the years for each parcel and sends the diversions, calls parcel NIR, sets the
+// efficiency for the parcel, adds SW delivery, adds the known pumping, and then calls the simulate pumping for all other
+// parcels. Finally it writes out the pumping per parcel and then operates the WSPP routine to finish the RO and DP.
 func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, cCrops []database.CoeffCrop) (AllParcels []Parcel, err error) {
 	// cert usage
@@ -96,7 +101,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		// get all parcels where Metered == false and simulate pumping if GW == true
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
-			if (&parcels[p]).Metered == false && (&parcels[p]).Gw.Bool == true {
+			if (&parcels[p]).Gw.Bool == true {
 				(&parcels[p]).estimatePumping(cCrops)
 			}
 		}
