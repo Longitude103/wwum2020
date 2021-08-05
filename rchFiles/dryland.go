@@ -49,8 +49,8 @@ func parcelValues(p []parcels.Parcel, id int, nrd string) (area float64, rf [12]
 		if p[i].ParcelNo == id && p[i].Nrd == nrd {
 			for m := 0; m < 12; m++ {
 				rf[m] += p[i].Ro[m] + p[i].Dp[m]
-				return p[i].Area, rf, nil
 			}
+			return p[i].Area, rf, nil
 		}
 	}
 
