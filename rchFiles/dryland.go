@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Dryland gets a slice of dryland parcels and writes out the values to the results' database.
 func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 	for y := v.SYear; y < v.EYear+1; y++ {
 
@@ -42,6 +43,7 @@ func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 	return nil
 }
 
+// parcelValues is a function that returns the area of the parcel and the monthly return flow (rf) values for processing.
 func parcelValues(p []parcels.Parcel, id int, nrd string) (area float64, rf [12]float64, err error) {
 	for i := 0; i < len(p); i++ {
 		if p[i].ParcelNo == id && p[i].Nrd == nrd {
@@ -55,6 +57,7 @@ func parcelValues(p []parcels.Parcel, id int, nrd string) (area float64, rf [12]
 	return 0, rf, errors.New("parcel not found")
 }
 
+// findResult takes a slice of RchResult and returns the one that matches the node number and date
 func findResult(r []database.RchResult, node int, dt time.Time) (found bool, location int) {
 	for i := 0; i < len(r); i++ {
 		if r[i].Node == node && r[i].Dt == dt {
@@ -65,6 +68,7 @@ func findResult(r []database.RchResult, node int, dt time.Time) (found bool, loc
 	return false, 0
 }
 
+// inGrouped is a function that looks to see if the node is present in the slice
 func inGrouped(g []database.RchResult, node int) bool {
 	for _, i := range g {
 		if i.Node == node {
@@ -75,6 +79,8 @@ func inGrouped(g []database.RchResult, node int) bool {
 	return false
 }
 
+// groupResults is a function to gorup the results together to make a smaller results set so that if there are more than
+// one node results, they are added together and made into one value.
 func groupResults(r []database.RchResult) (results []database.RchResult) {
 	for i := 0; i < len(r); i++ {
 		if inGroup := inGrouped(results, r[i].Node); inGroup {
