@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+// IrrigationRCH is a method that creates the RCH file information in the results DB for the irrigated parcels. This uses the
+// parcel information and adds the proper type id
 func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 	v.Logger.Info("Starting to write RCH information from Irrigated Parcels")
 
@@ -66,6 +68,7 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 	return nil
 }
 
+// cellRCH returns the cell area proportion of the RCH
 func cellRCH(ro float64, dp float64, parcelArea float64, parcelInCellArea float64) (r float64, err error) {
 	if parcelArea <= 0 {
 		return 0.0, errors.New("total parcel area is zero, division by zero would occur")
@@ -75,6 +78,7 @@ func cellRCH(ro float64, dp float64, parcelArea float64, parcelInCellArea float6
 	return r, nil
 }
 
+// assignRCHType is a function to set the RCH Type int for the results in the database.
 func assignRCHType(nrd string, sw bool, gw bool, post97 bool) (int, error) {
 	switch {
 	case sw && gw:
@@ -112,6 +116,7 @@ func assignRCHType(nrd string, sw bool, gw bool, post97 bool) (int, error) {
 	}
 }
 
+// post97 returns a bool if the year is post97
 func post97(yr int64) bool {
 	if yr > 1997 {
 		return true
