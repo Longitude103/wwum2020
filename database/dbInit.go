@@ -131,5 +131,34 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 		return err
 	}
 
+	stmt, err = db.Prepare(`
+		create table if not exists wel_results
+			(
+				id integer not null
+					constraint results_pk
+						primary key autoincrement,
+				well_id int not null,
+				cell_node int not null,
+				dt text,
+				file_type int not null
+					constraint results_file_keys_file_key_fk
+					references file_keys,
+				result float
+			);
+		
+		create unique index results_id_uindex
+			on wel_results (id);
+	`)
+	if err != nil {
+		logger.Errorf("Error in creating wel_results table statement: %s", err)
+		return err
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		logger.Errorf("Error in creating wel_results table: %s", err)
+		return err
+	}
+
 	return nil
 }

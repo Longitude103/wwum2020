@@ -6,6 +6,7 @@ import (
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/Longitude103/wwum2020/rchFiles"
+	"github.com/Longitude103/wwum2020/wells"
 	//"wwum2020/rchFiles"
 )
 
@@ -92,10 +93,12 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 		return err
 	}
 
-	//fmt.Println("First Irrigated Cell:")
-	//fmt.Println(irrCells[0])
+	// write out WEL File to db
+	if err := wells.WriteWELFile(v, irrParcels); err != nil {
+		return err
+	}
+
 	_ = v.SlDb.Close() // close the db before ending the program
 	return nil
-	// Dry Cells
 
 }
