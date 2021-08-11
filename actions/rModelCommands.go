@@ -94,7 +94,7 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 	}
 
 	// write out WEL File to db
-	if err := wells.WriteWELFile(v, irrParcels); err != nil {
+	if err := wells.WriteWELResults(v, irrParcels); err != nil {
 		return err
 	}
 

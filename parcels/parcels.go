@@ -2,6 +2,7 @@ package parcels
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
@@ -205,4 +206,45 @@ func (p *Parcel) PrintNIR() string {
 
 func (p *Parcel) GetXY() (x float64, y float64) {
 	return p.PointX, p.PointY
+}
+
+// SetWelFileType is a method that returns the file type of the well that will be assigned pumping.
+func (p *Parcel) SetWelFileType() (fileType int, err error) {
+	if p.Nrd == "NP" {
+		if p.FirstIrr.Int64 < 1998 || p.Yr < 1998 {
+			// pre1998 condition
+			if p.Sw.Bool == true {
+				return 201, nil
+			} else {
+				return 202, nil
+			}
+		} else {
+			// post 97 parcel
+			if p.Sw.Bool == true {
+				return 203, nil
+			} else {
+				return 204, nil
+			}
+		}
+	}
+
+	if p.Nrd == "SP" {
+		if p.FirstIrr.Int64 < 1998 || p.Yr < 1998 {
+			// pre1998 condition
+			if p.Sw.Bool == true {
+				return 205, nil
+			} else {
+				return 206, nil
+			}
+		} else {
+			// post 97 parcel
+			if p.Sw.Bool == true {
+				return 207, nil
+			} else {
+				return 208, nil
+			}
+		}
+	}
+
+	return 0, errors.New("could not determine file type")
 }

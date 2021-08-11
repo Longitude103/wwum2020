@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+// TODO: create documentation for this file
+
 type WelResult struct {
 	Wellid   int       `db:"well_id"`
 	Node     int       `db:"cell_node"`
@@ -38,12 +40,12 @@ func ResultsWelDB(sqlDB *sqlx.DB) (*WelDB, error) {
 	return &db, nil
 }
 
-func (db *WelDB) Add(conveyLoss WelResult) error {
+func (db *WelDB) Add(value WelResult) error {
 	if len(db.buffer) == cap(db.buffer) {
 		return errors.New("conveyance loss buffer is full")
 	}
 
-	db.buffer = append(db.buffer, conveyLoss)
+	db.buffer = append(db.buffer, value)
 	if len(db.buffer) == cap(db.buffer) {
 		if err := db.Flush(); err != nil {
 			return fmt.Errorf("unable to flush conveyance loss: %w", err)
