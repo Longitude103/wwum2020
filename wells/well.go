@@ -4,10 +4,7 @@ import (
 	"errors"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels"
-	"time"
 )
-
-// TODO: Create Tests for this file.
 
 // WriteWELResults is a function that gets the pumping amounts for the parcel and assigns them to a well or wells that
 // supply that parcel.
@@ -41,15 +38,12 @@ func WriteWELResults(v database.Setup, parcels []parcels.Parcel) error {
 		} else {
 			// can be one or multiple wells
 			for _, w := range wls {
-				if err = addToResults(wellNode, welResult, w, parcels[p], count); err != nil {
+				if welResult, err = addToResults(wellNode, welResult, w, parcels[p], count); err != nil {
 					return err
 				}
 			}
 		}
 	}
-
-	// sum the same wells together
-	groupedResult, err := sumWells(welResult)
 
 	welDB, err := database.ResultsWelDB(v.SlDb)
 	if err != nil {
@@ -57,8 +51,8 @@ func WriteWELResults(v database.Setup, parcels []parcels.Parcel) error {
 	}
 
 	// save groupedResult to DB
-	for i := 0; i < len(groupedResult); i++ {
-		err = welDB.Add(groupedResult[i])
+	for i := 0; i < len(welResult); i++ {
+		err = welDB.Add(welResult[i])
 		if err != nil {
 			return err
 		}
@@ -99,32 +93,42 @@ func getNode(wellNodes []database.WellNode, well int, nrd string) (int, error) {
 }
 
 // addToResults is the function that creates another result from the parcel and adds to the result slice.
-func addToResults(wellNode []database.WellNode, r []database.WelResult, well int, p parcels.Parcel, count int) error {
+func addToResults(wellNode []database.WellNode, r []database.WelResult, well int, p parcels.Parcel, count int) ([]database.WelResult, error) {
 	node, err := getNode(wellNode, well, p.Nrd)
 	if err != nil {
-		return err
+		return r, err
 	}
 
-	ft, err := p.SetWelFileType()
-	if err != nil {
-		return err
+	// if the well is there, then just add the value
+	if found, local := findResult(r, well, p.Yr); found {
+		// use local and call add
+		r[local].AddPumping(p.Pump, float64(count))
+	} else {
+		// Otherwise, create a new well and add it to the slice
+		ft, err := p.SetWelFileType()
+		if err != nil {
+			return r, err
+		}
+
+		var result [12]float64
+		for i, d := range p.Pump {
+			result[i] = d / float64(count)
+		}
+
+		r = append(r, database.WelResult{Wellid: well, Node: node, Yr: p.Yr, FileType: ft, Result: result})
 	}
 
-	for i, d := range p.Pump {
-		if d > 0 {
-			r = append(r, database.WelResult{Wellid: well, Node: node, Dt: time.Date(p.Yr,
-				time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), FileType: ft, Result: d / float64(count)})
+	return r, nil
+}
+
+// findResult is a function to find if there is a slice of database.WelResult that has a well and year and returns a
+// bool if it is found and a location in the slice that it is located
+func findResult(r []database.WelResult, well int, yr int) (found bool, location int) {
+	for i := 0; i < len(r); i++ {
+		if r[i].Wellid == well && r[i].Yr == yr {
+			return true, i
 		}
 	}
 
-	return nil
-}
-
-// sumWells is a function to add the same well in the same month together for one pumping value.
-func sumWells([]database.WelResult) (result []database.WelResult, err error) {
-	// run through and add wells together that are the same well, month and nrd, output a new slice.
-	// TODO: Create this function or might want to do this in addToResults as part of that function
-	// similar to dryland.go[60:98] file. Look there.
-
-	return result, nil
+	return false, 0
 }

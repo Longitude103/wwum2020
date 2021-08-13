@@ -1,0 +1,111 @@
+package wells
+
+import (
+	"database/sql"
+	"github.com/Longitude103/wwum2020/database"
+	"github.com/Longitude103/wwum2020/parcels"
+	"testing"
+)
+
+var (
+	wr1 = database.WelResult{Wellid: 123, Node: 1, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr2 = database.WelResult{Wellid: 124, Node: 1, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr3 = database.WelResult{Wellid: 125, Node: 2, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr4 = database.WelResult{Wellid: 126, Node: 2, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+
+	wrSlice = []database.WelResult{wr1, wr2, wr3, wr4}
+
+	wn1 = database.WellNode{WellId: 123, RegCd: "1", Node: 1, Nrd: "NP"}
+	wn2 = database.WellNode{WellId: 124, RegCd: "2", Node: 1, Nrd: "NP"}
+	wn3 = database.WellNode{WellId: 125, RegCd: "3", Node: 2, Nrd: "SP"}
+	wn4 = database.WellNode{WellId: 126, RegCd: "4", Node: 2, Nrd: "SP"}
+	wn5 = database.WellNode{WellId: 127, RegCd: "5", Node: 2, Nrd: "SP"}
+
+	wnSlice = []database.WellNode{wn1, wn2, wn3, wn4, wn5}
+
+	testParcel1 = parcels.Parcel{ParcelNo: 987, Yr: 2021, Nrd: "NP", FirstIrr: sql.NullInt64{Valid: true, Int64: 1999},
+		Sw: sql.NullBool{Valid: true, Bool: false}, Pump: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0}}
+	testParcel2 = parcels.Parcel{ParcelNo: 986, Yr: 2021, Nrd: "SP", FirstIrr: sql.NullInt64{Valid: true, Int64: 1972},
+		Sw: sql.NullBool{Valid: true, Bool: true}, Pump: [12]float64{0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0}}
+
+	wp1 = database.WellParcel{WellId: 123, ParcelId: 987, Nrd: "NP", Yr: 2021}
+	wp2 = database.WellParcel{WellId: 124, ParcelId: 987, Nrd: "NP", Yr: 2021}
+	wp3 = database.WellParcel{WellId: 125, ParcelId: 986, Nrd: "SP", Yr: 2021}
+	wp4 = database.WellParcel{WellId: 126, ParcelId: 986, Nrd: "SP", Yr: 2021}
+
+	wpSlice = []database.WellParcel{wp1, wp2, wp3, wp4}
+)
+
+func Test_findResult(t *testing.T) {
+	found, location := findResult(wrSlice, 123, 2021)
+	if found != true || location != 0 {
+		t.Errorf("should have found a result and the location should have been zero; found: %t, location: %d\n", found, location)
+	}
+
+	found, location = findResult(wrSlice, 126, 2021)
+	if found != true || location != 3 {
+		t.Errorf("should have found the well and location; found %t, location %d\n", found, location)
+	}
+
+	found, location = findResult(wrSlice, 124, 2020)
+	if found == true || location != 0 {
+		t.Errorf("should have not found the well and location; found %t, location %d\n", found, location)
+	}
+
+	found, location = findResult(wrSlice, 127, 2021)
+	if found == true || location != 0 {
+		t.Errorf("should have not found the well and location; found %t, location %d\n", found, location)
+	}
+}
+
+func Test_addToResults(t *testing.T) {
+	wrSlice, err := addToResults(wnSlice, wrSlice, 123, testParcel1, 1)
+	if err != nil {
+		t.Errorf("function errored: %s\n", err)
+	}
+
+	if wrSlice[0].Result[4] != 2 {
+		t.Errorf("function didn't add to new well result correctly value should be "+
+			"Result[4] == 2, values are: %+v\n", wrSlice[0])
+	}
+
+	wrSlice, err = addToResults(wnSlice, wrSlice, 127, testParcel2, 2)
+	if err != nil {
+		t.Errorf("function errored: %s\n", err)
+	}
+
+	if wrSlice[len(wrSlice)-1].Wellid != 127 {
+		t.Error("new well didn't get appended to slice")
+	}
+}
+
+func Test_getNode(t *testing.T) {
+	nodeNum, err := getNode(wnSlice, 127, "SP")
+	if err != nil {
+		t.Errorf("function errored: %s\n", err)
+	}
+
+	if nodeNum != 2 {
+		t.Errorf("node should have returned 2, but returned %d\n", nodeNum)
+	}
+}
+
+func Test_filterWells(t *testing.T) {
+	w, c, err := filterWells(wpSlice, 987, "NP", 2021)
+	if err != nil {
+		t.Errorf("function errored: %s\n", err)
+	}
+
+	if c != 2 || w[0] != 123 {
+		t.Errorf("well count or id was not correct, should be count 2, got %d, well id should be 123, got %d", c, w[0])
+	}
+
+	w, c, err = filterWells(wpSlice, 987, "NP", 2020)
+	if err != nil {
+		t.Errorf("function errored: %s\n", err)
+	}
+
+	if c != 0 {
+		t.Errorf("well count was not correct, should be count 0, got %d", c)
+	}
+}
