@@ -29,11 +29,13 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 			var cellResult database.RchResult
 			dist, err := database.Distances(cells[i], wStations)
 			if err != nil {
+				v.Logger.Errorf("error in distance calculation for cell: %v", cells[i])
 				return err
 			}
 
 			_, _, aDp, aRo, err := database.FilterCCDryLand(cCoefficients, cells[i].CZone, 13)
 			if err != nil {
+				v.Logger.Errorf("error in getting FilterCCDryLand Function for cell: %v and crop 13", cells[i].CZone)
 				return err
 			}
 
@@ -49,18 +51,21 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 
 				for m := 0; m < 12; m++ {
 					cellResult = database.RchResult{Node: cells[i].Node,
-						Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, nil), FileType: 102,
+						Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC), FileType: 102,
 						Result: annData.MonthlyData[m].Ro*st.Weight*cells[i].CellArea/12*aRo + annData.MonthlyData[m].Dp*st.Weight*cells[i].CellArea/12*aDp}
 				}
 
 			}
 
 			if err := v.RchDb.Add(cellResult); err != nil {
+				v.Logger.Errorf("Error Adding Result to RchDB Buffer, Result: %+v", cellResult)
 				return err
 			}
 		}
 		_ = nVegBarCells.Close()
 	}
 	_ = nVegBarYears.Close()
+
+	v.Logger.Info("finished natural vegetation function.")
 	return nil
 }

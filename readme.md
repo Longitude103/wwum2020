@@ -21,9 +21,9 @@ of flags in the CLI. This is a core go package.
     
 ### Common CLI Examples
 - Production runs:
-  - `go run main.go runModel --CSDir "/run/media/heath/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops"`
+  - `go run main.go runModel --CSDir "/run/media/heath/part1/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
 - Development runs:
-  - `go run main.go runModel --CSDir "/run/media/heath/G-Raid with TB3/WWUMM 2016/rswb/WBP/v4/CSResults/Crops" --debug`
+  - `go run main.go runModel --CSDir "/run/media/heath/part1/WWUMM2020/CropSim/Run005_WWUM2020/Output" --debug`
 
 ### Output
 To store the large volume of output, we're going to use SQLite3 as the storage container. 
