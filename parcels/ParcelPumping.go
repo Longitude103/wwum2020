@@ -125,12 +125,14 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		for p := 0; p < len(parcels); p++ {
 			_ = wbBar.Add(1)
 			if err := (&parcels[p]).waterBalanceWSPP(false); err != nil {
+				v.Logger.Errorf("error in parcel WSPP parcel data: %+v", parcels[p])
 				return nil, err
 			}
+
+			AllParcels = append(AllParcels, parcels[p])
 		}
 		_ = wbBar.Close()
 
-		AllParcels = append(AllParcels, parcels...)
 	}
 	_ = parcelYearBar.Close()
 

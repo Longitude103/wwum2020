@@ -84,6 +84,7 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 // crops as three arrays.
 func crop(c int64, aData []fileio.StationResults) (nir [12]float64, ro [12]float64, dp [12]float64, et [12]float64) {
 	var data fileio.StationResults
+	// TODO: Handle CROP 15 which is FALLOW
 
 	for _, d := range aData {
 		if int64(d.Crop) == c {

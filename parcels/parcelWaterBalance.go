@@ -16,6 +16,10 @@ func (p *Parcel) waterBalanceWSPP(verbose bool) error {
 	}
 
 	totalNir := sumAnnual(p.Nir)
+	if totalNir <= 0 {
+		return errors.New("total nir cannot be zero")
+	}
+
 	appWAT, _, pslIrr := setAppWat(p.SWDel, p.Pump, fsl)
 	roDpWt, err := setRoDpWt(p.Ro, p.Dp)
 	if err != nil {

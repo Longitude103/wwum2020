@@ -19,11 +19,13 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 		// filter all parcels to this year only
 		parcelList, err := parcelFilterByYear(AllParcels, y)
 		if err != nil {
+			v.Logger.Errorf("parcelFilterByYear error for year: %d", y)
 			return err
 		}
 
 		irrCells, err := database.GetCellsIrr(v, y)
 		if err != nil {
+			v.Logger.Errorf("GetCellsIrr error for year: %d", y)
 			return err
 		}
 
@@ -34,10 +36,12 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 			_ = irrCellsBar.Add(1)
 			p, err := parcelFilterById(parcelList, irrCells[i].ParcelId, irrCells[i].Nrd)
 			if err != nil {
+				v.Logger.Errorf("parcelFilterById error for parcel Id: %d, and nrd: %s", irrCells[i].ParcelId, irrCells[i].Nrd)
 				return err
 			}
 			fileType, err := assignRCHType(p.Nrd, p.Sw.Bool, p.Gw.Bool, post97(p.FirstIrr.Int64))
 			if err != nil {
+				v.Logger.Errorf("assignRCHType error where nrd is %s, SW: %t, GW: %t, post97: %t", p.Nrd, p.Sw.Bool, p.Gw.Bool, post97(p.FirstIrr.Int64))
 				return err
 			}
 
@@ -45,6 +49,7 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 			for j := 0; j < 12; j++ {
 				cellRecharge[j], err = cellRCH(p.Ro[j], p.Dp[j], p.Area, irrCells[i].IrrArea)
 				if err != nil {
+					v.Logger.Errorf("error in cellRCH where RO: %f, DP: %f, Area: %f, IrrArea: %f", p.Ro[j], p.Dp[j], p.Area, irrCells[i].IrrArea)
 					return err
 				}
 
@@ -54,6 +59,9 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 						Dt:       time.Date(y, time.Month(j+1), 1, 0, 0, 0, 0, nil),
 						FileType: fileType, Result: cellRecharge[j]})
 					if err != nil {
+						v.Logger.Errorf("Cannot Add to RchDb: %+v", database.RchResult{Node: irrCells[i].Node,
+							Dt:       time.Date(y, time.Month(j+1), 1, 0, 0, 0, 0, nil),
+							FileType: fileType, Result: cellRecharge[j]})
 						return err
 					}
 				}
@@ -65,6 +73,7 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 	}
 	_ = irrCellsYearBar.Close()
 
+	v.Logger.Info("IrrigationRCH is completed.")
 	return nil
 }
 
