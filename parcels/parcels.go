@@ -93,6 +93,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = Year
+		parcels[i].changeFallow()
 	}
 
 	if v.AppDebug {
@@ -247,4 +248,31 @@ func (p *Parcel) SetWelFileType() (fileType int, err error) {
 	}
 
 	return 0, errors.New("could not determine file type")
+}
+
+func (p *Parcel) changeFallow() {
+	if p.Crop1.Int64 == 15 {
+		p.Crop1.Int64 = 12
+	}
+
+	if p.Crop2.Int64 == 15 {
+		p.Crop2.Int64 = 12
+	}
+
+	if p.Crop3.Int64 == 15 {
+		p.Crop3.Int64 = 12
+	}
+
+	if p.Crop4.Int64 == 15 {
+		p.Crop4.Int64 = 12
+	}
+}
+
+func (p *Parcel) noCropCheck() {
+	cropT := p.Crop1.Int64 + p.Crop2.Int64 + p.Crop3.Int64 + p.Crop4.Int64
+
+	if cropT == 0 {
+		p.Crop1.Int64 = 8
+		p.Crop1Cov.Float64 = 1.0
+	}
 }
