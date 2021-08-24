@@ -272,10 +272,6 @@ func (p *Parcel) changeFallow() {
 func (p *Parcel) noCropCheck() {
 	cropT := p.Crop1.Int64 + p.Crop2.Int64 + p.Crop3.Int64 + p.Crop4.Int64
 
-	if p.ParcelNo == 6504 {
-		fmt.Println(cropT)
-	}
-
 	if cropT == 0 {
 		p.Crop1.Int64 = 8
 		p.Crop1.Valid = true
