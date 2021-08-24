@@ -94,6 +94,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = Year
 		parcels[i].changeFallow()
+		parcels[i].noCropCheck()
 	}
 
 	if v.AppDebug {
@@ -271,8 +272,14 @@ func (p *Parcel) changeFallow() {
 func (p *Parcel) noCropCheck() {
 	cropT := p.Crop1.Int64 + p.Crop2.Int64 + p.Crop3.Int64 + p.Crop4.Int64
 
+	if p.ParcelNo == 6504 {
+		fmt.Println(cropT)
+	}
+
 	if cropT == 0 {
 		p.Crop1.Int64 = 8
+		p.Crop1.Valid = true
 		p.Crop1Cov.Float64 = 1.0
+		p.Crop1Cov.Valid = true
 	}
 }
