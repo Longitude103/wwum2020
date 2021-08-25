@@ -35,7 +35,7 @@ type WelDB struct {
 // ResultsWelDB is a function that creates the WelDB struct and contains the SQL statement to insert the records, it
 // also accepts a slice of welResult used for the buffer
 func ResultsWelDB(sqlDB *sqlx.DB) (*WelDB, error) {
-	insertSQL := `INSERT INTO results (well_id, cell_node, dt, file_type, result) VALUES (?, ?, ?, ?, ?)`
+	insertSQL := `INSERT INTO wel_results (well_id, cell_node, dt, file_type, result) VALUES (?, ?, ?, ?, ?)`
 
 	stmt, err := sqlDB.Preparex(insertSQL)
 	if err != nil {

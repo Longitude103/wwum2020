@@ -54,13 +54,12 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 				}
 
 				if cellRecharge[j] > 0 {
-					v.Logger.Infow("recharge created and is:", cellRecharge[j])
 					err = v.RchDb.Add(database.RchResult{Node: irrCells[i].Node,
-						Dt:       time.Date(y, time.Month(j+1), 1, 0, 0, 0, 0, nil),
+						Dt:       time.Date(y, time.Month(j+1), 1, 0, 0, 0, 0, time.UTC),
 						FileType: fileType, Result: cellRecharge[j]})
 					if err != nil {
 						v.Logger.Errorf("Cannot Add to RchDb: %+v", database.RchResult{Node: irrCells[i].Node,
-							Dt:       time.Date(y, time.Month(j+1), 1, 0, 0, 0, 0, nil),
+							Dt:       time.Date(y, time.Month(j+1), 1, 0, 0, 0, 0, time.UTC),
 							FileType: fileType, Result: cellRecharge[j]})
 						return err
 					}

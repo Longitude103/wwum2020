@@ -31,7 +31,6 @@ func parcelFilterById(p []parcels.Parcel, id int, nrd string) (parcels.Parcel, e
 		return parcels.Parcel{}, errors.New("no parcels in slice for id")
 	}
 
-	fmt.Println("parcels length", len(p))
 	for i := 0; i < len(p); i++ {
 		if p[i].ParcelNo == id && p[i].Nrd == nrd {
 			return p[i], nil

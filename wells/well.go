@@ -82,10 +82,10 @@ func filterWells(wlPar []database.WellParcel, parcel int, nrd string, yr int) (w
 
 // getNode is a function that gets the node that a well is located in based on well id and nrd string and returns the
 // node value in an int.
-func getNode(wellNodes []database.WellNode, well int, nrd string) (int, error) {
+func getNode(wellNodes []database.WellNode, well int64, nrd string) (int64, error) {
 	for i := 0; i < len(wellNodes); i++ {
-		if wellNodes[i].WellId == well && wellNodes[i].Nrd == nrd {
-			return wellNodes[i].Node, nil
+		if wellNodes[i].WellId.Int64 == well && wellNodes[i].Nrd == nrd {
+			return wellNodes[i].Node.Int64, nil
 		}
 	}
 
@@ -94,7 +94,7 @@ func getNode(wellNodes []database.WellNode, well int, nrd string) (int, error) {
 
 // addToResults is the function that creates another result from the parcel and adds to the result slice.
 func addToResults(wellNode []database.WellNode, r []database.WelResult, well int, p parcels.Parcel, count int) ([]database.WelResult, error) {
-	node, err := getNode(wellNode, well, p.Nrd)
+	node, err := getNode(wellNode, int64(well), p.Nrd)
 	if err != nil {
 		return r, err
 	}
@@ -115,7 +115,7 @@ func addToResults(wellNode []database.WellNode, r []database.WelResult, well int
 			result[i] = d / float64(count)
 		}
 
-		r = append(r, database.WelResult{Wellid: well, Node: node, Yr: p.Yr, FileType: ft, Result: result})
+		r = append(r, database.WelResult{Wellid: well, Node: int(node), Yr: p.Yr, FileType: ft, Result: result})
 	}
 
 	return r, nil
