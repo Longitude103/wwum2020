@@ -15,23 +15,23 @@ var (
 
 	wrSlice = []database.WelResult{wr1, wr2, wr3, wr4}
 
-	wn1 = database.WellNode{WellId: 123, RegCd: "1", Node: 1, Nrd: "NP"}
-	wn2 = database.WellNode{WellId: 124, RegCd: "2", Node: 1, Nrd: "NP"}
-	wn3 = database.WellNode{WellId: 125, RegCd: "3", Node: 2, Nrd: "SP"}
-	wn4 = database.WellNode{WellId: 126, RegCd: "4", Node: 2, Nrd: "SP"}
-	wn5 = database.WellNode{WellId: 127, RegCd: "5", Node: 2, Nrd: "SP"}
+	wn1 = database.WellNode{WellId: 123, RegCd: sql.NullString{String: "1", Valid: true}, Node: 1, Nrd: "np"}
+	wn2 = database.WellNode{WellId: 124, RegCd: sql.NullString{String: "2", Valid: true}, Node: 1, Nrd: "np"}
+	wn3 = database.WellNode{WellId: 125, RegCd: sql.NullString{String: "3", Valid: true}, Node: 2, Nrd: "sp"}
+	wn4 = database.WellNode{WellId: 126, RegCd: sql.NullString{String: "4", Valid: true}, Node: 2, Nrd: "sp"}
+	wn5 = database.WellNode{WellId: 127, RegCd: sql.NullString{String: "5", Valid: true}, Node: 2, Nrd: "sp"}
 
 	wnSlice = []database.WellNode{wn1, wn2, wn3, wn4, wn5}
 
-	testParcel1 = parcels.Parcel{ParcelNo: 987, Yr: 2021, Nrd: "NP", FirstIrr: sql.NullInt64{Valid: true, Int64: 1999},
+	testParcel1 = parcels.Parcel{ParcelNo: 987, Yr: 2021, Nrd: "np", FirstIrr: sql.NullInt64{Valid: true, Int64: 1999},
 		Sw: sql.NullBool{Valid: true, Bool: false}, Pump: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0}}
-	testParcel2 = parcels.Parcel{ParcelNo: 986, Yr: 2021, Nrd: "SP", FirstIrr: sql.NullInt64{Valid: true, Int64: 1972},
+	testParcel2 = parcels.Parcel{ParcelNo: 986, Yr: 2021, Nrd: "sp", FirstIrr: sql.NullInt64{Valid: true, Int64: 1972},
 		Sw: sql.NullBool{Valid: true, Bool: true}, Pump: [12]float64{0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0}}
 
-	wp1 = database.WellParcel{WellId: 123, ParcelId: 987, Nrd: "NP", Yr: 2021}
-	wp2 = database.WellParcel{WellId: 124, ParcelId: 987, Nrd: "NP", Yr: 2021}
-	wp3 = database.WellParcel{WellId: 125, ParcelId: 986, Nrd: "SP", Yr: 2021}
-	wp4 = database.WellParcel{WellId: 126, ParcelId: 986, Nrd: "SP", Yr: 2021}
+	wp1 = database.WellParcel{WellId: 123, ParcelId: 987, Nrd: "np", Yr: 2021}
+	wp2 = database.WellParcel{WellId: 124, ParcelId: 987, Nrd: "np", Yr: 2021}
+	wp3 = database.WellParcel{WellId: 125, ParcelId: 986, Nrd: "sp", Yr: 2021}
+	wp4 = database.WellParcel{WellId: 126, ParcelId: 986, Nrd: "sp", Yr: 2021}
 
 	wpSlice = []database.WellParcel{wp1, wp2, wp3, wp4}
 )

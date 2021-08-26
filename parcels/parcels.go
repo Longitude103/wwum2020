@@ -212,7 +212,7 @@ func (p *Parcel) GetXY() (x float64, y float64) {
 
 // SetWelFileType is a method that returns the file type of the well that will be assigned pumping.
 func (p *Parcel) SetWelFileType() (fileType int, err error) {
-	if p.Nrd == "NP" {
+	if p.Nrd == "np" {
 		if p.FirstIrr.Int64 < 1998 || p.Yr < 1998 {
 			// pre1998 condition
 			if p.Sw.Bool == true {
@@ -230,7 +230,7 @@ func (p *Parcel) SetWelFileType() (fileType int, err error) {
 		}
 	}
 
-	if p.Nrd == "SP" {
+	if p.Nrd == "sp" {
 		if p.FirstIrr.Int64 < 1998 || p.Yr < 1998 {
 			// pre1998 condition
 			if p.Sw.Bool == true {
@@ -248,7 +248,8 @@ func (p *Parcel) SetWelFileType() (fileType int, err error) {
 		}
 	}
 
-	return 0, errors.New("could not determine file type")
+	fmt.Printf("Parcel data %+v\n", p)
+	return 0, errors.New("could not determine file type\n")
 }
 
 func (p *Parcel) changeFallow() {

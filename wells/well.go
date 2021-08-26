@@ -9,16 +9,21 @@ import (
 // WriteWELResults is a function that gets the pumping amounts for the parcel and assigns them to a well or wells that
 // supply that parcel.
 func WriteWELResults(v database.Setup, parcels []parcels.Parcel) error {
+	v.Logger.Info("Starting WriteWELResults...")
 	// get a list of the wells and associated parcels
+	v.Logger.Infof("Length of Parcels sent to wells: %d", len(parcels))
+
 	wellParcels, err := database.GetWellParcels(v)
 	if err != nil {
 		return err
 	}
+	v.Logger.Infof("Length of wellParcels is %d", len(wellParcels))
 
 	wellNode, err := database.GetWellNode(v)
 	if err != nil {
 		return err
 	}
+	v.Logger.Infof("Length of wellNode %d", len(wellNode))
 
 	var welResult []database.WelResult
 	for p := 0; p < len(parcels); p++ {
@@ -28,7 +33,10 @@ func WriteWELResults(v database.Setup, parcels []parcels.Parcel) error {
 		}
 
 		// find wells
+
 		wls, count, err := filterWells(wellParcels, parcels[p].ParcelNo, parcels[p].Nrd, parcels[p].Yr)
+		//fmt.Printf("ParcelNo: %d, NRD: %s, Year: %d", parcels[p].ParcelNo, parcels[p].Nrd, parcels[p].Yr)
+		//fmt.Println("Wells:", wls)
 		if err != nil {
 			return err
 		}
@@ -51,6 +59,7 @@ func WriteWELResults(v database.Setup, parcels []parcels.Parcel) error {
 	}
 
 	// save groupedResult to DB
+	v.Logger.Infof("Length of welResult %d", len(welResult))
 	for i := 0; i < len(welResult); i++ {
 		err = welDB.Add(welResult[i])
 		if err != nil {
@@ -82,10 +91,10 @@ func filterWells(wlPar []database.WellParcel, parcel int, nrd string, yr int) (w
 
 // getNode is a function that gets the node that a well is located in based on well id and nrd string and returns the
 // node value in an int.
-func getNode(wellNodes []database.WellNode, well int64, nrd string) (int64, error) {
+func getNode(wellNodes []database.WellNode, well int, nrd string) (int, error) {
 	for i := 0; i < len(wellNodes); i++ {
-		if wellNodes[i].WellId.Int64 == well && wellNodes[i].Nrd == nrd {
-			return wellNodes[i].Node.Int64, nil
+		if wellNodes[i].WellId == well && wellNodes[i].Nrd == nrd {
+			return wellNodes[i].Node, nil
 		}
 	}
 
@@ -94,7 +103,7 @@ func getNode(wellNodes []database.WellNode, well int64, nrd string) (int64, erro
 
 // addToResults is the function that creates another result from the parcel and adds to the result slice.
 func addToResults(wellNode []database.WellNode, r []database.WelResult, well int, p parcels.Parcel, count int) ([]database.WelResult, error) {
-	node, err := getNode(wellNode, int64(well), p.Nrd)
+	node, err := getNode(wellNode, well, p.Nrd)
 	if err != nil {
 		return r, err
 	}
@@ -115,7 +124,7 @@ func addToResults(wellNode []database.WellNode, r []database.WelResult, well int
 			result[i] = d / float64(count)
 		}
 
-		r = append(r, database.WelResult{Wellid: well, Node: int(node), Yr: p.Yr, FileType: ft, Result: result})
+		r = append(r, database.WelResult{Wellid: well, Node: node, Yr: p.Yr, FileType: ft, Result: result})
 	}
 
 	return r, nil
