@@ -1,10 +1,12 @@
 package parcels
 
 import (
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
 	"github.com/schollz/progressbar/v3"
+	"os"
 	"time"
 )
 
@@ -78,31 +80,17 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		// add usage to parcel
 		v.Logger.Info("Setting Annual Usage")
 		annUsage := filterUsage(usage, y)
-		for _, u := range annUsage {
-			//fmt.Printf("Annual Usage in %v is %g\n", u.CertNum, u.UseAF)
-			// filter parcels to this usage cert
-			filteredParcels := filterParcelByCert(&parcels, u.CertNum)
-
-			totalNIR := 0.0
-			totalMonthlyNIR := [12]float64{}
-
-			for i := 0; i < len(filteredParcels); i++ {
-				for m := 0; m < 12; m++ {
-					totalMonthlyNIR[m] += filteredParcels[i].Nir[m]
-					totalNIR += filteredParcels[i].Nir[m]
-				}
-			}
-
-			for i := 0; i < len(filteredParcels); i++ {
-				filteredParcels[i].distributeUsage(totalNIR, totalMonthlyNIR, u.UseAF)
-			}
+		if err := distUsage(annUsage, &parcels); err != nil {
+			return []Parcel{}, err
 		}
 
-		// get all parcels where Metered == false and simulate pumping if GW == true
+		// get all parcels simulate pumping if GW == true
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
 			if (&parcels[p]).Gw.Bool == true {
-				(&parcels[p]).estimatePumping(cCrops)
+				if err := (&parcels[p]).estimatePumping(cCrops); err != nil {
+					return []Parcel{}, err
+				}
 			}
 		}
 
@@ -136,5 +124,40 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	}
 	_ = parcelYearBar.Close()
 
+	for i := 0; i < len(AllParcels); i++ {
+		fmt.Println("All Parcels", AllParcels[i])
+		if i > 40 {
+			os.Exit(1)
+		}
+	}
+
 	return AllParcels, nil
+}
+
+func distUsage(annUsage []Usage, parcels *[]Parcel) error {
+	for _, u := range annUsage {
+		//fmt.Printf("Annual Usage in %v is %g\n", u.CertNum, u.UseAF)
+		// filter parcels to this usage cert
+		filteredParcels := filterParcelByCert(parcels, u.CertNum)
+		fmt.Println(filteredParcels)
+
+		totalNIR := 0.0
+		totalMonthlyNIR := [12]float64{}
+
+		for i := 0; i < len(filteredParcels); i++ {
+			for m := 0; m < 12; m++ {
+				totalMonthlyNIR[m] += filteredParcels[i].Nir[m]
+				totalNIR += filteredParcels[i].Nir[m]
+			}
+		}
+
+		fmt.Println(totalMonthlyNIR)
+		fmt.Println(totalNIR)
+
+		for i := 0; i < len(filteredParcels); i++ {
+			filteredParcels[i].distributeUsage(totalNIR, totalMonthlyNIR, u.UseAF)
+		}
+	}
+
+	return nil
 }

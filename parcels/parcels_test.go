@@ -71,6 +71,8 @@ var p4 = Parcel{ParcelNo: 1235, AppEff: 0.65,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 102.5,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
+var testParcelSlice = []Parcel{p1, p2, p3, p4}
+
 func TestParcel_String(t *testing.T) {
 	if p1.String() != "Parcel No: 1234, NRD: np, Year: 2014" {
 		t.Error("string doesn't produce correct result")
