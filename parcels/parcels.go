@@ -105,14 +105,14 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 }
 
 // filterParcelByCert filters a slice of parcels by the CertNum and returns a slice of the parcels that have that CertNum.
-func filterParcelByCert(p *[]Parcel, c string) (filteredParcels []Parcel) {
+func filterParcelByCert(p *[]Parcel, c string) (fParcels []int) {
 	for i := 0; i < len(*p); i++ {
 		if (*p)[i].CertNum.String == c {
-			filteredParcels = append(filteredParcels, (*p)[i])
+			fParcels = append(fParcels, i)
 		}
 	}
 
-	return filteredParcels
+	return fParcels
 }
 
 // parcelSWDelivery method uses the diversions to then calculate the total amount of surface water delivered to a parcel

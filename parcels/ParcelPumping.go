@@ -80,6 +80,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		// add usage to parcel
 		v.Logger.Info("Setting Annual Usage")
 		annUsage := filterUsage(usage, y)
+		// TODO: check results of this function and write more tests.
 		if err := distUsage(annUsage, &parcels); err != nil {
 			return []Parcel{}, err
 		}
@@ -88,6 +89,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
 			if (&parcels[p]).Gw.Bool == true {
+				// TODO: Check to make sure this function is working
 				if err := (&parcels[p]).estimatePumping(cCrops); err != nil {
 					return []Parcel{}, err
 				}
@@ -139,23 +141,19 @@ func distUsage(annUsage []Usage, parcels *[]Parcel) error {
 		//fmt.Printf("Annual Usage in %v is %g\n", u.CertNum, u.UseAF)
 		// filter parcels to this usage cert
 		filteredParcels := filterParcelByCert(parcels, u.CertNum)
-		fmt.Println(filteredParcels)
 
 		totalNIR := 0.0
 		totalMonthlyNIR := [12]float64{}
 
-		for i := 0; i < len(filteredParcels); i++ {
+		for _, pIndex := range filteredParcels {
 			for m := 0; m < 12; m++ {
-				totalMonthlyNIR[m] += filteredParcels[i].Nir[m]
-				totalNIR += filteredParcels[i].Nir[m]
+				totalMonthlyNIR[m] += (*parcels)[pIndex].Nir[m]
+				totalNIR += (*parcels)[pIndex].Nir[m]
 			}
 		}
 
-		fmt.Println(totalMonthlyNIR)
-		fmt.Println(totalNIR)
-
-		for i := 0; i < len(filteredParcels); i++ {
-			filteredParcels[i].distributeUsage(totalNIR, totalMonthlyNIR, u.UseAF)
+		for _, pIndex := range filteredParcels {
+			(*parcels)[pIndex].distributeUsage(totalNIR, totalMonthlyNIR, u.UseAF)
 		}
 	}
 

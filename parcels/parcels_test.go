@@ -22,7 +22,7 @@ var p1 = Parcel{ParcelNo: 1234, AppEff: 0.85,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 103.0,
 	Sw: sql.NullBool{Bool: true, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
-var p2 = Parcel{ParcelNo: 1234, AppEff: 0.85,
+var p2 = Parcel{ParcelNo: 1236, AppEff: 0.85,
 	Nir:       [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
 	DryEt:     [12]float64{0, 0, 0, 0, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0},
 	Et:        [12]float64{0, 0, 0, 0, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
@@ -83,8 +83,8 @@ func TestFilterParcelByCert(t *testing.T) {
 	sliceP := []Parcel{p1}
 	fp := filterParcelByCert(&sliceP, "3456")
 
-	if fp[0].ParcelNo != 1234 {
-		t.Error("is not returning correct parcel")
+	if sliceP[fp[0]].ParcelNo != 1234 {
+		t.Errorf("Didn't return correct parcel go parcel %d instead", sliceP[fp[0]].ParcelNo)
 	}
 }
 
