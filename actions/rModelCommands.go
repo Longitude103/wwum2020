@@ -97,6 +97,11 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 
 	_ = v.SlDb.Close() // close the db before ending the program
 
+	// run steady State Wells
+	if err := wells.SteadyStateWells(v); err != nil {
+		return err
+	}
+
 	v.Logger.Infof("Model Run took: %s", time.Now().Sub(timeStart))
 	v.Logger.Info("Model Completed without Error")
 	fmt.Println("Model Completed without Error.")

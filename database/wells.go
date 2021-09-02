@@ -20,6 +20,14 @@ type WellNode struct {
 	Nrd    string         `db:"nrd"`
 }
 
+type SSWells struct {
+	Id       int `db:"id"`
+	WellName int `db:"wellname"`
+	Rate     int `db:"defaultq"`
+	Node     int `db:"node"`
+	MVolume  [12]float64
+}
+
 // GetWellParcels is a function that gets all the well parcel junction table values and creates one struct from them
 // and also includes the year of the join as well as the nrd.
 func GetWellParcels(v Setup) ([]WellParcel, error) {
@@ -54,4 +62,36 @@ func GetWellNode(v Setup) (wellNodes []WellNode, err error) {
 	}
 
 	return wellNodes, nil
+}
+
+func GetSSWells(v Setup) (ssWells []SSWells, err error) {
+	const ssQuery = "select ss_wells.id, wellname, defaultq, node from ss_wells inner join model_cells mc on " +
+		"st_contains(mc.geom, st_translate(ss_wells.geom, 20, 20));"
+
+	if err := v.PgDb.Select(&ssWells, ssQuery); err != nil {
+		return ssWells, errors.New("error getting steady state wells from DB\n")
+	}
+
+	for i := 0; i < len(ssWells); i++ {
+		if err := ssWells[i].monthlyVolume(); err != nil {
+			return ssWells, errors.New("error setting monthly volumes\n")
+		}
+	}
+
+	if v.AppDebug {
+		return ssWells[:50], nil
+	}
+
+	return ssWells, nil
+}
+
+func (s *SSWells) monthlyVolume() (err error) {
+	const daysInMonth = 30.436875
+	annVolume := -1.0 * float64(s.Rate) * 365.25 / 43560
+
+	for i := 0; i < 12; i++ {
+		s.MVolume[i] = annVolume / daysInMonth
+	}
+
+	return nil
 }
