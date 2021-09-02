@@ -6,6 +6,7 @@ import "github.com/Longitude103/wwum2020/database"
 // model year(s) in the proper nodes and with the proper amounts.
 func SteadyStateWells(v database.Setup) error {
 	// get wells from DB with their node number
+	v.Logger.Info("Starting Steady State Wells Addition")
 	ssWells, err := database.GetSSWells(v)
 	if err != nil {
 		return err
@@ -26,5 +27,6 @@ func SteadyStateWells(v database.Setup) error {
 		}
 	}
 
+	v.Logger.Info("Added all the steady state wells to results DB")
 	return nil
 }
