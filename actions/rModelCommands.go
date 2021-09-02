@@ -7,14 +7,18 @@ import (
 	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/Longitude103/wwum2020/rchFiles"
 	"github.com/Longitude103/wwum2020/wells"
+	"time"
 	//"wwum2020/rchFiles"
 )
 
 func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[string]string) error {
+	timeStart := time.Now()
+
 	v := database.Setup{}
 	if err := v.NewSetup(debug, eF, myEnv); err != nil {
 		return err
 	}
+	v.Logger.Infof("Model Run Started at: %s", timeStart.Format(time.UnixDate))
 	if err := v.SetYears(sY, eY); err != nil {
 		v.Logger.Errorf("Error Setting Years Error: %s", err)
 		return err
@@ -59,13 +63,6 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 		return err
 	}
 
-	//// load up data with cell acres
-	//cells, err := database.GetCells(v)
-	//if err != nil {
-	//	v.Logger.Errorf("Error getting cells from DB: %s", err)
-	//	return err
-	//}
-
 	// Natural Veg 102
 	v.Logger.Info("Preforming Natural Vegetation Operations")
 	if err := rchFiles.NaturalVeg(v, wStations, csResults, cCoefficients); err != nil {
@@ -94,11 +91,14 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 	}
 
 	// write out WEL File to db
-	if err := wells.WriteWELResults(v, irrParcels); err != nil {
+	if err := wells.WriteWELResults(v, &irrParcels); err != nil {
 		return err
 	}
 
 	_ = v.SlDb.Close() // close the db before ending the program
+
+	v.Logger.Infof("Model Run took: %s", time.Now().Sub(timeStart))
+	v.Logger.Info("Model Completed without Error")
 	return nil
 
 }
