@@ -11,19 +11,15 @@ import (
 func WriteWELResults(v database.Setup, parcels *[]parcels.Parcel) error {
 	v.Logger.Info("Starting WriteWELResults...")
 	// get a list of the wells and associated parcels
-	v.Logger.Infof("Length of Parcels sent to wells: %d", len(*parcels))
-
 	wellParcels, err := database.GetWellParcels(v)
 	if err != nil {
 		return err
 	}
-	v.Logger.Infof("Length of wellParcels is %d", len(wellParcels))
 
 	wellNode, err := database.GetWellNode(v)
 	if err != nil {
 		return err
 	}
-	v.Logger.Infof("Length of wellNode %d", len(wellNode))
 
 	var welResult []database.WelResult
 	for p := 0; p < len(*parcels); p++ {
@@ -32,11 +28,7 @@ func WriteWELResults(v database.Setup, parcels *[]parcels.Parcel) error {
 			continue
 		}
 
-		// find wells
-
 		wls, count, err := filterWells(wellParcels, (*parcels)[p].ParcelNo, (*parcels)[p].Nrd, (*parcels)[p].Yr)
-		//fmt.Printf("ParcelNo: %d, NRD: %s, Year: %d", parcels[p].ParcelNo, parcels[p].Nrd, parcels[p].Yr)
-		//fmt.Println("Wells:", wls)
 		if err != nil {
 			return err
 		}
@@ -59,7 +51,6 @@ func WriteWELResults(v database.Setup, parcels *[]parcels.Parcel) error {
 	}
 
 	// save groupedResult to DB
-	v.Logger.Infof("Length of welResult %d", len(welResult))
 	for i := 0; i < len(welResult); i++ {
 		err = welDB.Add(welResult[i])
 		if err != nil {

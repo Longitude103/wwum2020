@@ -99,6 +99,7 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 
 	v.Logger.Infof("Model Run took: %s", time.Now().Sub(timeStart))
 	v.Logger.Info("Model Completed without Error")
+	fmt.Println("Model Completed without Error.")
 	return nil
 
 }
