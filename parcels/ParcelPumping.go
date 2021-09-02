@@ -1,12 +1,10 @@
 package parcels
 
 import (
-	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
 	"github.com/schollz/progressbar/v3"
-	"os"
 	"time"
 )
 
@@ -123,13 +121,6 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 
 	}
 	_ = parcelYearBar.Close()
-
-	for i := 0; i < len(AllParcels); i++ {
-		fmt.Println("All Parcels", AllParcels[i])
-		if i > 40 {
-			os.Exit(1)
-		}
-	}
 
 	return AllParcels, nil
 }

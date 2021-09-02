@@ -55,7 +55,7 @@ func ResultsWelDB(sqlDB *sqlx.DB) (*WelDB, error) {
 // and remove the zeros for space consideration. If the buffer is full it calls the Flush method.
 func (db *WelDB) Add(value WelResult) error {
 	if len(db.buffer) == cap(db.buffer) {
-		return errors.New("conveyance loss buffer is full")
+		return errors.New("WEL buffer is full")
 	}
 
 	// take in WelResult and reformat to welResult and don't save zero result values
@@ -65,7 +65,7 @@ func (db *WelDB) Add(value WelResult) error {
 				time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), FileType: value.FileType, Result: v})
 			if len(db.buffer) == cap(db.buffer) {
 				if err := db.Flush(); err != nil {
-					return fmt.Errorf("unable to flush conveyance loss: %w", err)
+					return fmt.Errorf("unable to flush WEL: %w\n", err)
 				}
 			}
 		}
@@ -83,7 +83,7 @@ func (db *WelDB) Flush() error {
 	}
 
 	for _, cl := range db.buffer {
-		_, err := tx.Stmtx(db.stmt).Exec(cl.Node, cl.Dt, cl.FileType, cl.Result)
+		_, err := tx.Stmtx(db.stmt).Exec(cl.Wellid, cl.Node, cl.Dt, cl.FileType, cl.Result)
 		if err != nil {
 			_ = tx.Rollback()
 			return err

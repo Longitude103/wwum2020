@@ -8,10 +8,10 @@ import (
 
 // WriteWELResults is a function that gets the pumping amounts for the parcel and assigns them to a well or wells that
 // supply that parcel.
-func WriteWELResults(v database.Setup, parcels []parcels.Parcel) error {
+func WriteWELResults(v database.Setup, parcels *[]parcels.Parcel) error {
 	v.Logger.Info("Starting WriteWELResults...")
 	// get a list of the wells and associated parcels
-	v.Logger.Infof("Length of Parcels sent to wells: %d", len(parcels))
+	v.Logger.Infof("Length of Parcels sent to wells: %d", len(*parcels))
 
 	wellParcels, err := database.GetWellParcels(v)
 	if err != nil {
@@ -26,15 +26,15 @@ func WriteWELResults(v database.Setup, parcels []parcels.Parcel) error {
 	v.Logger.Infof("Length of wellNode %d", len(wellNode))
 
 	var welResult []database.WelResult
-	for p := 0; p < len(parcels); p++ {
+	for p := 0; p < len(*parcels); p++ {
 		// no GW, skip
-		if !parcels[p].Gw.Bool {
+		if !(*parcels)[p].Gw.Bool {
 			continue
 		}
 
 		// find wells
 
-		wls, count, err := filterWells(wellParcels, parcels[p].ParcelNo, parcels[p].Nrd, parcels[p].Yr)
+		wls, count, err := filterWells(wellParcels, (*parcels)[p].ParcelNo, (*parcels)[p].Nrd, (*parcels)[p].Yr)
 		//fmt.Printf("ParcelNo: %d, NRD: %s, Year: %d", parcels[p].ParcelNo, parcels[p].Nrd, parcels[p].Yr)
 		//fmt.Println("Wells:", wls)
 		if err != nil {
@@ -46,7 +46,7 @@ func WriteWELResults(v database.Setup, parcels []parcels.Parcel) error {
 		} else {
 			// can be one or multiple wells
 			for _, w := range wls {
-				if welResult, err = addToResults(wellNode, welResult, w, parcels[p], count); err != nil {
+				if welResult, err = addToResults(wellNode, welResult, w, (*parcels)[p], count); err != nil {
 					return err
 				}
 			}
