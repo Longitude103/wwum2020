@@ -80,7 +80,6 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		// add usage to parcel
 		v.Logger.Info("Setting Annual Usage")
 		annUsage := filterUsage(usage, y)
-		// TODO: check results of this function and write more tests.
 		if err := distUsage(annUsage, &parcels); err != nil {
 			return []Parcel{}, err
 		}
@@ -89,7 +88,6 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
 			if (&parcels[p]).Gw.Bool == true {
-				// TODO: Check to make sure this function is working
 				if err := (&parcels[p]).estimatePumping(cCrops); err != nil {
 					return []Parcel{}, err
 				}
@@ -138,7 +136,6 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 
 func distUsage(annUsage []Usage, parcels *[]Parcel) error {
 	for _, u := range annUsage {
-		//fmt.Printf("Annual Usage in %v is %g\n", u.CertNum, u.UseAF)
 		// filter parcels to this usage cert
 		filteredParcels := filterParcelByCert(parcels, u.CertNum)
 
