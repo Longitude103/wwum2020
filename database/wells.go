@@ -20,12 +20,20 @@ type WellNode struct {
 	Nrd    string         `db:"nrd"`
 }
 
-type SSWells struct {
+type SSWell struct {
 	Id       int `db:"id"`
 	WellName int `db:"wellname"`
 	Rate     int `db:"defaultq"`
 	Node     int `db:"node"`
 	MVolume  [12]float64
+}
+
+type ExtWell struct {
+	Yr       int     `db:"yr"`
+	Mnth     int     `db:"mnth"`
+	FileType int     `db:"file_type"`
+	Pumping  float64 `db:"pmp"`
+	Node     int     `db:"node"`
 }
 
 // GetWellParcels is a function that gets all the well parcel junction table values and creates one struct from them
@@ -64,7 +72,9 @@ func GetWellNode(v Setup) (wellNodes []WellNode, err error) {
 	return wellNodes, nil
 }
 
-func GetSSWells(v Setup) (ssWells []SSWells, err error) {
+// GetSSWells is a function that gets the data from the postgres DB and returns a slice of SSWell and also includes a call
+// to the SSWell.monthlyVolume() method to set the monthly data from the annual data that is in the database.
+func GetSSWells(v Setup) (ssWells []SSWell, err error) {
 	const ssQuery = "select ss_wells.id, wellname, defaultq, node from ss_wells inner join model_cells mc on " +
 		"st_contains(mc.geom, st_translate(ss_wells.geom, 20, 20));"
 
@@ -85,7 +95,9 @@ func GetSSWells(v Setup) (ssWells []SSWells, err error) {
 	return ssWells, nil
 }
 
-func (s *SSWells) monthlyVolume() (err error) {
+// monthlyVolume is a method of SSWell that calculates the monthly volume of pumping from the rate that is inlcuded in the
+// database records.
+func (s *SSWell) monthlyVolume() (err error) {
 	const daysInMonth = 30.436875
 	annVolume := -1.0 * float64(s.Rate) * 365.25 / 43560
 
@@ -94,4 +106,21 @@ func (s *SSWells) monthlyVolume() (err error) {
 	}
 
 	return nil
+}
+
+// GetExternalWells is a function to query the external pumping from the database and returns a slice of ExtWell as well
+// as includes handling the debug mode.
+func GetExternalWells(v Setup) (extWells []ExtWell, err error) {
+	const extQuery = "select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on " +
+		"st_contains(mc.geom, ext_pumping.geom);"
+
+	if err := v.PgDb.Select(&extWells, extQuery); err != nil {
+		return extWells, errors.New("error getting data from ext_pumping table from DB")
+	}
+
+	if v.AppDebug {
+		return extWells[:50], nil
+	}
+
+	return extWells, nil
 }
