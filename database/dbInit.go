@@ -48,11 +48,11 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 		  (109, 'NP Groundwater Only Pre 1998'), (110, 'NP Groundwater Only Post 1997'), (111, 'SP Groundwater Only Pre 1998'), 
 		  (112, 'SP Groundwater Only Post 1997'), (113, 'NP Canal Loss'), (114, 'SP Canal Loss'), (115, 'Outside NP and SP'), 
 		  (116, 'NP Recharge Sites'), (117, 'SP Recharge Sites'), (118, 'Colorado'), (119, 'Wyoming'), 
-		  (120, 'UNWNRD'), (121, 'CoHyst'), (201, 'NP Comingled Pre 1998'), (202, 'NP Groundwater Only Pre 1998'), 
+		  (120, 'UNWNRD'), (121, 'CoHyst-FA'), (122, 'CoHyst-25'), (201, 'NP Comingled Pre 1998'), (202, 'NP Groundwater Only Pre 1998'), 
 		  (203, 'NP Comingled Post 1997'), (204, 'NP Groundwater Only Post 1997'), (205, 'SP Comingled Pre 1998'), 
 		  (206, 'SP Groundwater Only Pre 1998'), (207, 'SP Comingled Post 1997'), (208, 'SP Groundwater Only Post 1997'), 
           (209, 'Steady State'), (210, 'Municipal'), (211, 'Industrial'), (212, 'Other Wells'), (213, 'Western Canal Outside SP'),
-          (214, 'Colorado'), (215, 'Wyoming'), (216, 'UNWNRD'), (217, 'CoHyst');
+          (214, 'Colorado'), (215, 'Wyoming'), (216, 'UNWNRD'), (217, 'CoHyst-FA'), (218, 'CoHyst-25');
 	`)
 		if err != nil {
 			logger.Errorf("Error in statement of key records: %s", err)
