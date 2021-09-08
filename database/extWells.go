@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -16,8 +17,8 @@ type ExtWell struct {
 // GetExternalWells is a function to query the external pumping from the database and returns a slice of ExtWell as well
 // as includes handling the debug mode.
 func GetExternalWells(v Setup) (extWells []ExtWell, err error) {
-	const extQuery = "select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on " +
-		"st_contains(mc.geom, ext_pumping.geom);"
+	extQuery := fmt.Sprintf("select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on "+
+		"st_contains(mc.geom, ext_pumping.geom) where yr >= %d and yr <= %d;", v.SYear, v.EYear)
 
 	if err := v.PgDb.Select(&extWells, extQuery); err != nil {
 		return extWells, errors.New("error getting data from ext_pumping table from DB")
@@ -33,4 +34,8 @@ func GetExternalWells(v Setup) (extWells []ExtWell, err error) {
 // Date returns the formatted date of the ExtWell struct with a 1 for the day and zero hour in UTC.
 func (w *ExtWell) Date() time.Time {
 	return time.Date(w.Yr, time.Month(w.Mnth), 1, 0, 0, 0, 0, time.UTC)
+}
+
+func (w *ExtWell) Pmp() float64 {
+	return w.Pumping * -1
 }

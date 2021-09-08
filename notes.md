@@ -8,4 +8,4 @@ changed to irrigated pasture to ensure that we have an ET increase during the WS
 
 ## Pumping Outside NRDs
 The pumping amounts that are from outside SP or NP NRDs is included in ext_pumping and is recorded in ft^3 per month.
-We need to use that value in the db to create the new pumping.
+We need to use that value in the db to create the new pumping. The values of the pumping are all positive.

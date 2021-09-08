@@ -22,10 +22,10 @@ func CreateExternalWells(v database.Setup) error {
 	}
 
 	v.Logger.Info("Saving Data to results DB")
-	bar := progressbar.Default(int64(len(extPump)), "records saved")
+	bar := progressbar.Default(int64(len(extPump)), "External Well records saved")
 	for i := 0; i < len(extPump); i++ {
 		if err := welDb.Add(database.WelResult{Wellid: i, Node: extPump[i].Node, Dt: extPump[i].Date(),
-			FileType: extPump[i].FileType, Result: extPump[i].Pumping}); err != nil {
+			FileType: extPump[i].FileType, Result: extPump[i].Pmp()}); err != nil {
 			return err
 		}
 		_ = bar.Add(1)
