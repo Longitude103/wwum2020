@@ -100,6 +100,11 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 		return err
 	}
 
+	// run external wells
+	if err := wells.CreateExternalWells(v); err != nil {
+		return err
+	}
+
 	_ = v.SlDb.Close() // close the db before ending the program
 	v.Logger.Infof("Model Run took: %s", time.Now().Sub(timeStart))
 	v.Logger.Info("Model Completed without Error")
