@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// welResult is a stuct for the final result to be saved to db that is a value per well, per month
-type welResult struct {
+// WelResult is a struct for the final result to be saved to db that is a value per well, per month
+type WelResult struct {
 	Wellid   int       `db:"well_id"`
 	Node     int       `db:"cell_node"`
 	Dt       time.Time `db:"dt"`
@@ -16,8 +16,8 @@ type welResult struct {
 	Result   float64   `db:"result"`
 }
 
-// WelResult is a struct that is used to construct the well result per well, per year and the result is 12 month array
-type WelResult struct {
+// WelAnnualResult is a struct that is used to construct the well result and includes a 12-month array
+type WelAnnualResult struct {
 	Wellid   int
 	Node     int
 	Yr       int
@@ -29,11 +29,11 @@ type WelResult struct {
 type WelDB struct {
 	sql    *sqlx.DB
 	stmt   *sqlx.Stmt
-	buffer []welResult
+	buffer []WelResult
 }
 
 // ResultsWelDB is a function that creates the WelDB struct and contains the SQL statement to insert the records, it
-// also accepts a slice of welResult used for the buffer
+// also accepts a slice of WelResult used for the buffer
 func ResultsWelDB(sqlDB *sqlx.DB) (*WelDB, error) {
 	insertSQL := `INSERT INTO wel_results (well_id, cell_node, dt, file_type, result) VALUES (?, ?, ?, ?, ?)`
 
@@ -45,30 +45,45 @@ func ResultsWelDB(sqlDB *sqlx.DB) (*WelDB, error) {
 	db := WelDB{
 		sql:    sqlDB,
 		stmt:   stmt,
-		buffer: make([]welResult, 0, 1024),
+		buffer: make([]WelResult, 0, 1024),
 	}
 
 	return &db, nil
 }
 
-// Add is a method of WelDB that adds a record to the buffer, but we accept a WelResult and create 12 welResult records
-// and remove the zeros for space consideration. If the buffer is full it calls the Flush method.
-func (db *WelDB) Add(value WelResult) error {
+// Add is a method of WelDB that adds a record to the buffer, but we accept a WelAnnualResult or WelResult struct and
+// create 12 WelResult records for WelAnnualResult and remove the zeros. If there is a WelResult sent it will just save
+// that value directly to the buffer. If the buffer is full it calls the Flush method.
+func (db *WelDB) Add(value interface{}) error {
 	if len(db.buffer) == cap(db.buffer) {
 		return errors.New("WEL buffer is full")
 	}
 
-	// take in WelResult and reformat to welResult and don't save zero result values
-	for i, v := range value.Result {
-		if v > 0 {
-			db.buffer = append(db.buffer, welResult{Wellid: value.Wellid, Node: value.Node, Dt: time.Date(value.Yr,
-				time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), FileType: value.FileType, Result: v})
-			if len(db.buffer) == cap(db.buffer) {
-				if err := db.Flush(); err != nil {
-					return fmt.Errorf("unable to flush WEL: %w\n", err)
+	switch value.(type) {
+	case WelAnnualResult:
+		wr := value.(WelAnnualResult)
+		// take in WelAnnualResult and reformat to WelResult and don't save zero result values
+		for i, v := range wr.Result {
+			if v > 0 {
+				db.buffer = append(db.buffer, WelResult{Wellid: wr.Wellid, Node: wr.Node, Dt: time.Date(wr.Yr,
+					time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), FileType: wr.FileType, Result: v})
+				if len(db.buffer) == cap(db.buffer) {
+					if err := db.Flush(); err != nil {
+						return fmt.Errorf("unable to flush WEL: %w\n", err)
+					}
 				}
 			}
 		}
+	case WelResult:
+		wr := value.(WelResult)
+		db.buffer = append(db.buffer, wr)
+		if len(db.buffer) == cap(db.buffer) {
+			if err := db.Flush(); err != nil {
+				return fmt.Errorf("unable to flush WEL: %w\n", err)
+			}
+		}
+	default:
+		return fmt.Errorf("unable to determine the value struct type")
 	}
 
 	return nil
@@ -107,9 +122,9 @@ func (db *WelDB) Close() error {
 	return nil
 }
 
-// AddPumping is a method to add more pumping to the WelResult by pumping and a welCount that is the number of wells
+// AddPumping is a method to add more pumping to the WelAnnualResult by pumping and a welCount that is the number of wells
 // that it should be divided by.
-func (wr *WelResult) AddPumping(pump [12]float64, welCount float64) {
+func (wr *WelAnnualResult) AddPumping(pump [12]float64, welCount float64) {
 	for i, f := range pump {
 		wr.Result[i] += f / welCount
 	}

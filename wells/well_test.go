@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	wr1 = database.WelResult{Wellid: 123, Node: 1, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
-	wr2 = database.WelResult{Wellid: 124, Node: 1, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
-	wr3 = database.WelResult{Wellid: 125, Node: 2, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
-	wr4 = database.WelResult{Wellid: 126, Node: 2, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr1 = database.WelAnnualResult{Wellid: 123, Node: 1, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr2 = database.WelAnnualResult{Wellid: 124, Node: 1, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr3 = database.WelAnnualResult{Wellid: 125, Node: 2, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr4 = database.WelAnnualResult{Wellid: 126, Node: 2, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
 
-	wrSlice = []database.WelResult{wr1, wr2, wr3, wr4}
+	wrSlice = []database.WelAnnualResult{wr1, wr2, wr3, wr4}
 
 	wn1 = database.WellNode{WellId: 123, RegCd: sql.NullString{String: "1", Valid: true}, Node: 1, Nrd: "np"}
 	wn2 = database.WellNode{WellId: 124, RegCd: sql.NullString{String: "2", Valid: true}, Node: 1, Nrd: "np"}

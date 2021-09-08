@@ -20,7 +20,7 @@ func SteadyStateWells(v database.Setup) error {
 	for yr := v.SYear; yr < v.EYear+1; yr++ {
 		// write them to the results DB
 		for i := 0; i < len(ssWells); i++ {
-			if err := welDB.Add(database.WelResult{Wellid: ssWells[i].WellName, Node: ssWells[i].Node, Yr: yr,
+			if err := welDB.Add(database.WelAnnualResult{Wellid: ssWells[i].WellName, Node: ssWells[i].Node, Yr: yr,
 				FileType: 209, Result: ssWells[i].MVolume}); err != nil {
 				return err
 			}

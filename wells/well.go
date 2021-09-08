@@ -21,7 +21,7 @@ func WriteWELResults(v database.Setup, parcels *[]parcels.Parcel) error {
 		return err
 	}
 
-	var welResult []database.WelResult
+	var welResult []database.WelAnnualResult
 	for p := 0; p < len(*parcels); p++ {
 		// no GW, skip
 		if !(*parcels)[p].Gw.Bool {
@@ -93,7 +93,7 @@ func getNode(wellNodes []database.WellNode, well int, nrd string) (int, error) {
 }
 
 // addToResults is the function that creates another result from the parcel and adds to the result slice.
-func addToResults(wellNode []database.WellNode, r []database.WelResult, well int, p parcels.Parcel, count int) ([]database.WelResult, error) {
+func addToResults(wellNode []database.WellNode, r []database.WelAnnualResult, well int, p parcels.Parcel, count int) ([]database.WelAnnualResult, error) {
 	node, err := getNode(wellNode, well, p.Nrd)
 	if err != nil {
 		return r, err
@@ -115,15 +115,15 @@ func addToResults(wellNode []database.WellNode, r []database.WelResult, well int
 			result[i] = d / float64(count)
 		}
 
-		r = append(r, database.WelResult{Wellid: well, Node: node, Yr: p.Yr, FileType: ft, Result: result})
+		r = append(r, database.WelAnnualResult{Wellid: well, Node: node, Yr: p.Yr, FileType: ft, Result: result})
 	}
 
 	return r, nil
 }
 
-// findResult is a function to find if there is a slice of database.WelResult that has a well and year and returns a
+// findResult is a function to find if there is a slice of database.WelAnnualResult that has a well and year and returns a
 // bool if it is found and a location in the slice that it is located
-func findResult(r []database.WelResult, well int, yr int) (found bool, location int) {
+func findResult(r []database.WelAnnualResult, well int, yr int) (found bool, location int) {
 	for i := 0; i < len(r); i++ {
 		if r[i].Wellid == well && r[i].Yr == yr {
 			return true, i
