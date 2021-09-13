@@ -5,6 +5,7 @@ import (
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
 	"github.com/schollz/progressbar/v3"
+	"sync"
 	"time"
 )
 
@@ -52,6 +53,8 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 
 	// 1. load parcels
 	parcelYearBar := progressbar.Default(int64(v.EYear-v.SYear), "Years of Parcels")
+	wg := sync.WaitGroup{}
+
 	for y := v.SYear; y < v.EYear+1; y++ {
 		_ = parcelYearBar.Add(1)
 		parcels = getParcels(v, y)
@@ -59,10 +62,16 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")
 		for i := 0; i < len(parcels); i++ {
-			err = (&parcels[i]).parcelNIR(v.PNirDB, y, wStations, csResults, Irrigated) // must be a pointer to work
-			if err != nil {
-				return nil, err
-			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				err := (&parcels[i]).parcelNIR(v.PNirDB, y, wStations, csResults, Irrigated)
+				if err != nil {
+					v.Logger.Errorf("parcel error")
+				}
+			}() // must be a pointer to work
+
+			wg.Wait()
 			(&parcels[i]).setAppEfficiency(efficiencies, y)
 
 			// add SW Delivery to the parcels
@@ -110,13 +119,18 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		wbBar := progressbar.Default(int64(len(parcels)), "Water Balance Parcels")
 		for p := 0; p < len(parcels); p++ {
 			_ = wbBar.Add(1)
-			if err := (&parcels[p]).waterBalanceWSPP(false); err != nil {
-				v.Logger.Errorf("error in parcel WSPP parcel data: %+v", parcels[p])
-				return nil, err
-			}
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				err := (&parcels[i]).waterBalanceWSPP(false)
+				if err != nil {
+					v.Logger.Errorf("error in parcel WSPP parcel data: %+v", parcels[p])
+				}
+			}(p)
 
 			AllParcels = append(AllParcels, parcels[p])
 		}
+		wg.Wait()
 		_ = wbBar.Close()
 
 	}
