@@ -52,7 +52,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				for m := 0; m < 12; m++ {
 					cellResult = database.RchResult{Node: cells[i].Node,
 						Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC), FileType: 102,
-						Result: annData.MonthlyData[m].Ro*st.Weight*cells[i].CellArea/12*aRo + annData.MonthlyData[m].Dp*st.Weight*cells[i].CellArea/12*aDp}
+						Result: annData.MonthlyData[m].Ro*st.Weight*cells[i].VegArea()/12*aRo + annData.MonthlyData[m].Dp*st.Weight*cells[i].VegArea()/12*aDp}
 				}
 
 			}
