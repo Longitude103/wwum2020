@@ -12,4 +12,5 @@ require (
 	github.com/schollz/progressbar/v3 v3.8.0
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.16.0
+	golang.org/x/sys v0.0.0-20210923061019-b8560ed6a9b7 // indirect
 )

@@ -9,6 +9,8 @@ import (
 	"github.com/Longitude103/wwum2020/actions"
 )
 
+// main function is the entry for the application that sets up the CLI and sets the flags needed for the application. This
+// function also has an error checking to deal with flags not set correctly.
 func main() {
 	const help = `WWUM 2020 CLI for various tasks. At this point there are two main functions implemented.
 2. runModel -> Run Full WWUMM 2020 Model
