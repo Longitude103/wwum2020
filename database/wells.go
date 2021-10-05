@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 type WellParcel struct {
@@ -26,6 +27,24 @@ type SSWell struct {
 	Rate     int `db:"defaultq"`
 	Node     int `db:"node"`
 	MVolume  [12]float64
+}
+
+type MIWell struct {
+	WellId     int    `db:"id"`
+	WellName   string `db:"wellname"`
+	Rate       int    `db:"defaultq"`
+	MuniWell   bool   `db:"muni_well"`
+	IndustWell bool   `db:"indust_well"`
+	Stop97     bool   `db:"stop_97"`
+	Start97    bool   `db:"start_97"`
+	Node       int    `db:"node"`
+	Pumping    []MIPumping
+}
+
+type MIPumping struct {
+	WellId    int       `db:"well_id"`
+	PumpMonth time.Time `db:"dt"`
+	Pump      float64   `db:"pumping"`
 }
 
 // GetWellParcels is a function that gets all the well parcel junction table values and creates one struct from them
@@ -98,4 +117,33 @@ func (s *SSWell) monthlyVolume() (err error) {
 	}
 
 	return nil
+}
+
+func GetMIWells(v Setup) (miWells []MIWell, err error) {
+	const miQuery = "SELECT mi.id, mi.wellname, mi.defaultq, mi.muni_well, mi.indust_well, mi.stop_97, mi.start_97, " +
+		"mc.node FROM mi_wells mi inner join model_cells mc on st_contains(mc.geom, st_translate(mi.geom, 20, 20));"
+
+	if err = v.PgDb.Select(&miWells, miQuery); err != nil {
+		return miWells, errors.New("error getting Municipal and industrial wells")
+	}
+
+	// use setup to get bounds of pumping (earliest is 1997)
+	miPumpQuery := fmt.Sprintf("SELECT well_id, dt, pumping FROM mi_pumping where "+
+		"extract(YEAR from dt) between %d and %d", v.SYear, v.EYear)
+
+	var miPump []MIPumping
+
+	if err = v.PgDb.Select(&miPump, miPumpQuery); err != nil {
+		return miWells, errors.New("error getting Pumping for M&I wells")
+	}
+
+	for i := 0; i < len(miWells); i++ {
+		for _, p := range miPump {
+			if p.WellId == miWells[i].WellId {
+				miWells[i].Pumping = append(miWells[i].Pumping, p)
+			}
+		}
+	}
+
+	return
 }
