@@ -22,7 +22,7 @@ type Setup struct {
 
 // NewSetup is an initialization function for the Setup struct that sets the initial database connections, logger, and stores
 // the flags for excess flow and debug.
-func (s *Setup) NewSetup(debug, ef bool, myEnv map[string]string) error {
+func (s *Setup) NewSetup(debug, ef bool, myEnv map[string]string, noSqlite bool) error {
 	l, err := NewLogger()
 	if err != nil {
 		return err
@@ -41,22 +41,24 @@ func (s *Setup) NewSetup(debug, ef bool, myEnv map[string]string) error {
 		s.Logger.Info("Using Excess Flows")
 	}
 
-	s.SlDb, err = GetSqlite(s.Logger)
-	if err != nil {
-		return err
+	if !noSqlite {
+		s.SlDb, err = GetSqlite(s.Logger)
+		if err != nil {
+			return err
+		}
+
+		s.PNirDB, err = PNirDB(s.SlDb)
+		if err != nil {
+			return err
+		}
+
+		s.RchDb, err = ResultsRchDB(s.SlDb)
+		if err != nil {
+			return err
+		}
 	}
 
 	s.PgDb, err = PgConnx(myEnv)
-	if err != nil {
-		return err
-	}
-
-	s.PNirDB, err = PNirDB(s.SlDb)
-	if err != nil {
-		return err
-	}
-
-	s.RchDb, err = ResultsRchDB(s.SlDb)
 	if err != nil {
 		return err
 	}

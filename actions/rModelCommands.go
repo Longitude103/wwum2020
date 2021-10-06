@@ -15,7 +15,7 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 	timeStart := time.Now()
 
 	v := database.Setup{}
-	if err := v.NewSetup(debug, eF, myEnv); err != nil {
+	if err := v.NewSetup(debug, eF, myEnv, false); err != nil {
 		return err
 	}
 	v.Logger.Infof("Model Run Started at: %s", timeStart.Format(time.UnixDate))
