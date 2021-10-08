@@ -56,7 +56,7 @@ func TestGetMIWells(t *testing.T) {
 
 	for _, file := range files {
 		if file.Name()[len(file.Name())-3:] == "log" {
-			fmt.Println(file.Name())
+			fmt.Println("removing file:" + file.Name())
 			_ = os.Remove(file.Name())
 		}
 	}
