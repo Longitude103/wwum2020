@@ -21,13 +21,32 @@ func MunicipalIndWells(v database.Setup) error {
 	}
 
 	// start97 == false then use the "rate" to create the monthly pumping
+	var wlResult []database.WelResult
+
 	for yr := v.SYear; yr < v.EYear+1; yr++ {
 		if yr < 1997 {
 			for _, well := range wells {
-				// TODO: Only run with wells that start pre 1997
-				constMIWell(well, yr, welDB)
+				if well.Start97 == false {
+					wlResult = append(wlResult, constMIWell(well, TimeExt{y: yr})...)
+				}
 			}
 		}
+
+		if yr >= 1997 {
+			for _, well := range wells {
+				if well.Stop97 == false && well.Start97 == false {
+					wlResult = append(wlResult, constMIWell(well, TimeExt{y: yr})...)
+				}
+
+				if well.Start97 {
+					// these wells have pumping records
+
+				}
+			}
+		}
+
+		// TODO: Save the []database.WelResult to the results database
+		_ = welDB
 
 	}
 
@@ -36,15 +55,23 @@ func MunicipalIndWells(v database.Setup) error {
 	return nil
 }
 
-func constMIWell(well database.MIWell, yr int, db *database.WelDB) []database.WelResult {
+func constMIWell(well database.MIWell, yr TimeExt) []database.WelResult {
 	var wrList []database.WelResult
-	annVolume := -1.0 * float64(well.Rate) * float64(DaysInYear(yr)) / 43560
+	annVolume := -1.0 * float64(well.Rate) * float64(yr.DaysInYear()) / 43560
 	for i := 0; i < 12; i++ {
-		monthVol := annVolume / float64(DaysInMonth(time.Date(yr, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)))
+		dInMon := TimeExt{t: time.Date(yr.y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)}
+		monthVol := annVolume / float64(dInMon.DaysInMonth())
 		wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: MIFileType(well),
-			Dt: time.Date(yr, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), Result: monthVol}
+			Dt: time.Date(yr.y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), Result: monthVol}
 		wrList = append(wrList, wl)
 	}
+
+	return wrList
+}
+
+func pumpMIWell(well database.MIWell, yr TimeExt) []database.WelResult {
+	var wrList []database.WelResult
+	// TODO: Finish this function, needs to loop through the pumping and see which date it is and create a result based on that date.
 
 	return wrList
 }
@@ -59,28 +86,34 @@ func MIFileType(well database.MIWell) int {
 	}
 }
 
-func EndOfMonth(t time.Time) time.Time {
-	y, m, _ := t.Date()
+type TimeExt struct {
+	t time.Time
+	y int
+}
+
+func (tm TimeExt) EndOfMonth() time.Time {
+	y, m, _ := tm.t.Date()
 	beginMonth := time.Date(y, m, 1, 0, 0, 0, 0, time.UTC)
 
 	return beginMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
 }
 
 // EndOfYear end of year
-func EndOfYear(t time.Time) time.Time {
-	y, _, _ := t.Date()
+func (tm TimeExt) EndOfYear() time.Time {
+	y, _, _ := tm.t.Date()
 	beginYear := time.Date(y, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 	return beginYear.AddDate(1, 0, 0).Add(-time.Nanosecond)
 }
 
-func DaysInMonth(t time.Time) int {
-	_, _, d := EndOfMonth(t).Date()
+func (tm TimeExt) DaysInMonth() int {
+	_, _, d := tm.EndOfMonth().Date()
 
 	return d
 }
 
-func DaysInYear(yr int) int {
-	ey := EndOfYear(time.Date(yr, 1, 1, 0, 0, 0, 0, time.UTC))
+func (tm TimeExt) DaysInYear() int {
+	t := TimeExt{t: time.Date(tm.y, 1, 1, 0, 0, 0, 0, time.UTC)}
+	ey := t.EndOfYear()
 	return ey.YearDay()
 }
