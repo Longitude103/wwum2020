@@ -110,7 +110,9 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 		return err
 	}
 
-	// TODO: Add Municipal and Industrial Wells
+	if err := wells.MunicipalIndWells(v); err != nil {
+		return err
+	}
 
 	_ = v.SlDb.Close() // close the db before ending the program
 	v.Logger.Infof("Model Run took: %s", time.Now().Sub(timeStart))

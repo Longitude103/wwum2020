@@ -39,18 +39,18 @@ func MunicipalIndWells(v database.Setup) error {
 				}
 
 				if well.Start97 {
-					// these wells have pumping records
-
+					wlResult = append(wlResult, pumpMIWell(well, TimeExt{y: yr})...)
 				}
 			}
 		}
 
-		// TODO: Save the []database.WelResult to the results database
-		_ = welDB
+		for i := 0; i < len(wlResult); i++ {
+			if err := welDB.Add(wlResult[i]); err != nil {
+				return err
+			}
+		}
 
 	}
-
-	// add pumping from the actual pumping table to results db
 
 	return nil
 }
@@ -61,7 +61,7 @@ func constMIWell(well database.MIWell, yr TimeExt) []database.WelResult {
 	for i := 0; i < 12; i++ {
 		dInMon := TimeExt{t: time.Date(yr.y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)}
 		monthVol := annVolume / float64(dInMon.DaysInMonth())
-		wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: MIFileType(well),
+		wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: well.MIFileType(),
 			Dt: time.Date(yr.y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), Result: monthVol}
 		wrList = append(wrList, wl)
 	}
@@ -71,19 +71,15 @@ func constMIWell(well database.MIWell, yr TimeExt) []database.WelResult {
 
 func pumpMIWell(well database.MIWell, yr TimeExt) []database.WelResult {
 	var wrList []database.WelResult
-	// TODO: Finish this function, needs to loop through the pumping and see which date it is and create a result based on that date.
+	for _, p := range well.Pumping {
+		if p.PumpDate.Year() == yr.y {
+			wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: well.MIFileType(),
+				Dt: p.PumpDate, Result: p.Pump}
+			wrList = append(wrList, wl)
+		}
+	}
 
 	return wrList
-}
-
-func MIFileType(well database.MIWell) int {
-	if well.MuniWell {
-		return 210
-	} else if well.IndustWell {
-		return 211
-	} else {
-		return 212
-	}
 }
 
 type TimeExt struct {

@@ -42,9 +42,9 @@ type MIWell struct {
 }
 
 type MIPumping struct {
-	WellId    int       `db:"well_id"`
-	PumpMonth time.Time `db:"dt"`
-	Pump      float64   `db:"pumping"`
+	WellId   int       `db:"well_id"`
+	PumpDate time.Time `db:"dt"`
+	Pump     float64   `db:"pumping"`
 }
 
 // GetWellParcels is a function that gets all the well parcel junction table values and creates one struct from them
@@ -146,4 +146,14 @@ func GetMIWells(v Setup) (miWells []MIWell, err error) {
 	}
 
 	return
+}
+
+func (w *MIWell) MIFileType() int {
+	if w.MuniWell {
+		return 210
+	} else if w.IndustWell {
+		return 211
+	} else {
+		return 212
+	}
 }
