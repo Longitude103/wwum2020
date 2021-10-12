@@ -8,6 +8,8 @@ github.com/Longitude103/Flogo v0.1.3 h1:cF0ZvZlU2pMPcSb9E8u5UfGqiC1z9OxsUWXNaF0+
 github.com/Longitude103/Flogo v0.1.3/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
 github.com/Longitude103/Flogo v0.1.4 h1:YW7UjqtoiRBeHwhngZgAKnALhsXxriFtpG/dtw7IzI4=
 github.com/Longitude103/Flogo v0.1.4/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
+github.com/Longitude103/Flogo v0.1.5 h1:slNGVNRD+G6px2Cs7PbpxbaeRlmFIFpOCPnGEVoGVnY=
+github.com/Longitude103/Flogo v0.1.5/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
 github.com/Longitude103/gisUtils v1.0.2 h1:vEvzD12zHsocPMCQGfiDWeS7otk2j9N/H0CPBk2hEhs=
 github.com/Longitude103/gisUtils v1.0.2/go.mod h1:VgX5gEAe1yfL8TUMSxnoFPeSm/1iKBjGmrwwiRop7bQ=
 github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8 h1:xzYJEypr/85nBpB11F9br+3HUrpgb+fcm5iADzXXYEw=
