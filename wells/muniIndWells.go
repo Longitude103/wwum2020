@@ -1,6 +1,7 @@
 package wells
 
 import (
+	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
 	"time"
 )
@@ -27,7 +28,7 @@ func MunicipalIndWells(v database.Setup) error {
 		if yr < 1997 {
 			for _, well := range wells {
 				if well.Start97 == false {
-					wlResult = append(wlResult, constMIWell(well, TimeExt{y: yr})...)
+					wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
 				}
 			}
 		}
@@ -35,11 +36,11 @@ func MunicipalIndWells(v database.Setup) error {
 		if yr >= 1997 {
 			for _, well := range wells {
 				if well.Stop97 == false && well.Start97 == false {
-					wlResult = append(wlResult, constMIWell(well, TimeExt{y: yr})...)
+					wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
 				}
 
 				if well.Start97 {
-					wlResult = append(wlResult, pumpMIWell(well, TimeExt{y: yr})...)
+					wlResult = append(wlResult, pumpMIWell(well, Utils.TimeExt{Y: yr})...)
 				}
 			}
 		}
@@ -55,24 +56,24 @@ func MunicipalIndWells(v database.Setup) error {
 	return nil
 }
 
-func constMIWell(well database.MIWell, yr TimeExt) []database.WelResult {
+func constMIWell(well database.MIWell, yr Utils.TimeExt) []database.WelResult {
 	var wrList []database.WelResult
 	annVolume := -1.0 * float64(well.Rate) * float64(yr.DaysInYear()) / 43560
 	for i := 0; i < 12; i++ {
-		dInMon := TimeExt{t: time.Date(yr.y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)}
+		dInMon := Utils.TimeExt{T: time.Date(yr.Y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)}
 		monthVol := annVolume / float64(dInMon.DaysInMonth())
 		wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: well.MIFileType(),
-			Dt: time.Date(yr.y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), Result: monthVol}
+			Dt: time.Date(yr.Y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), Result: monthVol}
 		wrList = append(wrList, wl)
 	}
 
 	return wrList
 }
 
-func pumpMIWell(well database.MIWell, yr TimeExt) []database.WelResult {
+func pumpMIWell(well database.MIWell, yr Utils.TimeExt) []database.WelResult {
 	var wrList []database.WelResult
 	for _, p := range well.Pumping {
-		if p.PumpDate.Year() == yr.y {
+		if p.PumpDate.Year() == yr.Y {
 			wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: well.MIFileType(),
 				Dt: p.PumpDate, Result: p.Pump}
 			wrList = append(wrList, wl)
@@ -80,36 +81,4 @@ func pumpMIWell(well database.MIWell, yr TimeExt) []database.WelResult {
 	}
 
 	return wrList
-}
-
-type TimeExt struct {
-	t time.Time
-	y int
-}
-
-func (tm TimeExt) EndOfMonth() time.Time {
-	y, m, _ := tm.t.Date()
-	beginMonth := time.Date(y, m, 1, 0, 0, 0, 0, time.UTC)
-
-	return beginMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
-}
-
-// EndOfYear end of year
-func (tm TimeExt) EndOfYear() time.Time {
-	y, _, _ := tm.t.Date()
-	beginYear := time.Date(y, time.January, 1, 0, 0, 0, 0, time.UTC)
-
-	return beginYear.AddDate(1, 0, 0).Add(-time.Nanosecond)
-}
-
-func (tm TimeExt) DaysInMonth() int {
-	_, _, d := tm.EndOfMonth().Date()
-
-	return d
-}
-
-func (tm TimeExt) DaysInYear() int {
-	t := TimeExt{t: time.Date(tm.y, 1, 1, 0, 0, 0, 0, time.UTC)}
-	ey := t.EndOfYear()
-	return ey.YearDay()
 }
