@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"time"
@@ -16,9 +17,10 @@ func (f FileKeys) Print() string {
 }
 
 type MfResults struct {
-	CellNode   int       `db:"cell_node"`
-	ResultDate time.Time `db:"dt"`
-	Rslt       float64   `db:"rslt"`
+	CellNode   int             `db:"cell_node"`
+	CellSize   sql.NullFloat64 `db:"cell_size"`
+	ResultDate time.Time       `db:"dt"`
+	Rslt       float64         `db:"rslt"`
 }
 
 func (m MfResults) Date() time.Time {
@@ -80,11 +82,11 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 				list += excludeList[i][0:3]
 			}
 
-			qry = fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt "+
-				"FROM results WHERE file_type NOT IN (%s) group by cell_node, dt) where rslt > 0;", list)
+			qry = fmt.Sprintf("SELECT cell_node, cell_size, dt, rslt from (SELECT cell_node, cell_size, dt, sum(result) rslt "+
+				"FROM results WHERE file_type NOT IN (%s) group by cell_node, cell_size, dt) where rslt > 0;", list)
 		} else { // don't exclude anything
-			qry = fmt.Sprint("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt " +
-				"FROM results group by cell_node, dt) where rslt > 0;")
+			qry = fmt.Sprint("SELECT cell_node, cell_size, dt, rslt from (SELECT cell_node, cell_size, dt, sum(result) rslt " +
+				"FROM results group by cell_node, cell_size, dt) where rslt > 0;")
 		}
 	}
 

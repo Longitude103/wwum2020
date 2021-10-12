@@ -23,7 +23,7 @@ func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 			for m := 0; m < 12; m++ {
 				if rf[m] > 0 {
 					preResults = append(preResults,
-						database.RchResult{Node: dryCells[i].Node,
+						database.RchResult{Node: dryCells[i].Node, Size: dryCells[i].CellArea,
 							Dt:       time.Date(y, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC),
 							FileType: 101, Result: rf[m] * dryCells[i].DryArea / parcelArea})
 				}
@@ -90,7 +90,8 @@ func groupResults(r []database.RchResult) (results []database.RchResult) {
 				results[resultLocal].Result += r[i].Result
 			}
 		} else {
-			results = append(results, database.RchResult{Node: r[i].Node, Dt: r[i].Dt, FileType: r[i].FileType, Result: r[i].Result})
+			results = append(results, database.RchResult{Node: r[i].Node, Size: r[i].Size, Dt: r[i].Dt,
+				FileType: r[i].FileType, Result: r[i].Result})
 		}
 	}
 

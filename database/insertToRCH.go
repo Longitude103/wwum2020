@@ -9,6 +9,7 @@ import (
 
 type RchResult struct {
 	Node     int       `db:"cell_node"`
+	Size     float64   `db:"cell_size"`
 	Dt       time.Time `db:"dt"`
 	FileType int       `db:"file_type"`
 	Result   float64   `db:"result"`
@@ -21,7 +22,7 @@ type RchDB struct {
 }
 
 func ResultsRchDB(sqlDB *sqlx.DB) (*RchDB, error) {
-	insertSQL := `INSERT INTO results (cell_node, dt, file_type, result) VALUES (?, ?, ?, ?)`
+	insertSQL := `INSERT INTO results (cell_node, cell_size, dt, file_type, result) VALUES (?, ?, ?, ?, ?)`
 
 	stmt, err := sqlDB.Preparex(insertSQL)
 	if err != nil {
@@ -59,7 +60,7 @@ func (db *RchDB) Flush() error {
 	}
 
 	for _, cl := range db.buffer {
-		_, err := tx.Stmtx(db.stmt).Exec(cl.Node, cl.Dt, cl.FileType, cl.Result)
+		_, err := tx.Stmtx(db.stmt).Exec(cl.Node, cl.Size, cl.Dt, cl.FileType, cl.Result)
 		if err != nil {
 			_ = tx.Rollback()
 			return err

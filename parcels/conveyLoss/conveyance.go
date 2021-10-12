@@ -104,7 +104,8 @@ func Conveyance(v database.Setup) (err error) {
 			//}
 
 			if structureLoss > 0 {
-				err := v.RchDb.Add(database.RchResult{Node: cell.Node, Dt: div.DivDate.Time, FileType: ft, Result: structureLoss * factor * 1.9835})
+				err := v.RchDb.Add(database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,
+					FileType: ft, Result: structureLoss * factor * 1.9835})
 				if err != nil {
 					return err
 				}

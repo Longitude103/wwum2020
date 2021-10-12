@@ -73,6 +73,7 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 					constraint results_pk
 						primary key autoincrement,
 				cell_node int not null,
+				cell_size float,
 				dt TIMESTAMP,
 				file_type int not null
 					constraint results_file_keys_file_key_fk

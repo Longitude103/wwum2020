@@ -54,7 +54,7 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 				}
 
 				if cellRecharge[j] > 0 {
-					err = v.RchDb.Add(database.RchResult{Node: irrCells[i].Node,
+					err = v.RchDb.Add(database.RchResult{Node: irrCells[i].Node, Size: irrCells[i].CellArea,
 						Dt:       time.Date(y, time.Month(j+1), 1, 0, 0, 0, 0, time.UTC),
 						FileType: fileType, Result: cellRecharge[j]})
 					if err != nil {

@@ -12,6 +12,7 @@ type CanalCell struct {
 	DistId     int             `db:"district_id"`
 	Eff        sql.NullFloat64 `db:"eff"`
 	Node       int             `db:"node"`
+	CellArea   float64         `db:"cell_area"`
 	StLength   float64         `db:"st_length"`
 	CFlag      int             `db:"c_flag"`
 	DnrFact    sql.NullFloat64 `db:"dnr_fact"`
@@ -36,7 +37,7 @@ type Canal struct {
 // of canal length and types through that cell. It returns a slice of CanalCell for processing. It also implements AppDebug
 // to reduce the number of cells it returns if the app is in debug mode.
 func getCanalCells(v database.Setup) ([]CanalCell, error) {
-	query := `SELECT c.id, c.type_2, c.district_id, c.eff, a.node,
+	query := `SELECT c.id, c.type_2, c.district_id, c.eff, a.node, st_area(a.geom) / 43560 cell_area,
 		   ST_Length(ST_Intersection(a.geom, c.geom)), c.c_flag, d.dnr_fact, s.sat_fact, u.usgs_fact, c.clink_id, c1.eff eff2,
 		   c2.latcount, c3.tot_lat_ln, c4.tot_can_ln
 	FROM public.model_cells a JOIN sw.canals c ON ST_intersects(c.geom, a.geom)
