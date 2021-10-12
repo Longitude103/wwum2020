@@ -67,10 +67,10 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 			}
 
 			qry = fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt "+
-				"FROM results WHERE file_type < 200 and file_type NOT IN (%s) group by cell_node, dt) where rslt > 0;", list)
+				"FROM wel_results WHERE file_type NOT IN (%s) group by cell_node, dt) where rslt > 0;", list)
 		} else { // don't exclude anything
 			qry = fmt.Sprint("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt " +
-				"FROM results WHERE file_type < 200 group by cell_node, dt) where rslt > 0;")
+				"FROM wel_results group by cell_node, dt) where rslt > 0;")
 		}
 	} else { // is a recharge file
 		if len(excludeList) > 0 { // has an item in exclude list
@@ -81,10 +81,10 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 			}
 
 			qry = fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt "+
-				"FROM results WHERE file_type > 199 and file_type NOT IN (%s) group by cell_node, dt) where rslt > 0;", list)
+				"FROM results WHERE file_type NOT IN (%s) group by cell_node, dt) where rslt > 0;", list)
 		} else { // don't exclude anything
 			qry = fmt.Sprint("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt " +
-				"FROM results WHERE file_type > 199 group by cell_node, dt) where rslt > 0;")
+				"FROM results group by cell_node, dt) where rslt > 0;")
 		}
 	}
 
@@ -95,10 +95,17 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 	return results, nil
 }
 
-func SingleResult(db *sqlx.DB, fileKey string) ([]MfResults, error) {
+func SingleResult(db *sqlx.DB, wel bool, fileKey string) ([]MfResults, error) {
 	var results []MfResults
-	qry := fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt FROM results "+
-		"WHERE file_type = %s group by cell_node, dt) where rslt > 0;", fileKey[0:3])
+	var qry string
+
+	if wel {
+		qry = fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt FROM wel_results "+
+			"WHERE file_type = %s group by cell_node, dt) where rslt > 0;", fileKey[0:3])
+	} else {
+		qry = fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt FROM results "+
+			"WHERE file_type = %s group by cell_node, dt) where rslt > 0;", fileKey[0:3])
+	}
 
 	if err := db.Select(&results, qry); err != nil {
 		return results, err
