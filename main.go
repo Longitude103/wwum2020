@@ -48,12 +48,12 @@ For help with those functions type: dist -h or rch -h`
 		fmt.Println("Run Full Model")
 
 		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelStartY, *rModelEndY, *rModelEF, myEnv); err != nil {
-			fmt.Printf("Error in Application: %s", err)
+			fmt.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}
 	case "mfFiles":
 		if err := actions.MakeModflowFiles(); err != nil {
-			fmt.Printf("Error in Application: %s", err)
+			fmt.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}
 	default:
