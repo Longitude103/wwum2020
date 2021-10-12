@@ -10,6 +10,12 @@ github.com/Longitude103/Flogo v0.1.4 h1:YW7UjqtoiRBeHwhngZgAKnALhsXxriFtpG/dtw7I
 github.com/Longitude103/Flogo v0.1.4/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
 github.com/Longitude103/Flogo v0.1.5 h1:slNGVNRD+G6px2Cs7PbpxbaeRlmFIFpOCPnGEVoGVnY=
 github.com/Longitude103/Flogo v0.1.5/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
+github.com/Longitude103/Flogo v0.1.6 h1:phmkhMLVLqjnNS9gzpAbHwPorMd+1VIptLNrsyULJkw=
+github.com/Longitude103/Flogo v0.1.6/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
+github.com/Longitude103/Flogo v0.1.7 h1:GkG5i4VArCrmxUspcE32HVABF/AXHXSJ4KKqyQgT5co=
+github.com/Longitude103/Flogo v0.1.7/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
+github.com/Longitude103/Flogo v0.1.8 h1:k2rBlCXS/ouzhGOohDH2LNapF2lhE82t9wz53h4aLH8=
+github.com/Longitude103/Flogo v0.1.8/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
 github.com/Longitude103/gisUtils v1.0.2 h1:vEvzD12zHsocPMCQGfiDWeS7otk2j9N/H0CPBk2hEhs=
 github.com/Longitude103/gisUtils v1.0.2/go.mod h1:VgX5gEAe1yfL8TUMSxnoFPeSm/1iKBjGmrwwiRop7bQ=
 github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8 h1:xzYJEypr/85nBpB11F9br+3HUrpgb+fcm5iADzXXYEw=

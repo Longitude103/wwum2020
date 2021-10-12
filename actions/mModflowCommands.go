@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Longitude103/Flogo"
+	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/jmoiron/sqlx"
 	"os"
@@ -41,35 +42,37 @@ func MakeModflowFiles() error {
 	var singleRCHResults = make(map[string][]database.MfResults)
 
 	for _, w := range welFK {
-		singleWELResults[w], err = database.SingleResult(db, w)
+		singleWELResults[w], err = database.SingleResult(db, true, w)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, r := range rchFK {
-		singleRCHResults[r], err = database.SingleResult(db, r)
+		singleRCHResults[r], err = database.SingleResult(db, false, r)
 		if err != nil {
 			return err
 		}
 	}
 
-	if err := MakeFiles(aggWel, true, false, fileName, path); err != nil {
+	if err := MakeFiles(aggWel, true, false, "AggregateWEL", path); err != nil {
 		return err
 	}
 
 	for k, _ := range singleWELResults {
-		if err := MakeFiles(singleWELResults[k], true, false, fileName, path); err != nil {
+		fn := fmt.Sprintf("%sWEL", k)
+		if err := MakeFiles(singleWELResults[k], true, false, fn, path); err != nil {
 			return err
 		}
 	}
 
-	if err := MakeFiles(aggRch, false, true, fileName, path); err != nil {
+	if err := MakeFiles(aggRch, false, true, "AggregateRCH", path); err != nil {
 		return err
 	}
 
 	for k, _ := range singleRCHResults {
-		if err := MakeFiles(singleRCHResults[k], false, true, fileName, path); err != nil {
+		fn := fmt.Sprintf("%sRCH", k)
+		if err := MakeFiles(singleRCHResults[k], false, true, fn, path); err != nil {
 			return err
 		}
 	}
@@ -167,6 +170,15 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outp
 		Value() float64
 	}, len(r))
 	for i, v := range r {
+		if wel {
+			// acre-feet / month -> (ft^3 / day) * -1
+			v.Rslt = (v.Rslt * 43560) / float64(Utils.TimeExt{T: v.ResultDate}.DaysInMonth()) * -1
+		}
+
+		if rch {
+			// acre-feet / month -> ft / day
+			v.Rslt = (v.Rslt / v.CellSize.Float64) / float64(Utils.TimeExt{T: v.ResultDate}.DaysInMonth())
+		}
 		rInterface[i] = v
 	}
 
@@ -179,7 +191,7 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outp
 
 func MakeOutputDir(fileName string) (string, error) {
 	rootPath := "."
-	subPath := fmt.Sprintf("/OutputFiles/%s", fileName)
+	subPath := fmt.Sprintf("/OutputFiles/%s", fileName[:len(fileName)-7])
 
 	path := filepath.Join(rootPath, subPath)
 
