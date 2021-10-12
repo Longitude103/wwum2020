@@ -21,12 +21,20 @@ of flags in the CLI. This is a core go package.
     
 ### Common CLI Examples
 - Production runs:
-  - `go run main.go runModel --CSDir "/run/media/heath/part1/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
+  - `go run main.go runModel --CSDir "<path>"`
+  - "--CSDir" is the path to the monthly output CropSim .txt files, you must qualify it in "<path>" if the path contains spaces 
+    - My example is `--CSDir "/Volumes/G-Raid with TB3/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
 - Development runs:
-  - `go run main.go runModel --CSDir "/run/media/heath/part1/WWUMM2020/CropSim/Run005_WWUM2020/Output" --debug`
+  - `go run main.go runModel --CSDir "<path>" --debug`
 
 ### Output
 To store the large volume of output, we're going to use SQLite3 as the storage container. 
 This gives the ability to still be SQL enabled, but also allow compressing and store the data in Binary Format.
 The only text files that are output are the rch and wel files. The package used is the [go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) package in the repo.
 The file is named results.db that will be in the same dir as the executable.
+
+### ModFlow Output Files
+The second command that is used by the app is the "mfFiles" command that enables you to write out ModFlow files needed for the 
+further model runs.
+
+- Run the model using `go run main.go mfFiles`
