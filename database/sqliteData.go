@@ -59,7 +59,7 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 	var results []MfResults
 
 	if wel { // is a wel file
-		if len(excludeList) > 0 { // has an item in the exclude list
+		if len(excludeList) > 0 { // has an item in the to exclude list
 			list := excludeList[0][0:3]
 			for i := 1; i < len(excludeList); i++ {
 				list += ", "

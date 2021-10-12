@@ -73,7 +73,7 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 					constraint results_pk
 						primary key autoincrement,
 				cell_node int not null,
-				dt text,
+				dt TIMESTAMP,
 				file_type int not null
 					constraint results_file_keys_file_key_fk
 					references file_keys,
@@ -99,7 +99,7 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 									(
 										parcelID integer,
 										nrd text,
-										dt text,
+										dt TIMESTAMP,
 										nir real,
 										irrtype integer
 									);`)
@@ -119,7 +119,7 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 									(
 										parcelID integer,
 										nrd text,
-										dt text,
+										dt TIMESTAMP,
 										pump real
 									);`)
 	if err != nil {
@@ -141,7 +141,7 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 						primary key autoincrement,
 				well_id int not null,
 				cell_node int not null,
-				dt text,
+				dt TIMESTAMP,
 				file_type int not null
 					constraint results_file_keys_file_key_fk
 					references file_keys,
