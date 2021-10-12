@@ -1,0 +1,191 @@
+package actions
+
+import (
+	"fmt"
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/Longitude103/Flogo"
+	"github.com/Longitude103/wwum2020/database"
+	"github.com/jmoiron/sqlx"
+	"os"
+	"path/filepath"
+	"time"
+)
+
+func MakeModflowFiles() error {
+	fileName, db, err := dbQuestion()
+	if err != nil {
+		return err
+	}
+
+	path, err := MakeOutputDir(fileName)
+	if err != nil {
+		return err
+	}
+
+	welFK, rchFK, err := questions(db)
+	if err != nil {
+		return err
+	}
+
+	aggWel, err := database.GetAggResults(db, true, welFK)
+	if err != nil {
+		return err
+	}
+
+	aggRch, err := database.GetAggResults(db, false, rchFK)
+	if err != nil {
+		return err
+	}
+
+	var singleWELResults = make(map[string][]database.MfResults)
+	var singleRCHResults = make(map[string][]database.MfResults)
+
+	for _, w := range welFK {
+		singleWELResults[w], err = database.SingleResult(db, w)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, r := range rchFK {
+		singleRCHResults[r], err = database.SingleResult(db, r)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := MakeFiles(aggWel, true, false, fileName, path); err != nil {
+		return err
+	}
+
+	for k, _ := range singleWELResults {
+		if err := MakeFiles(singleWELResults[k], true, false, fileName, path); err != nil {
+			return err
+		}
+	}
+
+	if err := MakeFiles(aggRch, false, true, fileName, path); err != nil {
+		return err
+	}
+
+	for k, _ := range singleRCHResults {
+		if err := MakeFiles(singleRCHResults[k], false, true, fileName, path); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func suggestFiles(toComplete string) []string {
+	files, _ := filepath.Glob(toComplete + "*.sqlite")
+	return files
+}
+
+func dbQuestion() (string, *sqlx.DB, error) {
+	var q = []*survey.Question{
+		{
+			Name: "file",
+			Prompt: &survey.Input{
+				Message: "Which results DB should be used?",
+				Suggest: suggestFiles,
+				Help:    "The SQLite file you want to use to build ModFlow files",
+			},
+			Validate: survey.Required,
+		},
+	}
+
+	answers := struct {
+		File string
+	}{}
+
+	// ask the question
+	if err := survey.Ask(q, &answers); err != nil {
+		return "", nil, err
+	}
+
+	// get the file_keys from sqlite and ask if any of these should be individual files
+	sqliteDB, err := database.ConnectSqlite(answers.File)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return answers.File, sqliteDB, nil
+}
+
+func questions(sqliteDB *sqlx.DB) (a2 []string, a3 []string, err error) {
+	wellFk, err := database.GetFileKeys(sqliteDB, true)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// the questions to ask
+	var multiQs = []*survey.Question{
+		{
+			Name: "wellFK",
+			Prompt: &survey.MultiSelect{
+				Message: "Choose WEL files to exclude :",
+				Options: wellFk,
+			},
+		},
+	}
+
+	var answers2 []string
+	// ask the question
+	if err := survey.Ask(multiQs, &answers2); err != nil {
+		return nil, nil, err
+	}
+
+	rchFK, err := database.GetFileKeys(sqliteDB, false)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	multiQs = []*survey.Question{
+		{
+			Name: "rchFK",
+			Prompt: &survey.MultiSelect{
+				Message: "Choose which RCH files to exclude :",
+				Options: rchFK,
+			},
+		},
+	}
+
+	var answers3 []string
+	// ask the question
+	if err := survey.Ask(multiQs, &answers3); err != nil {
+		return nil, nil, err
+	}
+
+	return answers2, answers3, nil
+}
+
+func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outputPath string) error {
+	rInterface := make([]interface {
+		Date() time.Time
+		Node() int
+		Value() float64
+	}, len(r))
+	for i, v := range r {
+		rInterface[i] = v
+	}
+
+	if err := Flogo.Input(wel, rch, fileName, rInterface, outputPath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func MakeOutputDir(fileName string) (string, error) {
+	rootPath := "."
+	subPath := fmt.Sprintf("/OutputFiles/%s", fileName)
+
+	path := filepath.Join(rootPath, subPath)
+
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		return "", err
+	}
+
+	return path, nil
+}

@@ -51,6 +51,11 @@ For help with those functions type: dist -h or rch -h`
 			fmt.Printf("Error in Application: %s", err)
 			os.Exit(1)
 		}
+	case "mfFiles":
+		if err := actions.MakeModflowFiles(); err != nil {
+			fmt.Printf("Error in Application: %s", err)
+			os.Exit(1)
+		}
 	default:
 		fmt.Println(help)
 	}

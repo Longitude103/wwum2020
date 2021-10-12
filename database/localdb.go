@@ -27,3 +27,14 @@ func GetSqlite(logger *zap.SugaredLogger) (*sqlx.DB, error) {
 
 	return db, nil
 }
+
+func ConnectSqlite(fileName string) (*sqlx.DB, error) {
+	dbPath := fmt.Sprintf("./%s", fileName)
+
+	db, err := sqlx.Open("sqlite3", dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
