@@ -10,13 +10,19 @@ import (
 // Dryland gets a slice of dryland parcels and writes out the values to the results' database.
 func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 	for y := v.SYear; y < v.EYear+1; y++ {
-
 		dryCells := database.GetDryCells(v, y) // will need to iterate through years
+		annParcels, err := parcelFilterByYear(dryParcels, y)
+		if err != nil {
+			v.Logger.Errorf("Didn't return parcels from filter by year for year: %d", y)
+			return err
+		}
 
 		var preResults []database.RchResult
 		for i := 0; i < len(dryCells); i++ {
-			parcelArea, rf, err := parcelValues(dryParcels, int(dryCells[i].PId), dryCells[i].Nrd)
+			parcelArea, rf, err := parcelValues(annParcels, int(dryCells[i].PId), dryCells[i].Nrd)
 			if err != nil {
+				v.Logger.Errorf("Dryland RCH parcelValues error, year: %d, parcel_id: %d, nrd: %s", y,
+					int(dryCells[i].PId), dryCells[i].Nrd)
 				return err
 			}
 
