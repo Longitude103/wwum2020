@@ -9,11 +9,13 @@ import (
 func GetSurfaceWaterDelivery(v database.Setup) ([]Diversion, error) {
 	diversions, err := getDiversions(v)
 	if err != nil {
+		v.Logger.Errorf("Error in getDiversions: %s", err)
 		return nil, err
 	}
 
 	canals, err := getCanals(v)
 	if err != nil {
+		v.Logger.Errorf("Error in getCanals: %s", err)
 		return nil, err
 	}
 
