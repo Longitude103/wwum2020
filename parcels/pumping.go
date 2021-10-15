@@ -10,7 +10,7 @@ import (
 // the amount of pumping that was done at the parcel since a well is present, but not metered. It fills the Pump field of the Parcel struct
 func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) error {
 
-	if se, err := p.shouldEstimate(); err != nil && se {
+	if se, err := p.shouldEstimate(); err != nil || se {
 		nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
 		if err != nil {
 			return err
@@ -119,6 +119,24 @@ func adjFactor(cCrops []database.CoeffCrop, zone int, crop int, adj database.Adj
 			case database.IrrEt:
 				nf = v.IrrEtAdj
 				return nf, nil
+			}
+		}
+
+		if crop == 15 {
+			for _, v := range cCrops {
+				if v.Zone == zone && v.Crop == 7 {
+					switch adj {
+					case database.NirEt:
+						nf = v.NirAdjFactor
+						return nf, nil
+					case database.DryET:
+						nf = v.DryEtAdj
+						return nf, nil
+					case database.IrrEt:
+						nf = v.IrrEtAdj
+						return nf, nil
+					}
+				}
 			}
 		}
 	}

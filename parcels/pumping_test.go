@@ -1,6 +1,7 @@
 package parcels
 
 import (
+	"database/sql"
 	"github.com/Longitude103/wwum2020/database"
 	"testing"
 )
@@ -80,6 +81,7 @@ func TestPumping_estimatePumping(t *testing.T) {
 	p1.Pump = [12]float64{}
 	// alter NIR
 	p1.Nir = [12]float64{0, 0, 0, 0, 3, 25, 40, 45, 20, 0, 0, 0}
+	p1.Subarea = sql.NullString{String: "FA", Valid: true}
 
 	err := p1.estimatePumping(cCrops)
 	if err != nil {

@@ -40,7 +40,7 @@ func GetCoeffCrops(v Setup) (CoeffCrops []CoeffCrop, err error) {
 }
 
 // FilterValues is a method that will return the values that you would use to filter a slice of CoeffCrop struct for a filter
-// function
+// function, returns the zone and the crop as integers
 func (coeff CoeffCrop) FilterValues() (z, c int) {
 	return coeff.Zone, coeff.Crop
 }
@@ -53,6 +53,15 @@ func FilterCCDryLand(cSlice []CoeffCrop, z int, c int) (DryEtAdj float64, DryEtT
 		vZ, vC := v.FilterValues()
 		if vZ == z && vC == c {
 			return v.DryEtAdj, v.DryEtToRo, v.DpAdj, v.RoAdj, nil
+		}
+	}
+
+	if c == 15 {
+		for _, v := range cSlice {
+			vZ, vC := v.FilterValues()
+			if vZ == z && vC == 7 {
+				return v.DryEtAdj, v.DryEtToRo, v.DpAdj, v.RoAdj, nil
+			}
 		}
 	}
 
