@@ -8,7 +8,6 @@ import (
 	"github.com/Longitude103/wwum2020/rchFiles"
 	"github.com/Longitude103/wwum2020/wells"
 	"time"
-	//"wwum2020/rchFiles"
 )
 
 func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[string]string) error {
@@ -115,9 +114,9 @@ func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[stri
 	}
 
 	_ = v.SlDb.Close() // close the db before ending the program
-	v.Logger.Infof("Model Run took: %s", time.Now().Sub(timeStart))
-	v.Logger.Info("Model Completed without Error")
-	fmt.Println("Model Completed without Error.")
+	v.Logger.Infof("Model Runtime: %s", time.Now().Sub(timeStart))
+	v.Logger.Info("Model Completed Normally")
+	fmt.Println("Model Completed Normally, check logs for details of run")
 	return nil
 
 }
