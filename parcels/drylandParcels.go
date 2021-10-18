@@ -23,6 +23,7 @@ func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResul
 				err := (&annDryParcels[d]).parcelNIR(v.PNirDB, y, wStations, csResults, DryLand)
 				if err != nil {
 					v.Logger.Error("error in dry parcel NIR ", err)
+					v.Logger.Errorf("Parcel trace: %+v", annDryParcels[d])
 				}
 			}(i)
 
@@ -31,6 +32,7 @@ func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResul
 				err := (&annDryParcels[d]).dryWaterBalanceWSPP(cCrop)
 				if err != nil {
 					v.Logger.Error("error in dry parcel WSPP ", err)
+					v.Logger.Errorf("Parcel trace: %+v", annDryParcels[d])
 				}
 			}(i)
 		}
