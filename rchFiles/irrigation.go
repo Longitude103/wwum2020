@@ -42,6 +42,7 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 			fileType, err := assignRCHType(p.Nrd, p.Sw.Bool, p.Gw.Bool, post97(p.FirstIrr.Int64))
 			if err != nil {
 				v.Logger.Errorf("assignRCHType error where nrd is %s, SW: %t, GW: %t, post97: %t", p.Nrd, p.Sw.Bool, p.Gw.Bool, post97(p.FirstIrr.Int64))
+				v.Logger.Errorf("Parcel trace: %+v", p)
 				return err
 			}
 
