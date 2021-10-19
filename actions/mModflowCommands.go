@@ -18,7 +18,15 @@ func MakeModflowFiles() error {
 		return err
 	}
 
+	// TODO: Get description from DB and display on CLI
+	// TODO: Write this into the WEL and RCH File Header
+
 	path, err := MakeOutputDir(fileName)
+	if err != nil {
+		return err
+	}
+
+	mDesc, err := database.GetDescription(db)
 	if err != nil {
 		return err
 	}
@@ -55,24 +63,24 @@ func MakeModflowFiles() error {
 		}
 	}
 
-	if err := MakeFiles(aggWel, true, false, "AggregateWEL", path); err != nil {
+	if err := MakeFiles(aggWel, true, false, "AggregateWEL", path, mDesc); err != nil {
 		return err
 	}
 
 	for k, _ := range singleWELResults {
 		fn := fmt.Sprintf("%sWEL", k)
-		if err := MakeFiles(singleWELResults[k], true, false, fn, path); err != nil {
+		if err := MakeFiles(singleWELResults[k], true, false, fn, path, mDesc); err != nil {
 			return err
 		}
 	}
 
-	if err := MakeFiles(aggRch, false, true, "AggregateRCH", path); err != nil {
+	if err := MakeFiles(aggRch, false, true, "AggregateRCH", path, mDesc); err != nil {
 		return err
 	}
 
 	for k, _ := range singleRCHResults {
 		fn := fmt.Sprintf("%sRCH", k)
-		if err := MakeFiles(singleRCHResults[k], false, true, fn, path); err != nil {
+		if err := MakeFiles(singleRCHResults[k], false, true, fn, path, mDesc); err != nil {
 			return err
 		}
 	}
@@ -163,7 +171,7 @@ func questions(sqliteDB *sqlx.DB) (a2 []string, a3 []string, err error) {
 	return answers2, answers3, nil
 }
 
-func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outputPath string) error {
+func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outputPath string, mDesc string) error {
 	rInterface := make([]interface {
 		Date() time.Time
 		Node() int

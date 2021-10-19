@@ -8,7 +8,7 @@ import (
 // InitializeDb creates the database results table if it doesn't exist, so the records of the
 // transaction can be stored properly, also creates file_keys table for result file_type integer
 // and a foreign key restriction to results table
-func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
+func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger, mDesc string) error {
 	stmt, err := db.Prepare(`
 		create table if not exists file_keys
 			(
@@ -160,6 +160,31 @@ func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger) error {
 	_, err = stmt.Exec()
 	if err != nil {
 		logger.Errorf("Error in creating wel_results table: %s", err)
+		return err
+	}
+
+	stmt, err = db.Prepare(`
+		create table if not exists results_notes 
+			(
+			    id integer not null
+					constraint results_pk
+						primary key autoincrement,
+				note text
+			)
+    `)
+	if err != nil {
+		logger.Errorf("Error in creating results_notes table statement: %s", err)
+		return err
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		logger.Errorf("Error in creating results_notes table: %s", err)
+		return err
+	}
+
+	if _, err := db.Exec("insert into results_notes (note) VALUES ($1)", mDesc); err != nil {
+		logger.Errorf("unable to insert note description into SQLite: %s", err)
 		return err
 	}
 

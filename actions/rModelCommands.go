@@ -10,14 +10,15 @@ import (
 	"time"
 )
 
-func RunModel(debug bool, CSDir *string, sY int, eY int, eF bool, myEnv map[string]string) error {
+func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, myEnv map[string]string) error {
 	timeStart := time.Now()
 
 	v := database.Setup{}
-	if err := v.NewSetup(debug, eF, myEnv, false); err != nil {
+	if err := v.NewSetup(debug, eF, myEnv, false, mDesc); err != nil {
 		return err
 	}
 	v.Logger.Infof("Model Run Started at: %s", timeStart.Format(time.UnixDate))
+	v.Logger.Infof("Model Description: %s", mDesc)
 	if err := v.SetYears(sY, eY); err != nil {
 		v.Logger.Errorf("Error Setting Years Error: %s", err)
 		return err

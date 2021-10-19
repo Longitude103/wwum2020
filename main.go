@@ -34,11 +34,17 @@ import (
 // function also has an error checking to deal with flags not set correctly.
 func main() {
 	const help = `WWUM 2020 CLI for various tasks. At this point there are two main functions implemented.
-2. runModel -> Run Full WWUMM 2020 Model
+1. runModel -> Run Full WWUMM 2020 Model
+2. mfFiles -> Write ModFlow files from a results DB
 -------------------------------------------------------------------------------------------------
 Use this command: runModel
+    Required Flags: --Desc: A description of the model being run
+					--CSDir: The directory path to the CropSim Results text files
+
+Use this command: mfFiles
+	Required Flags: None, but will prompt for selection responses based on data
 -------------------------------------------------------------------------------------------------
-For help with those functions type: dist -h or rch -h`
+For help with those functions type: runModel -h or mfFiles -h`
 
 	var myEnv map[string]string
 	myEnv, err := godotenv.Read()
@@ -48,10 +54,11 @@ For help with those functions type: dist -h or rch -h`
 	}
 	runModelCmd := flag.NewFlagSet("runModel", flag.ExitOnError)
 	rModelDebug := runModelCmd.Bool("debug", false, "sets debugger for more log information")
-	rModelStartY := runModelCmd.Int("StartYr", 2014, "Sets the start year of Command, default = 1997")
-	rModelEndY := runModelCmd.Int("EndYr", 2014, "Sets the end year of Command, default = 2020")
-	rModelCSDir := runModelCmd.String("CSDir", "", "CropSim Directory path")
+	rModelStartY := runModelCmd.Int("StartYr", 1997, "Sets the start year of Command, default = 1997")
+	rModelEndY := runModelCmd.Int("EndYr", 2020, "Sets the end year of Command, default = 2020")
+	rModelCSDir := runModelCmd.String("CSDir", "", "REQUIRED! - CropSim Directory path")
 	rModelEF := runModelCmd.Bool("excessFlow", false, "Sets to use Excess Flow or Not, default = false")
+	rModelDesc := runModelCmd.String("Desc", "", "REQUIRED! - Model Description")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -66,9 +73,16 @@ For help with those functions type: dist -h or rch -h`
 			fmt.Println(help)
 			os.Exit(1)
 		}
+
+		if *rModelDesc == "" {
+			fmt.Println("Must include a model description before executing model run")
+			fmt.Println(help)
+			os.Exit(0)
+		}
+
 		fmt.Println("Run Full Model")
 
-		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelStartY, *rModelEndY, *rModelEF, myEnv); err != nil {
+		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelDesc, *rModelStartY, *rModelEndY, *rModelEF, myEnv); err != nil {
 			fmt.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}

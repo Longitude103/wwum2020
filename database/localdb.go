@@ -10,7 +10,7 @@ import (
 
 // GetSqlite gets or sets the connection string for the sqlite3 results database.
 //  It takes no args, and returns the db object for the connection
-func GetSqlite(logger *zap.SugaredLogger) (*sqlx.DB, error) {
+func GetSqlite(logger *zap.SugaredLogger, mDesc string) (*sqlx.DB, error) {
 	dbName := fmt.Sprintf("./results%s.sqlite", time.Now().Format(time.RFC3339))
 	logger.Infof("created sqlite results db named: %s", dbName)
 	db, err := sqlx.Open("sqlite3", dbName)
@@ -20,7 +20,7 @@ func GetSqlite(logger *zap.SugaredLogger) (*sqlx.DB, error) {
 	}
 
 	// initializes the database with a results table and file_keys table
-	err = InitializeDb(db, logger)
+	err = InitializeDb(db, logger, mDesc)
 	if err != nil {
 		return nil, err
 	}

@@ -22,7 +22,7 @@ type Setup struct {
 
 // NewSetup is an initialization function for the Setup struct that sets the initial database connections, logger, and stores
 // the flags for excess flow and debug.
-func (s *Setup) NewSetup(debug, ef bool, myEnv map[string]string, noSqlite bool) error {
+func (s *Setup) NewSetup(debug, ef bool, myEnv map[string]string, noSqlite bool, mDesc string) error {
 	l, err := NewLogger()
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (s *Setup) NewSetup(debug, ef bool, myEnv map[string]string, noSqlite bool)
 	}
 
 	if !noSqlite {
-		s.SlDb, err = GetSqlite(s.Logger)
+		s.SlDb, err = GetSqlite(s.Logger, mDesc)
 		if err != nil {
 			return err
 		}
