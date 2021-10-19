@@ -68,10 +68,12 @@ func (p *Parcel) shouldEstimate() (bool, error) {
 		if p.Yr > 2009 {
 			return false, nil
 		} else {
-			if p.Yr > 2006 && (p.Subarea.String[2:] != "FA" || p.Subarea.String[3:] != "SPV") {
-				return false, nil
-			} else {
-				return true, nil
+			if len(p.Subarea.String) > 0 {
+				if p.Yr > 2006 && (p.Subarea.String[2:] != "FA" || p.Subarea.String[3:] != "SPV") {
+					return false, nil
+				} else {
+					return true, nil
+				}
 			}
 		}
 	}
