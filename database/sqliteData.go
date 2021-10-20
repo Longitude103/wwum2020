@@ -23,9 +23,9 @@ type MfResults struct {
 	Rslt       float64         `db:"rslt"`
 }
 
-type resultsNote struct {
-	id   int    `db:"id"`
-	note string `db:"note"`
+type ResultsNote struct {
+	Id   int    `db:"id"`
+	Note string `db:"note"`
 }
 
 func (m MfResults) Date() time.Time {
@@ -122,12 +122,12 @@ func SingleResult(db *sqlx.DB, wel bool, fileKey string) ([]MfResults, error) {
 }
 
 func GetDescription(db *sqlx.DB) (desc string, err error) {
-	var rslt []resultsNote
+	var rslt []ResultsNote
 	query := "SELECT * FROM results_notes ORDER BY id ASC LIMIT 1"
 
 	if err := db.Select(&rslt, query); err != nil {
 		return "", err
 	}
 
-	return rslt[0].note, nil
+	return rslt[0].Note, nil
 }
