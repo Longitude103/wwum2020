@@ -62,23 +62,25 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 
 		bar := progressbar.Default(int64(len(parcels)), "Parcels")
 		for i := 0; i < len(parcels); i++ {
+			// this might be the issue??
 			wg.Add(1)
-			go func() {
+			go func(ip int) {
 				defer wg.Done()
-				err := (&parcels[i]).parcelNIR(v.PNirDB, y, wStations, csResults, Irrigated)
+				err := (&parcels[ip]).parcelNIR(v.PNirDB, y, wStations, csResults, Irrigated)
 				if err != nil {
-					v.Logger.Errorf("parcel error")
+					v.Logger.Errorf("Parcel NIR Error: %s", err)
+					v.Logger.Errorf("Parcel Trace: %+v", parcels[ip])
 				}
-			}() // must be a pointer to work
+
+				(&parcels[ip]).setAppEfficiency(efficiencies, y)
+
+				// add SW Delivery to the parcels
+				if parcels[ip].Sw.Bool == true {
+					(&parcels[ip]).parcelSWDelivery(filteredDiversions)
+				}
+			}(i) // must be a pointer to work
 
 			wg.Wait()
-			(&parcels[i]).setAppEfficiency(efficiencies, y)
-
-			// add SW Delivery to the parcels
-			if parcels[i].Sw.Bool == true {
-				(&parcels[i]).parcelSWDelivery(filteredDiversions)
-			}
-
 			_ = bar.Add(1)
 		}
 
@@ -119,18 +121,24 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		wbBar := progressbar.Default(int64(len(parcels)), "Water Balance Parcels")
 		for p := 0; p < len(parcels); p++ {
 			_ = wbBar.Add(1)
-			wg.Add(1)
-			go func(i int) {
-				defer wg.Done()
-				err := (&parcels[i]).waterBalanceWSPP(false)
-				if err != nil {
-					v.Logger.Errorf("error in parcel WSPP parcel data: %+v", parcels[p])
-				}
-			}(p)
+			//wg.Add(1)
+			//go func(i int) {
+			//	defer wg.Done()
+			//	err := (&parcels[i]).waterBalanceWSPP(false)
+			//	if err != nil {
+			//		v.Logger.Errorf("error in parcel WSPP parcel data: %+v", parcels[p])
+			//	}
+			//}(p)
+
+			err := (&parcels[p]).waterBalanceWSPP(false)
+			if err != nil {
+				v.Logger.Errorf("error in parcel WSPP: %s\n", err)
+				v.Logger.Errorf("Parcel trace: %+v\n", parcels[p])
+			}
 
 			AllParcels = append(AllParcels, parcels[p])
 		}
-		wg.Wait()
+		//wg.Wait()
 		_ = wbBar.Close()
 
 	}
