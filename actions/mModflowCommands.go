@@ -190,7 +190,7 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outp
 		rInterface[i] = v
 	}
 
-	if err := Flogo.Input(wel, rch, fileName, rInterface, outputPath); err != nil {
+	if err := Flogo.Input(wel, rch, fileName, rInterface, outputPath, mDesc); err != nil {
 		return err
 	}
 
