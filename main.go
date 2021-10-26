@@ -36,6 +36,7 @@ func main() {
 	const help = `WWUM 2020 CLI for various tasks. At this point there are two main functions implemented.
 1. runModel -> Run Full WWUMM 2020 Model
 2. mfFiles -> Write ModFlow files from a results DB
+3. qcResults -> Runs QC analysis on the results DB chosen, can output many things
 -------------------------------------------------------------------------------------------------
 Use this command: runModel
     Required Flags: --Desc: A description of the model being run
@@ -89,6 +90,11 @@ For help with those functions type: runModel -h or mfFiles -h`
 	case "mfFiles":
 		if err := actions.MakeModflowFiles(); err != nil {
 			fmt.Printf("Error in Application: %s\n", err)
+			os.Exit(1)
+		}
+	case "qcResults":
+		if err := actions.QcResults(myEnv); err != nil {
+			fmt.Printf("Error in Application: %s", err)
 			os.Exit(1)
 		}
 	default:

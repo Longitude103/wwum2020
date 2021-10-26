@@ -13,7 +13,7 @@ import (
 )
 
 func MakeModflowFiles() error {
-	fileName, db, err := dbQuestion()
+	fileName, db, err := DbQuestion()
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func suggestFiles(toComplete string) []string {
 	return files
 }
 
-func dbQuestion() (string, *sqlx.DB, error) {
+func DbQuestion() (string, *sqlx.DB, error) {
 	var q = []*survey.Question{
 		{
 			Name: "file",
