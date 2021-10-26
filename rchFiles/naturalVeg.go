@@ -26,7 +26,13 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 		nVegBarCells := progressbar.Default(int64(len(cells)), "Natural Veg Cells")
 		for i := 0; i < len(cells); i++ {
 			_ = nVegBarCells.Add(1)
-			var cellResult database.RchResult
+
+			var cellResult []database.RchResult
+			for m := 0; m < 12; m++ {
+				cellResult = append(cellResult, database.RchResult{Node: cells[i].Node, Size: cells[i].CellArea,
+					Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC), FileType: 102})
+			}
+
 			dist, err := database.Distances(cells[i], wStations)
 			if err != nil {
 				v.Logger.Errorf("error in distance calculation for cell: %v", cells[i])
@@ -50,16 +56,18 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				}
 
 				for m := 0; m < 12; m++ {
-					cellResult = database.RchResult{Node: cells[i].Node, Size: cells[i].CellArea,
-						Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC), FileType: 102,
-						Result: annData.MonthlyData[m].Ro*st.Weight*cells[i].VegArea()/12*aRo + annData.MonthlyData[m].Dp*st.Weight*cells[i].VegArea()/12*aDp}
+					cellResult[m].Result += annData.MonthlyData[m].Ro*st.Weight*cells[i].VegArea()/12*aRo +
+						annData.MonthlyData[m].Dp*st.Weight*cells[i].VegArea()/12*aDp
 				}
-
 			}
 
-			if err := v.RchDb.Add(cellResult); err != nil {
-				v.Logger.Errorf("Error Adding Result to RchDB Buffer, Result: %+v", cellResult)
-				return err
+			for m := 0; m < 12; m++ {
+				if cellResult[m].Result > 0 {
+					if err := v.RchDb.Add(cellResult[m]); err != nil {
+						v.Logger.Errorf("Error Adding Result to RchDB Buffer, Result: %+v", cellResult)
+						return err
+					}
+				}
 			}
 		}
 		_ = nVegBarCells.Close()
