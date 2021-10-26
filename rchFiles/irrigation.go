@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels"
-	"github.com/schollz/progressbar/v3"
+	"github.com/pterm/pterm"
 	"time"
 )
 
@@ -12,28 +12,29 @@ import (
 // parcel information and adds the proper type id
 func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 	v.Logger.Info("Starting to write RCH information from Irrigated Parcels")
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Irrigated Recharge Results").WithRemoveWhenDone(true).Start()
 
-	irrCellsYearBar := progressbar.Default(int64(v.EYear-v.SYear), "Years of Irr Cells")
 	for y := v.SYear; y < v.EYear+1; y++ {
-		_ = irrCellsYearBar.Add(1)
+		p.Increment()
 		// filter all parcels to this year only
+		p.UpdateTitle("Filtering Parcels")
 		parcelList, err := parcelFilterByYear(AllParcels, y)
 		if err != nil {
 			v.Logger.Errorf("parcelFilterByYear error for year: %d", y)
 			return err
 		}
 
+		p.UpdateTitle("Getting Irrigated Cells")
 		irrCells, err := database.GetCellsIrr(v, y)
 		if err != nil {
 			v.Logger.Errorf("GetCellsIrr error for year: %d", y)
 			return err
 		}
 
-		irrCellsBar := progressbar.Default(int64(len(irrCells)), "Irrigated Cells")
+		p.UpdateTitle("Processing Irr Cells")
 		// use the RO + DP from parcel and split by acres to get recharge, will need to keep separate files for the various
 		// distributions of scenarios.
 		for i := 0; i < len(irrCells); i++ {
-			_ = irrCellsBar.Add(1)
 			p, err := parcelFilterById(parcelList, irrCells[i].ParcelId, irrCells[i].Nrd)
 			if err != nil {
 				v.Logger.Errorf("parcelFilterById error for parcel Id: %d, and nrd: %s", irrCells[i].ParcelId, irrCells[i].Nrd)
@@ -68,10 +69,7 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 
 			}
 		}
-		_ = irrCellsBar.Close()
-
 	}
-	_ = irrCellsYearBar.Close()
 
 	v.Logger.Info("IrrigationRCH is completed.")
 	return nil

@@ -4,11 +4,13 @@ import (
 	"errors"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels"
+	"github.com/pterm/pterm"
 )
 
 // WriteWELResults is a function that gets the pumping amounts for the parcel and assigns them to a well or wells that
 // supply that parcel.
 func WriteWELResults(v database.Setup, parcels *[]parcels.Parcel) error {
+	spin, _ := pterm.DefaultSpinner.Start("Getting Well Parcels and Well Nodes")
 	v.Logger.Info("Starting WriteWELResults...")
 	// get a list of the wells and associated parcels
 	wellParcels, err := database.GetWellParcels(v)
@@ -20,9 +22,12 @@ func WriteWELResults(v database.Setup, parcels *[]parcels.Parcel) error {
 	if err != nil {
 		return err
 	}
+	spin.Success()
 
+	pBar, _ := pterm.DefaultProgressbar.WithTotal(len(*parcels)).WithTitle("Well Results Parcels").WithRemoveWhenDone(true).Start()
 	var welResult []database.WelAnnualResult
-	for p := 0; p < len(*parcels); p++ {
+	for p := 0; p < pBar.Total; p++ {
+		pBar.Increment()
 		// no GW, skip
 		if !(*parcels)[p].Gw.Bool {
 			continue

@@ -2,7 +2,7 @@ package conveyLoss
 
 import (
 	"github.com/Longitude103/wwum2020/database"
-	"github.com/schollz/progressbar/v3"
+	"github.com/pterm/pterm"
 )
 
 // Conveyance function finds the diversions and calculates the conveyance loss for all cells where there is a canal. This
@@ -10,20 +10,24 @@ import (
 func Conveyance(v database.Setup) (err error) {
 	spRates := map[string]float64{"interstate": 0.4869, "highline": 0.2617, "lowline": 0.2513}
 
+	spinner, _ := pterm.DefaultSpinner.Start("Getting Canal Cells and Diversions")
 	canalCells, err := getCanalCells(v)
 	if err != nil {
+		spinner.Fail("Get Canals Failed")
 		return err
 	}
 
 	diversions, err := getDiversions(v)
 	if err != nil {
+		spinner.Fail("Get Diversions Failed")
 		return err
 	}
+	spinner.Success()
 
-	bar := progressbar.Default(int64(len(canalCells)), "Canal Cells")
+	p, _ := pterm.DefaultProgressbar.WithTotal(len(canalCells)).WithTitle("Process Canal Cells").WithRemoveWhenDone(true).Start()
 	// loop over cells
 	for _, cell := range canalCells {
-
+		p.Increment()
 		strLossPercent := 0.0
 		cellIdDiv := 0
 
@@ -111,11 +115,10 @@ func Conveyance(v database.Setup) (err error) {
 				}
 			}
 		}
-
-		_ = bar.Add(1)
 	}
 
-	_ = bar.Close()
+	pterm.Success.Println("Canal Loss Calculations")
+	v.Logger.Info("Canal Loss Completed Successfully")
 	return nil
 }
 

@@ -1,10 +1,11 @@
 package parcels
 
 import (
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
-	"github.com/schollz/progressbar/v3"
+	"github.com/pterm/pterm"
 	"sync"
 	"time"
 )
@@ -16,12 +17,15 @@ import (
 // parcels. Finally it writes out the pumping per parcel and then operates the WSPP routine to finish the RO and DP.
 func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, cCrops []database.CoeffCrop) (AllParcels []Parcel, err error) {
+
+	spinner, _ := pterm.DefaultSpinner.Start("Getting Cert Usage and Efficiencies")
 	// cert usage
 	v.Logger.Info("Getting Cert Usage")
 	usage := getUsage(v.PgDb)
 
 	v.Logger.Info("Getting Efficiencies")
 	efficiencies := database.GetAppEfficiency(v.PgDb)
+	spinner.Success()
 
 	v.Logger.Info("Running Conveyance Loss")
 	err = conveyLoss.Conveyance(v)
@@ -29,20 +33,26 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		v.Logger.Errorf("Error in Conveyance Losses %s", err)
 	}
 
+	spinner, _ = pterm.DefaultSpinner.Start("Getting Surface Water Delivery")
 	// parcel delivery
 	v.Logger.Info("Getting Surface Water Delivery")
 	swDelivery, err := conveyLoss.GetSurfaceWaterDelivery(v)
 	if err != nil {
+		spinner.Fail("Error in Surface Water Delivery")
 		return nil, err
 	}
+	spinner.Success()
 
 	var parcels []Parcel
 
+	spinner, _ = pterm.DefaultSpinner.Start("Setting Parcel Pumping")
 	v.Logger.Info("Setting Parcel Pumping")
 	pPumpDB, err := database.ParcelPumpDB(v.SlDb)
 	if err != nil {
+		spinner.Fail("Failed Setting Parcel Pumping")
 		return nil, err
 	}
+	spinner.Success()
 
 	defer func(pPumpDB *database.PPDB) {
 		err := pPumpDB.Close()
@@ -52,15 +62,16 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	}(pPumpDB)
 
 	// 1. load parcels
-	parcelYearBar := progressbar.Default(int64(v.EYear-v.SYear), "Years of Parcels")
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Parcel Operations").WithRemoveWhenDone(true).Start()
 	wg := sync.WaitGroup{}
 
 	for y := v.SYear; y < v.EYear+1; y++ {
-		_ = parcelYearBar.Add(1)
+		p.Increment()
+		p.UpdateTitle(fmt.Sprintf("%d Parel Operations", y))
 		parcels = getParcels(v, y)
 		filteredDiversions := conveyLoss.FilterSWDeliveryByYear(swDelivery, y)
 
-		bar := progressbar.Default(int64(len(parcels)), "Parcels")
+		p.UpdateTitle(fmt.Sprintf("%d Parcel NIR", y))
 		for i := 0; i < len(parcels); i++ {
 			// this might be the issue??
 			wg.Add(1)
@@ -81,12 +92,10 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 			}(i) // must be a pointer to work
 
 			wg.Wait()
-			_ = bar.Add(1)
 		}
 
-		_ = bar.Close()
-
 		// add usage to parcel
+		p.UpdateTitle(fmt.Sprintf("%d Parcel Annual Usage", y))
 		v.Logger.Info("Setting Annual Usage")
 		annUsage := filterUsage(usage, y)
 		if err := distUsage(annUsage, &parcels); err != nil {
@@ -94,6 +103,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		}
 
 		// get all parcels simulate pumping if GW == true
+		p.UpdateTitle(fmt.Sprintf("%d Parcel Simulate Pumping", y))
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
 			if (&parcels[p]).Gw.Bool == true {
@@ -104,6 +114,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		}
 
 		// write out parcel pumping for each parcel in sqlite results
+		p.UpdateTitle(fmt.Sprintf("%d Parcel Pumping Write Results", y))
 		for p := 0; p < len(parcels); p++ {
 			if parcels[p].Gw.Bool == true {
 				// Add data to pumpingStruct and then append
@@ -118,9 +129,8 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		}
 
 		v.Logger.Infof("Simulating parcel WSPP for year %d", y)
-		wbBar := progressbar.Default(int64(len(parcels)), "Water Balance Parcels")
+		p.UpdateTitle(fmt.Sprintf("%d Parcel WSPP Ops", y))
 		for p := 0; p < len(parcels); p++ {
-			_ = wbBar.Add(1)
 			//wg.Add(1)
 			//go func(i int) {
 			//	defer wg.Done()
@@ -139,10 +149,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 			AllParcels = append(AllParcels, parcels[p])
 		}
 		//wg.Wait()
-		_ = wbBar.Close()
-
 	}
-	_ = parcelYearBar.Close()
 
 	return AllParcels, nil
 }

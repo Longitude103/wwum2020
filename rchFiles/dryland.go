@@ -2,14 +2,21 @@ package rchFiles
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels"
+	"github.com/pterm/pterm"
 	"time"
 )
 
 // Dryland gets a slice of dryland parcels and writes out the values to the results' database.
 func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Dryland Recharge Results").WithRemoveWhenDone(true).Start()
+
 	for y := v.SYear; y < v.EYear+1; y++ {
+		p.Increment()
+
+		p.UpdateTitle(fmt.Sprintf("Getting %d cells and filtering them", y))
 		dryCells := database.GetDryCells(v, y) // will need to iterate through years
 		annParcels, err := parcelFilterByYear(dryParcels, y)
 		if err != nil {
@@ -17,6 +24,7 @@ func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 			return err
 		}
 
+		p.UpdateTitle(fmt.Sprintf("Writing %d values to DB", y))
 		var preResults []database.RchResult
 		for i := 0; i < len(dryCells); i++ {
 			parcelArea, rf, err := parcelValues(annParcels, int(dryCells[i].PId), dryCells[i].Nrd)

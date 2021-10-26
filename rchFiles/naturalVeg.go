@@ -1,10 +1,11 @@
 package rchFiles
 
 import (
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels"
-	"github.com/schollz/progressbar/v3"
+	"github.com/pterm/pterm"
 	"time"
 )
 
@@ -15,18 +16,18 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 	csResults map[string][]fileio.StationResults, cCoefficients []database.CoeffCrop) error {
 	v.Logger.Infow("Starting Natural Vegetation Ops.")
 
-	nVegBarYears := progressbar.Default(int64(v.EYear-v.SYear), "Years of Natural Veg")
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Natural Vegetation Operations").WithRemoveWhenDone(true).Start()
 	for yr := v.SYear; yr < v.EYear+1; yr++ {
-		_ = nVegBarYears.Add(1)
+		p.Increment()
+
+		p.UpdateTitle(fmt.Sprintf("Getting %d cell areas", yr))
 		cells, err := database.GetCellAreas(v, yr)
 		if err != nil {
 			return err
 		}
 
-		nVegBarCells := progressbar.Default(int64(len(cells)), "Natural Veg Cells")
+		p.UpdateTitle(fmt.Sprintf("%d Natural Veg Recharge", yr))
 		for i := 0; i < len(cells); i++ {
-			_ = nVegBarCells.Add(1)
-
 			var cellResult []database.RchResult
 			for m := 0; m < 12; m++ {
 				cellResult = append(cellResult, database.RchResult{Node: cells[i].Node, Size: cells[i].CellArea,
@@ -61,6 +62,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				}
 			}
 
+			p.UpdateTitle(fmt.Sprintf("%d Natural Veg Save Results", yr))
 			for m := 0; m < 12; m++ {
 				if cellResult[m].Result > 0 {
 					if err := v.RchDb.Add(cellResult[m]); err != nil {
@@ -70,9 +72,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				}
 			}
 		}
-		_ = nVegBarCells.Close()
 	}
-	_ = nVegBarYears.Close()
 
 	v.Logger.Info("finished natural vegetation function.")
 	return nil

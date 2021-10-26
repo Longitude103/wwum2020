@@ -3,12 +3,15 @@ package wells
 import (
 	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
+	"github.com/pterm/pterm"
 	"time"
 )
 
 // MunicipalIndWells is a function that adds the municipal and industrial wells from postgresql to the results database
 // and uses either assumed pumping rates or actual pumping numbers.
 func MunicipalIndWells(v database.Setup) error {
+
+	spin, _ := pterm.DefaultSpinner.Start("Getting MI Wells Data and results DB")
 	// go get the wells data
 	wells, err := database.GetMIWells(v)
 	if err != nil {
@@ -20,11 +23,14 @@ func MunicipalIndWells(v database.Setup) error {
 	if err != nil {
 		return err
 	}
+	spin.Success()
 
 	// start97 == false then use the "rate" to create the monthly pumping
 	var wlResult []database.WelResult
 
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Steady State Save Results").WithRemoveWhenDone(true).Start()
 	for yr := v.SYear; yr < v.EYear+1; yr++ {
+		p.Increment()
 		if yr < 1997 {
 			for _, well := range wells {
 				if well.Start97 == false {
