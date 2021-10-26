@@ -61,7 +61,7 @@ type CanalCells struct {
 func nodeWithCanal(q *QC) error {
 	var CCResults []CanalCells
 
-	// find a node with a canal inside it
+	// find 10 cells that have a canal inside it, they will be random
 	query := "select node, st_area(m.geom) / 43560 cell_area, soil_code, zone, coeff_zone, name, eff, clink_id" +
 		"from public.model_cells m join sw.canals c on st_intersects(m.geom, c.geom)" +
 		"where type_2 = 'Canal' order by random() limit 10;"
@@ -70,9 +70,16 @@ func nodeWithCanal(q *QC) error {
 		return err
 	}
 
+	for _, c := range CCResults {
+		_ = c
+	}
 	// query the results db about that node
 
 	// graph the values, make a text file output
 
 	return nil
+}
+
+func (q *QC) getNodeDataFromSqlite(node int) {
+	//q.v.SlDb.Select()
 }
