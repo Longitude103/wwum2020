@@ -21,17 +21,16 @@ func CreateExternalWells(v database.Setup) error {
 	if err != nil {
 		return err
 	}
-	spin.Success()
 
+	spin.UpdateText("Saving External Well Results")
 	v.Logger.Info("Saving Data to results DB")
-	pBar, _ := pterm.DefaultProgressbar.WithTotal(len(extPump)).WithTitle("Well Results Parcels").WithRemoveWhenDone(true).Start()
-	for i := 0; i < pBar.Total; i++ {
-		pBar.Increment()
+	for i := 0; i < len(extPump); i++ {
 		if err := welDb.Add(database.WelResult{Wellid: i, Node: extPump[i].Node, Dt: extPump[i].Date(),
 			FileType: extPump[i].FileType, Result: extPump[i].Pmp()}); err != nil {
 			return err
 		}
 	}
+	spin.Success()
 
 	v.Logger.Info("Finished adding External Wells to the results dataset")
 	return nil

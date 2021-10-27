@@ -2,6 +2,7 @@ package rchFiles
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/pterm/pterm"
@@ -15,23 +16,22 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Irrigated Recharge Results").WithRemoveWhenDone(true).Start()
 
 	for y := v.SYear; y < v.EYear+1; y++ {
-		p.Increment()
 		// filter all parcels to this year only
-		p.UpdateTitle("Filtering Parcels")
+		p.UpdateTitle(fmt.Sprintf("Filtering %d Parcels", y))
 		parcelList, err := parcelFilterByYear(AllParcels, y)
 		if err != nil {
 			v.Logger.Errorf("parcelFilterByYear error for year: %d", y)
 			return err
 		}
 
-		p.UpdateTitle("Getting Irrigated Cells")
+		p.UpdateTitle(fmt.Sprintf("Getting %d Irr Cells", y))
 		irrCells, err := database.GetCellsIrr(v, y)
 		if err != nil {
 			v.Logger.Errorf("GetCellsIrr error for year: %d", y)
 			return err
 		}
 
-		p.UpdateTitle("Processing Irr Cells")
+		p.UpdateTitle(fmt.Sprintf("Saving %d Irr Cell Data", y))
 		// use the RO + DP from parcel and split by acres to get recharge, will need to keep separate files for the various
 		// distributions of scenarios.
 		for i := 0; i < len(irrCells); i++ {
@@ -69,6 +69,7 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 
 			}
 		}
+		p.Increment()
 	}
 
 	v.Logger.Info("IrrigationRCH is completed.")

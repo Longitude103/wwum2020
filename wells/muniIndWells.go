@@ -23,14 +23,12 @@ func MunicipalIndWells(v database.Setup) error {
 	if err != nil {
 		return err
 	}
-	spin.Success()
 
 	// start97 == false then use the "rate" to create the monthly pumping
 	var wlResult []database.WelResult
+	spin.UpdateText("Saving Municipal and Industrial Data")
 
-	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Steady State Save Results").WithRemoveWhenDone(true).Start()
 	for yr := v.SYear; yr < v.EYear+1; yr++ {
-		p.Increment()
 		if yr < 1997 {
 			for _, well := range wells {
 				if well.Start97 == false {
@@ -56,9 +54,9 @@ func MunicipalIndWells(v database.Setup) error {
 				return err
 			}
 		}
-
 	}
 
+	spin.Success()
 	return nil
 }
 

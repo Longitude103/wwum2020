@@ -16,13 +16,11 @@ func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResul
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Dryland Parcel Operations").WithRemoveWhenDone(true).Start()
 	v.Logger.Info("Getting Dryland parcels")
 	for y := v.SYear; y < v.EYear+1; y++ {
-		p.Increment()
-
 		p.UpdateTitle(fmt.Sprintf("Getting %d Dryland Parcels", y))
 		annDryParcels := getDryParcels(v, y)
 
 		// method is used to set RO and DP, just poorly named.
-		p.UpdateTitle(fmt.Sprintf("%d Dryland Parcels return flows", y))
+		p.UpdateTitle(fmt.Sprintf("Calculating %d Dryland Parcels return flows", y))
 		wg := sync.WaitGroup{}
 		for i := 0; i < len(annDryParcels); i++ {
 			wg.Add(1)
@@ -44,8 +42,8 @@ func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResul
 			}(i)
 		}
 		wg.Wait()
-
 		dryParcels = append(dryParcels, annDryParcels...)
+		p.Increment()
 	}
 
 	v.Logger.Info("Finished Dryland parcel operations")

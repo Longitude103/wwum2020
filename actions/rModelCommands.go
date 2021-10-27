@@ -138,6 +138,6 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	_ = v.SlDb.Close() // close the db before ending the program
 	v.Logger.Infof("Model Runtime: %s", time.Now().Sub(timeStart))
 	v.Logger.Info("Model Completed Normally")
-	pterm.Success.Println("Model Completed Normally, check logs for details of run")
+	pterm.Info.Println("Model Completed Normally, check logs for details of run")
 	return nil
 }

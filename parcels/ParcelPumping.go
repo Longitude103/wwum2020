@@ -66,12 +66,11 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 	wg := sync.WaitGroup{}
 
 	for y := v.SYear; y < v.EYear+1; y++ {
-		p.Increment()
-		p.UpdateTitle(fmt.Sprintf("%d Parel Operations", y))
+		p.UpdateTitle(fmt.Sprintf("Getting %d Parels", y))
 		parcels = getParcels(v, y)
 		filteredDiversions := conveyLoss.FilterSWDeliveryByYear(swDelivery, y)
 
-		p.UpdateTitle(fmt.Sprintf("%d Parcel NIR", y))
+		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel NIR", y))
 		for i := 0; i < len(parcels); i++ {
 			// this might be the issue??
 			wg.Add(1)
@@ -95,7 +94,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		}
 
 		// add usage to parcel
-		p.UpdateTitle(fmt.Sprintf("%d Parcel Annual Usage", y))
+		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
 		v.Logger.Info("Setting Annual Usage")
 		annUsage := filterUsage(usage, y)
 		if err := distUsage(annUsage, &parcels); err != nil {
@@ -103,7 +102,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		}
 
 		// get all parcels simulate pumping if GW == true
-		p.UpdateTitle(fmt.Sprintf("%d Parcel Simulate Pumping", y))
+		p.UpdateTitle(fmt.Sprintf("Simulating %d Parcel Pumping", y))
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
 			if (&parcels[p]).Gw.Bool == true {
@@ -114,7 +113,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		}
 
 		// write out parcel pumping for each parcel in sqlite results
-		p.UpdateTitle(fmt.Sprintf("%d Parcel Pumping Write Results", y))
+		p.UpdateTitle(fmt.Sprintf("Saving %d Parcel Pumping Results", y))
 		for p := 0; p < len(parcels); p++ {
 			if parcels[p].Gw.Bool == true {
 				// Add data to pumpingStruct and then append
@@ -129,7 +128,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 		}
 
 		v.Logger.Infof("Simulating parcel WSPP for year %d", y)
-		p.UpdateTitle(fmt.Sprintf("%d Parcel WSPP Ops", y))
+		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel WSPP", y))
 		for p := 0; p < len(parcels); p++ {
 			//wg.Add(1)
 			//go func(i int) {
@@ -149,6 +148,7 @@ func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
 			AllParcels = append(AllParcels, parcels[p])
 		}
 		//wg.Wait()
+		p.Increment()
 	}
 
 	return AllParcels, nil

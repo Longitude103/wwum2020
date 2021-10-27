@@ -18,15 +18,13 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Natural Vegetation Operations").WithRemoveWhenDone(true).Start()
 	for yr := v.SYear; yr < v.EYear+1; yr++ {
-		p.Increment()
-
 		p.UpdateTitle(fmt.Sprintf("Getting %d cell areas", yr))
 		cells, err := database.GetCellAreas(v, yr)
 		if err != nil {
 			return err
 		}
 
-		p.UpdateTitle(fmt.Sprintf("%d Natural Veg Recharge", yr))
+		p.UpdateTitle(fmt.Sprintf("Calculating %d Natural Veg Recharge", yr))
 		for i := 0; i < len(cells); i++ {
 			var cellResult []database.RchResult
 			for m := 0; m < 12; m++ {
@@ -62,7 +60,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				}
 			}
 
-			p.UpdateTitle(fmt.Sprintf("%d Natural Veg Save Results", yr))
+			p.UpdateTitle(fmt.Sprintf("Saving %d Natural Veg Save Results", yr))
 			for m := 0; m < 12; m++ {
 				if cellResult[m].Result > 0 {
 					if err := v.RchDb.Add(cellResult[m]); err != nil {
@@ -72,6 +70,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				}
 			}
 		}
+		p.Increment()
 	}
 
 	v.Logger.Info("finished natural vegetation function.")

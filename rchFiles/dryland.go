@@ -14,8 +14,6 @@ func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Dryland Recharge Results").WithRemoveWhenDone(true).Start()
 
 	for y := v.SYear; y < v.EYear+1; y++ {
-		p.Increment()
-
 		p.UpdateTitle(fmt.Sprintf("Getting %d cells and filtering them", y))
 		dryCells := database.GetDryCells(v, y) // will need to iterate through years
 		annParcels, err := parcelFilterByYear(dryParcels, y)
@@ -52,6 +50,7 @@ func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 				return err
 			}
 		}
+		p.Increment()
 	}
 
 	return nil
