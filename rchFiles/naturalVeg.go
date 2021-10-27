@@ -38,7 +38,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				return err
 			}
 
-			_, _, aDp, aRo, err := database.FilterCCDryLand(cCoefficients, cells[i].CZone, 13)
+			etAdj, etAdjToRo, aDp, aRo, err := database.FilterCCDryLand(cCoefficients, cells[i].CZone, 13)
 			if err != nil {
 				v.Logger.Errorf("error in getting FilterCCDryLand Function for cell: %v and crop 13", cells[i].CZone)
 				return err
@@ -55,8 +55,14 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				}
 
 				for m := 0; m < 12; m++ {
-					cellResult[m].Result += annData.MonthlyData[m].Ro*st.Weight*cells[i].VegArea()/12*aRo +
-						annData.MonthlyData[m].Dp*st.Weight*cells[i].VegArea()/12*aDp
+					diffEt := annData.MonthlyData[m].Et * (1 - etAdj) // ET that was removed, if any
+					diffEtToRo := diffEt * etAdjToRo                  // the difference to RO
+					diffEtToDp := diffEt - diffEtToRo                 // Remaining to DP
+
+					totalRo := (annData.MonthlyData[m].Ro + diffEtToRo) * st.Weight * cells[i].VegArea() / 12 * aRo
+					totalDp := (annData.MonthlyData[m].Dp + diffEtToDp) * st.Weight * cells[i].VegArea() / 12 * aDp
+
+					cellResult[m].Result += totalRo + totalDp // add both together for total RF
 				}
 			}
 
