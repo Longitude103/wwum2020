@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Longitude103/Flogo v0.1.13
+	github.com/Longitude103/Flogo v0.1.14
 	github.com/Longitude103/gisUtils v1.0.3
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/joho/godotenv v1.4.0

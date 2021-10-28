@@ -42,10 +42,10 @@ func Dryland(v database.Setup, dryParcels []parcels.Parcel) error {
 			}
 		}
 
-		results := groupResults(preResults)
+		//results := groupResults(preResults)
 
-		for i := 0; i < len(results); i++ {
-			err := v.RchDb.Add(results[i])
+		for i := 0; i < len(preResults); i++ {
+			err := v.RchDb.Add(preResults[i])
 			if err != nil {
 				return err
 			}

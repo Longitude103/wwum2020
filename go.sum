@@ -4,6 +4,8 @@ github.com/DATA-DOG/go-sqlmock v1.5.0 h1:Shsta01QNfFxHCfpW6YH2STWB0MudeXXEWMr20O
 github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/Longitude103/Flogo v0.1.13 h1:qU8MjDzfikABcapLGGy75YWSFem7N8uQXZ1FxzNpup8=
 github.com/Longitude103/Flogo v0.1.13/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
+github.com/Longitude103/Flogo v0.1.14 h1:dfvFuNRWvbm1AT6JsOvuWOtcBbr3kD8ksOLG0rQELRE=
+github.com/Longitude103/Flogo v0.1.14/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
 github.com/Longitude103/gisUtils v1.0.3 h1:NbRFPm71n90Px8FOTaXQOg6Y22UdMEXM57hAfSnFSs8=
 github.com/Longitude103/gisUtils v1.0.3/go.mod h1:VgX5gEAe1yfL8TUMSxnoFPeSm/1iKBjGmrwwiRop7bQ=
 github.com/MarvinJWendt/testza v0.1.0/go.mod h1:7AxNvlfeHP7Z/hDQ5JtE3OKYT3XFUeLCDE2DQninSqs=

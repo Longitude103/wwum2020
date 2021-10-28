@@ -6,7 +6,7 @@ import "github.com/Longitude103/wwum2020/database"
 // information and a slice of database.CoeffCrop and the adjustment factor within it. This method is the WSPP approach
 // to the calculation
 func (p *Parcel) dryWaterBalanceWSPP(cCrops []database.CoeffCrop) error {
-	adjFactor, err := adjustmentFactor(p, cCrops, database.DryET)
+	adjFactor, err := adjustmentFactor(p, cCrops, database.DryET) // weighted AdjFactor for all crops in parcel
 	if err != nil {
 		return err
 	}
@@ -15,7 +15,7 @@ func (p *Parcel) dryWaterBalanceWSPP(cCrops []database.CoeffCrop) error {
 	var (
 		etDryAdj [12]float64
 	)
-	_, EttoRO, _, _, err := database.FilterCCDryLand(cCrops, p.CoeffZone, int(p.Crop1.Int64))
+	_, EttoRO, dpAdj, roAdj, err := database.FilterCCDryLand(cCrops, p.CoeffZone, int(p.Crop1.Int64))
 	if err != nil {
 		return err
 	}
@@ -24,10 +24,10 @@ func (p *Parcel) dryWaterBalanceWSPP(cCrops []database.CoeffCrop) error {
 		etDryAdj[i] = p.DryEt[i] * adjFactor
 
 		// RO3 = ETMAXDRY - ETMAXDryAdj * DryETtoRO
-		p.Ro[i] += ((p.DryEt[i] - etDryAdj[i]) * EttoRO) * p.Area / 12
+		p.Ro[i] += ((p.DryEt[i] - etDryAdj[i]) * EttoRO) * p.Area / 12 * roAdj
 
 		// DP3 = (ETMAXDRY - ETMAXADJU) - RO3
-		p.Dp[i] += ((p.DryEt[i] - etDryAdj[i]) - (1 - EttoRO)) * p.Area / 12
+		p.Dp[i] += ((p.DryEt[i] - etDryAdj[i]) * (1 - EttoRO)) * p.Area / 12 * dpAdj
 	}
 
 	return nil
