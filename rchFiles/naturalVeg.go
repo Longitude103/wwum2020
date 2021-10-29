@@ -27,6 +27,8 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Natural Veg Recharge", yr))
 		for i := 0; i < len(cells); i++ {
 			var cellResult []database.RchResult
+			vegArea := cells[i].VegArea()
+
 			for m := 0; m < 12; m++ {
 				cellResult = append(cellResult, database.RchResult{Node: cells[i].Node, Size: cells[i].CellArea,
 					Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC), FileType: 102})
@@ -38,7 +40,7 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 				return err
 			}
 
-			etAdj, etAdjToRo, aDp, aRo, err := database.FilterCCDryLand(cCoefficients, cells[i].CZone, 13)
+			etAdj, etAdjToRo, perToRch, aDp, aRo, err := database.FilterCCDryLand(cCoefficients, cells[i].CZone, 13)
 			if err != nil {
 				v.Logger.Errorf("error in getting FilterCCDryLand Function for cell: %v and crop 13", cells[i].CZone)
 				return err
@@ -54,21 +56,28 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 					}
 				}
 
+				if cells[i].Node == 94418 {
+					v.Logger.Infof("cell node: %d, area: %f, Veg Area: %f", cells[i].Node, cells[i].CellArea, vegArea)
+					v.Logger.Infof("Station: %s, dist: %f, weight: %f", st.Station, st.Distance, st.Weight)
+					v.Logger.Infof("Station Data: %+v", annData)
+				}
+
 				for m := 0; m < 12; m++ {
-					diffEt := annData.MonthlyData[m].Et * (1 - etAdj) // ET that was removed, if any
-					diffEtToRo := diffEt * etAdjToRo                  // the difference to RO
-					diffEtToDp := diffEt - diffEtToRo                 // Remaining to DP
+					diffRo, diffDp := calcDiffEt(annData.MonthlyData[m].Et, etAdj, etAdjToRo)
+					_, roToRch := calcRo(annData.MonthlyData[m].Ro, diffRo, st.Weight, vegArea, aRo, cells[i].GetLossFactor(), perToRch)
+					deepPerc := calcDp(annData.MonthlyData[m].Dp, diffDp, roToRch, st.Weight, vegArea, aDp)
 
-					totalRo := (annData.MonthlyData[m].Ro + diffEtToRo) * st.Weight * cells[i].VegArea() / 12 * aRo
-					totalDp := (annData.MonthlyData[m].Dp + diffEtToDp) * st.Weight * cells[i].VegArea() / 12 * aDp
-
-					cellResult[m].Result += totalRo + totalDp // add both together for total RF
+					cellResult[m].Result += deepPerc
 				}
 			}
 
 			p.UpdateTitle(fmt.Sprintf("Saving %d Natural Veg Save Results", yr))
 			for m := 0; m < 12; m++ {
 				if cellResult[m].Result > 0 {
+					if cells[i].Node == 94418 && m == 6 {
+						fmt.Printf("cellResult: %+v", cellResult[m])
+					}
+
 					if err := v.RchDb.Add(cellResult[m]); err != nil {
 						v.Logger.Errorf("Error Adding Result to RchDB Buffer, Result: %+v", cellResult)
 						return err
@@ -81,4 +90,38 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 
 	v.Logger.Info("finished natural vegetation function.")
 	return nil
+}
+
+func calcDiffEt(Et float64, etAdj float64, etAdjToRo float64) (diffEtToRo float64, diffEtToDp float64) {
+	if etAdj == 1 {
+		return 0, 0
+	}
+
+	diffEt := Et * (1 - etAdj)       // ET that was removed, if any
+	diffEtToRo = diffEt * etAdjToRo  // the difference to RO
+	diffEtToDp = diffEt - diffEtToRo // Remaining to DP
+
+	return
+}
+
+func runOffToRch(Ro float64, lossFactor float64, perToRch float64) float64 {
+	sf := Ro - (Ro * lossFactor)
+	return sf * perToRch
+}
+
+func calcRo(Ro1 float64, diffRo float64, weight float64, area float64, aRo float64, lossFactor float64,
+	perToRch float64) (runOff float64, roToRch float64) {
+
+	totalRunOff := (Ro1 + diffRo) * weight * area / 12 * aRo
+
+	roToRch = runOffToRch(runOff, lossFactor, perToRch)
+	runOff = totalRunOff * lossFactor
+
+	return
+}
+
+func calcDp(Dp1 float64, diffDp float64, roToRch float64, weight float64, area float64, aDp float64) float64 {
+	deepPerc := (Dp1 + diffDp) * weight * area / 12 * aDp
+
+	return deepPerc + roToRch
 }

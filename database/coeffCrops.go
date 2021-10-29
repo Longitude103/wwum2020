@@ -47,12 +47,12 @@ func (coeff CoeffCrop) FilterValues() (z, c int) {
 
 // FilterCCDryLand is a function that returns the dryland values of the coefficient of crops table by giving it a slice
 // of CoeffCrop and a zone and crop.
-func FilterCCDryLand(cSlice []CoeffCrop, z int, c int) (DryEtAdj float64, DryEtToRo float64, DpAdj float64,
+func FilterCCDryLand(cSlice []CoeffCrop, z int, c int) (DryEtAdj float64, DryEtToRo float64, PerToRch float64, DpAdj float64,
 	RoAdj float64, err error) {
 	for _, v := range cSlice {
 		vZ, vC := v.FilterValues()
 		if vZ == z && vC == c {
-			return v.DryEtAdj, v.DryEtToRo, v.DpAdj, v.RoAdj, nil
+			return v.DryEtAdj, v.DryEtToRo, v.PerToRch, v.DpAdj, v.RoAdj, nil
 		}
 	}
 
@@ -60,10 +60,10 @@ func FilterCCDryLand(cSlice []CoeffCrop, z int, c int) (DryEtAdj float64, DryEtT
 		for _, v := range cSlice {
 			vZ, vC := v.FilterValues()
 			if vZ == z && vC == 7 {
-				return v.DryEtAdj, v.DryEtToRo, v.DpAdj, v.RoAdj, nil
+				return v.DryEtAdj, v.DryEtToRo, v.PerToRch, v.DpAdj, v.RoAdj, nil
 			}
 		}
 	}
 
-	return 0, 0, 0, 0, errors.New("crop not found in coefficient of crops")
+	return 0, 0, 0, 0, 0, errors.New("crop not found in coefficient of crops")
 }
