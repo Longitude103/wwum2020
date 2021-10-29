@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Longitude103/gisUtils"
+	"math"
 	"sort"
 )
 
@@ -23,6 +24,7 @@ type CellIntersect struct {
 	Soil      int             `db:"soil_code"`
 	CZone     int             `db:"coeff_zone"`
 	CellArea  float64         `db:"cell_area"`
+	Mtg       sql.NullFloat64 `db:"mtg"`
 	NpIrrArea sql.NullFloat64 `db:"nip_area"`
 	NpDryArea sql.NullFloat64 `db:"ndp_area"`
 	SpIrrArea sql.NullFloat64 `db:"sip_area"`
@@ -65,7 +67,7 @@ func GetCells(v Setup) (cells []ModelCell, err error) {
 // dryland. It also returns the area, soil code, and zone of the cell in a slice of CellIntersect Struct. It implements the
 // debug mode to only return 200 cells which were selected as having good data.
 func GetCellAreas(v Setup, y int) (cells []CellIntersect, err error) {
-	query := fmt.Sprintf(`select m.node, m.soil_code, m.coeff_zone, st_area(geom)/43560 cell_area, st_x(st_transform(st_centroid(geom), 4326)) pointx,
+	query := fmt.Sprintf(`select m.node, m.soil_code, m.coeff_zone, m.mtg, st_area(geom)/43560 cell_area, st_x(st_transform(st_centroid(geom), 4326)) pointx,
        st_y(st_transform(st_centroid(geom), 4326)) pointy, nip_area, ndp_area, sip_area, sdp_area from model_cells m
            left join (select node, sum(st_area(st_intersection(c.geom, ni.geom))/43560) nip_area from public.model_cells c 
                inner join np.t%d_irr ni on st_intersects(c.geom, ni.geom) group by node) ni on m.node = ni.node
@@ -132,9 +134,16 @@ func Distances(points XyPoints, wStations []WeatherStation) (dist []StDistances,
 }
 
 // VegArea is a method of the CellIntersect struct that returns the total area that isn't covered by a parcel (dry or irr)
-// of a cell and returns an area.
+// of a cell and returns an area. Checks for cropArea > cell area as small parcel overlaps can make this negative which cannot
+// be introduced to equations.
 func (c CellIntersect) VegArea() float64 {
-	return c.CellArea - returnF64(c.NpIrrArea) - returnF64(c.SpIrrArea) - returnF64(c.NpDryArea) - returnF64(c.SpDryArea)
+	cropArea := returnF64(c.NpIrrArea) + returnF64(c.SpIrrArea) + returnF64(c.NpDryArea) + returnF64(c.SpDryArea)
+
+	if cropArea > c.CellArea {
+		return 0
+	} else {
+		return c.CellArea - cropArea
+	}
 }
 
 // GetXY is a method of CellIntersect struct that returns the XY locations for use in the Distances function and is required
@@ -150,4 +159,12 @@ func returnF64(v sql.NullFloat64) float64 {
 		return v.Float64
 	}
 	return 0.0
+}
+
+func (c CellIntersect) GetLossFactor() float64 {
+	if c.Mtg.Valid == false || c.Mtg.Float64 == 0 {
+		return 0.5
+	}
+
+	return math.Min(1-math.Exp(-0.02*c.Mtg.Float64), 1)
 }
