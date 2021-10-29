@@ -85,7 +85,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	pterm.Success.Println("Successfully Completed Natural Vegetation")
 
 	// Dryland 101
-	if err := rchFiles.Dryland(v, dryParcels); err != nil {
+	if err := rchFiles.Dryland(v, dryParcels, cCoefficients); err != nil {
 		v.Logger.Errorf("Error in Dryland: %s", err)
 		return err
 	}
