@@ -32,14 +32,14 @@ func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResul
 				}
 			}(i)
 
-			go func(d int) {
-				defer wg.Done()
-				err := (&annDryParcels[d]).dryWaterBalanceWSPP(cCrop)
-				if err != nil {
-					v.Logger.Error("error in dry parcel WSPP ", err)
-					v.Logger.Errorf("Parcel trace: %+v", annDryParcels[d])
-				}
-			}(i)
+			//go func(d int) {
+			//	defer wg.Done()
+			//	err := (&annDryParcels[d]).dryWaterBalanceWSPP(cCrop)
+			//	if err != nil {
+			//		v.Logger.Error("error in dry parcel WSPP ", err)
+			//		v.Logger.Errorf("Parcel trace: %+v", annDryParcels[d])
+			//	}
+			//}(i)
 		}
 		wg.Wait()
 		dryParcels = append(dryParcels, annDryParcels...)
