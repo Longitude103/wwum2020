@@ -97,7 +97,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 
 	// Irr Cells
 	v.Logger.Info("Preforming Irrigation RCH Operations")
-	if err := rchFiles.IrrigationRCH(v, irrParcels); err != nil {
+	if err := rchFiles.IrrigationRCH(v, irrParcels, cCoefficients); err != nil {
 		v.Logger.Errorf("Error in Creating Irrigation RCH %s", err)
 		return err
 	}

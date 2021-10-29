@@ -11,7 +11,7 @@ import (
 
 // IrrigationRCH is a method that creates the RCH file information in the results DB for the irrigated parcels. This uses the
 // parcel information and adds the proper type id
-func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
+func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel, cCData []database.CoeffCrop) error {
 	v.Logger.Info("Starting to write RCH information from Irrigated Parcels")
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Irrigated Recharge Results").WithRemoveWhenDone(true).Start()
 
@@ -47,9 +47,11 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 				return err
 			}
 
+			_, _, perToRch, _, _, _ := database.FilterCCDryLand(cCData, p.CoeffZone, int(p.Crop1.Int64))
+
 			cellRecharge := [12]float64{}
 			for j := 0; j < 12; j++ {
-				cellRecharge[j], err = cellRCH(p.Ro[j], p.Dp[j], p.Area, irrCells[i].IrrArea)
+				cellRecharge[j], err = cellRCH(p.Ro[j], p.Dp[j], p.Area, irrCells[i].IrrArea, irrCells[i].GetLossFactor(), perToRch)
 				if err != nil {
 					v.Logger.Errorf("error in cellRCH where RO: %f, DP: %f, Area: %f, IrrArea: %f", p.Ro[j], p.Dp[j], p.Area, irrCells[i].IrrArea)
 					return err
@@ -77,11 +79,12 @@ func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel) error {
 }
 
 // cellRCH returns the cell area proportion of the RCH
-func cellRCH(ro float64, dp float64, parcelArea float64, parcelInCellArea float64) (r float64, err error) {
+func cellRCH(ro float64, dp float64, parcelArea float64, parcelInCellArea float64, lossFactor float64, perToRch float64) (r float64, err error) {
 	if parcelArea <= 0 {
 		return 0.0, errors.New("total parcel area is zero, division by zero would occur")
 	}
-	r = ro*parcelInCellArea/parcelArea + dp*parcelInCellArea/parcelArea
+	roToRch := ro * lossFactor * perToRch
+	r = (dp + roToRch) * parcelInCellArea / parcelArea
 
 	return r, nil
 }
