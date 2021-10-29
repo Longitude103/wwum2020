@@ -105,8 +105,8 @@ func calcDiffEt(Et float64, etAdj float64, etAdjToRo float64) (diffEtToRo float6
 }
 
 func runOffToRch(Ro float64, lossFactor float64, perToRch float64) float64 {
-	sf := Ro - (Ro * lossFactor)
-	return sf * perToRch
+	lossRo := Ro * lossFactor
+	return lossRo * perToRch // amount of runoff that infiltrates on the way back to stream
 }
 
 func calcRo(Ro1 float64, diffRo float64, weight float64, area float64, aRo float64, lossFactor float64,
