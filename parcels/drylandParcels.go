@@ -25,6 +25,7 @@ func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResul
 		for i := 0; i < len(annDryParcels); i++ {
 			wg.Add(1)
 			go func(d int) {
+				defer wg.Done()
 				err := (&annDryParcels[d]).parcelNIR(v.PNirDB, y, wStations, csResults, DryLand)
 				if err != nil {
 					v.Logger.Error("error in dry parcel NIR ", err)
