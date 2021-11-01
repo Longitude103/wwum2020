@@ -56,12 +56,6 @@ func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
 					}
 				}
 
-				if cells[i].Node == 94418 {
-					v.Logger.Infof("cell node: %d, area: %f, Veg Area: %f", cells[i].Node, cells[i].CellArea, vegArea)
-					v.Logger.Infof("Station: %s, dist: %f, weight: %f", st.Station, st.Distance, st.Weight)
-					v.Logger.Infof("Station Data: %+v", annData)
-				}
-
 				for m := 0; m < 12; m++ {
 					diffRo, diffDp := calcDiffEt(annData.MonthlyData[m].Et, etAdj, etAdjToRo)
 					_, roToRch := calcRo(annData.MonthlyData[m].Ro, diffRo, st.Weight, vegArea, aRo, cells[i].GetLossFactor(), perToRch)
