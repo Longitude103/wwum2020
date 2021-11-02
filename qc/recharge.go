@@ -19,13 +19,13 @@ type rchResults struct {
 func (q *QC) rechargeBalance() error {
 	var rchResultsSlice []rchResults
 
+	spin, _ := pterm.DefaultSpinner.Start(fmt.Sprintf("Getting %d Data", q.Year))
 	query := "select file_type, description, sum(result) recharge from results inner join file_keys fk on fk.file_key = results.file_type where strftime('%Y', dt) = "
 	query += fmt.Sprintf("'%d' group by file_type, description;", q.Year)
 
 	if err := q.v.SlDb.Select(&rchResultsSlice, query); err != nil {
 		return err
 	}
-
 	d := pterm.TableData{{"File Type", "Description", "Recharge (AF)"}}
 	total := 0.0
 
@@ -35,7 +35,9 @@ func (q *QC) rechargeBalance() error {
 	}
 
 	d = append(d, []string{"TOTAL", "All File Types", fmt.Sprintf("%.0f", total)})
+	spin.Success()
 
+	pterm.DefaultSection.Println("Recharge Summary")
 	if err := pterm.DefaultTable.WithHasHeader().WithRightAlignment().WithData(d).Render(); err != nil {
 		return err
 	}
@@ -51,49 +53,84 @@ type modelCells struct {
 
 type resultData struct {
 	Node int     `db:"node"`
-	Mnth int     `db:"mnth"`
 	Rslt float64 `db:"rslt"`
 }
 
 func (q *QC) rechargeGeoJson() error {
 	// get a slice of model cells in geojson
+	pterm.DefaultSection.Println("GeoJSON Creation")
+	spin, _ := pterm.DefaultSpinner.Start("Getting Model Cells from DB")
 	var mCells []modelCells
-	qry := "select st_asgeojson(q) geojson, area_ac, node from (select geom, node, st_area(geom)/43560 area_ac from model_cells) q;"
+	qry := "select st_asgeojson(q) geojson, area_ac, node from (select st_transform(geom, 4326), node, st_area(geom)/43560 area_ac from model_cells) q;"
 
 	if err := q.v.PgDb.Select(&mCells, qry); err != nil {
 		return err
 	}
+	spin.Success()
 
-	var rResults []resultData
-	rqry := "select cell_node node, strftime('%m', dt) mnth, sum(result) rslt from results where strftime('%Y', dt) = '1953' group by cell_node, strftime('%m', dt);"
+	spin, _ = pterm.DefaultSpinner.Start("Getting Result Data")
+	rResMap := make(map[int][]resultData)
+	for m := 1; m < 13; m++ {
+		var rResults []resultData
+		var mnString string
+		if m < 10 {
+			mnString = fmt.Sprintf("0%d", m)
+		} else {
+			mnString = fmt.Sprintf("%d", m)
+		}
 
-	if err := q.v.SlDb.Select(&rResults, rqry); err != nil {
+		rqry := fmt.Sprintf("select cell_node node, sum(result) rslt from results "+
+			"where strftime('%%Y', dt) = '%d' and strftime('%%m', dt) = '%s' group by cell_node, strftime('%%m', dt);", q.Year, mnString)
+
+		if err := q.v.SlDb.Select(&rResults, rqry); err != nil {
+			return err
+		}
+
+		rResMap[m] = rResults
+	}
+	spin.Success()
+
+	fn := fmt.Sprintf("%d_Recharge.geojson", q.Year)
+	path := filepath.Join("./", q.fileName)
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
 	}
-
-	wfp := filepath.Join("./", "OutputFiles", "GeoJSON.geojson")
-	writeFile, err := os.Create(wfp)
+	writeFile, err := os.Create(filepath.Join(path, fn))
 	if err != nil {
 		return err
 	}
 
+	// Follows format of https://datatracker.ietf.org/doc/html/rfc7946#section-1.5
 	w := bufio.NewWriter(writeFile)
-	// TODO: need to write a header file like: https://datatracker.ietf.org/doc/html/rfc7946#section-1.5
+
+	header := `{"type":"FeatureCollection","features":[`
+
+	_, _ = w.WriteString(header)
+	cL := len(mCells)
 
 	// unmarshal each item
-	for i := 0; i < len(mCells); i++ {
+	p, _ := pterm.DefaultProgressbar.WithTotal(cL).WithTitle("Model Cells").WithRemoveWhenDone(true).Start()
+	for i := 0; i < cL; i++ {
+		p.Increment()
 		fc, err := geojson.UnmarshalFeature(mCells[i].Gjson)
 		if err != nil {
 			return err
 		}
 
 		// add property to them of the monthly result
-		for i := 0; i < 12; i++ {
-			m := time.Month(i + 1)
-			res := findResult(rResults, i+1, mCells[i].Node)
-			fc.Properties[m.String()] = res
-			fc.Properties[m.String()+"_rate"] = res / mCells[i].Ac
+		annTotal := 0.0
+		for m := 1; m < 13; m++ {
+			mn := time.Month(m)
+			res := findResult(rResMap[m], mCells[i].Node)
+			if q.Monthly {
+				fc.Properties[mn.String()] = res
+				fc.Properties[mn.String()+"_rate"] = res / mCells[i].Ac
+			}
+			annTotal += res
 		}
+
+		fc.Properties["Annual_Total"] = annTotal
+		fc.Properties["AnnTotal_rate"] = annTotal / mCells[i].Ac
 
 		// marshal that item back to json
 		d, err := fc.MarshalJSON()
@@ -104,37 +141,23 @@ func (q *QC) rechargeGeoJson() error {
 		if _, err := w.WriteString(string(d)); err != nil {
 			return err
 		}
-		// TODO: need to write a comma between them
 
-		// testing it
-		//fmt.Println(string(d))
-		if i == 5 {
-			break
+		if i < cL-1 {
+			_, _ = w.WriteString(", ")
 		}
 	}
 
-	// TODO: need to add the footer which is the close for the array "]", and close for the collection "}"
-
+	_, _ = w.WriteString("]}")
 	_ = w.Flush()
-
 	_ = writeFile.Close()
-	//fc.Properties["Result"] = 5
-	//
-	//// just checking on it
-	//for s, i := range fc.Properties {
-	//	if s == "node" {
-	//		fmt.Println("Node number is:", i)
-	//	}
-	//}
-
-	// write to geojson file
+	pterm.Success.Println("Check Output Files for GeoJson")
 
 	return nil
 }
 
-func findResult(rData []resultData, mon int, node int) float64 {
+func findResult(rData []resultData, node int) float64 {
 	for i := 0; i < len(rData); i++ {
-		if rData[i].Node == node && rData[i].Mnth == mon {
+		if rData[i].Node == node {
 			return rData[i].Rslt
 		}
 	}

@@ -17,27 +17,50 @@ func QcResults(myEnv map[string]string) error {
 		return err
 	}
 
+	var opts []qc.Option
 	yr, err := yearQuestion()
 	if err != nil {
 		return err
 	}
+	opts = append(opts, qc.WithYear(yr))
 
 	graph, err := graphQuestion()
 	if err != nil {
 		return err
 	}
 
-	v := database.Setup{}
+	if graph {
+		opts = append(opts, qc.WithGraph())
+	}
 
-	if err := v.NewSetup(false, false, myEnv, true, ""); err != nil {
+	gj, err := GJQuestion()
+	if err != nil {
+		return err
+	}
+
+	if gj {
+		mOrA, err := mOrYQuestion()
+		if err != nil {
+			return err
+		}
+		if mOrA == "Monthly" {
+			opts = append(opts, qc.WithGJson(), qc.WithMonthly())
+		} else {
+			opts = append(opts, qc.WithGJson())
+		}
+
+	}
+
+	v, err := database.NewSetup(myEnv, database.WithNoSQLite())
+	if err != nil {
 		return err
 	}
 
 	v.SlDb = db
 
-	q := qc.NewQC(v, path, qc.WithGraph(graph), qc.WithYear(yr))
+	q := qc.NewQC(v, path, opts...)
 
-	if err := qc.QcRMain(q); err != nil {
+	if err := qc.StartQcRMain(q); err != nil {
 		return err
 	}
 
@@ -74,4 +97,37 @@ func graphQuestion() (bool, error) {
 	}
 
 	return g, nil
+}
+
+func GJQuestion() (bool, error) {
+	var q = &survey.Confirm{
+		Message: "Want to Output a GeoJson file of the results?",
+		Help:    "This will produce a GeoJson file of the results and saved to 'Output' Directory",
+	}
+
+	gj := false
+
+	// ask the question
+	if err := survey.AskOne(q, &gj); err != nil {
+		return false, err
+	}
+
+	return gj, nil
+}
+
+func mOrYQuestion() (string, error) {
+	var q = &survey.Select{
+		Message: "Want the output to include Monthly or just Annual Data",
+		Help:    "Selecting Monthly will add the monthly data to the GeoJson file of the results and saved to 'Output' Directory",
+		Options: []string{"Annual", "Monthly"},
+	}
+
+	aOrM := ""
+
+	// ask the question
+	if err := survey.AskOne(q, &aOrM); err != nil {
+		return "", err
+	}
+
+	return aOrM, nil
 }
