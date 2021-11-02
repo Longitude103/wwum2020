@@ -19,7 +19,7 @@ type IrrCell struct {
 
 // GetCellsIrr gets the cells that have irrigation within them and splits them by parcel. If a cell has multiple parcels
 // there will be multiples of the same cell listed. This includes both nrd irrigated acres.
-func GetCellsIrr(v Setup, yr int) ([]IrrCell, error) {
+func GetCellsIrr(v *Setup, yr int) ([]IrrCell, error) {
 	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, 
 									parcel_id, nrd from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, geom from np.t%d_irr UNION SELECT parcel_id, 'sp' nrd, geom from sp.t%d_irr) i
         on st_intersects(c.geom, i.geom);`, yr, yr)

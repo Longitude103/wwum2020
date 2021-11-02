@@ -49,7 +49,7 @@ type MIPumping struct {
 
 // GetWellParcels is a function that gets all the well parcel junction table values and creates one struct from them
 // and also includes the year of the join as well as the nrd.
-func GetWellParcels(v Setup) ([]WellParcel, error) {
+func GetWellParcels(v *Setup) ([]WellParcel, error) {
 	const query = "select parcel_id, wellid, nrd, yr from public.alljct();"
 
 	var wellParcels []WellParcel
@@ -67,7 +67,7 @@ func GetWellParcels(v Setup) ([]WellParcel, error) {
 
 // GetWellNode is a function that gets the wellid, regno and node number of the well so that we can add a location to
 // the well when it is written out along with the nrd.
-func GetWellNode(v Setup) (wellNodes []WellNode, err error) {
+func GetWellNode(v *Setup) (wellNodes []WellNode, err error) {
 	const query = "select wellid, regcd, node, 'np' nrd from np.npnrd_wells nw inner join model_cells mc " +
 		"on st_contains(mc.geom, nw.geom) union all select wellid, regcd, node, 'sp' nrd from sp.spnrd_wells sw " +
 		"inner join model_cells mc on st_contains(mc.geom, sw.geom)"
@@ -85,7 +85,7 @@ func GetWellNode(v Setup) (wellNodes []WellNode, err error) {
 
 // GetSSWells is a function that gets the data from the postgres DB and returns a slice of SSWell and also includes a call
 // to the SSWell.monthlyVolume() method to set the monthly data from the annual data that is in the database.
-func GetSSWells(v Setup) (ssWells []SSWell, err error) {
+func GetSSWells(v *Setup) (ssWells []SSWell, err error) {
 	const ssQuery = "select ss_wells.id, wellname, defaultq, node from ss_wells inner join model_cells mc on " +
 		"st_contains(mc.geom, st_translate(ss_wells.geom, 20, 20));"
 
@@ -119,7 +119,7 @@ func (s *SSWell) monthlyVolume() (err error) {
 	return nil
 }
 
-func GetMIWells(v Setup) (miWells []MIWell, err error) {
+func GetMIWells(v *Setup) (miWells []MIWell, err error) {
 	const miQuery = "SELECT mi.id, mi.wellname, mi.defaultq, mi.muni_well, mi.indust_well, mi.stop_97, mi.start_97, " +
 		"mc.node FROM mi_wells mi inner join model_cells mc on st_contains(mc.geom, st_translate(mi.geom, 20, 20));"
 

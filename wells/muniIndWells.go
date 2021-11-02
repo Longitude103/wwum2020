@@ -9,7 +9,7 @@ import (
 
 // MunicipalIndWells is a function that adds the municipal and industrial wells from postgresql to the results database
 // and uses either assumed pumping rates or actual pumping numbers.
-func MunicipalIndWells(v database.Setup) error {
+func MunicipalIndWells(v *database.Setup) error {
 
 	spin, _ := pterm.DefaultSpinner.Start("Getting MI Wells Data and results DB")
 	// go get the wells data

@@ -11,7 +11,7 @@ import (
 
 // IrrigationRCH is a method that creates the RCH file information in the results DB for the irrigated parcels. This uses the
 // parcel information and adds the proper type id
-func IrrigationRCH(v database.Setup, AllParcels []parcels.Parcel, cCData []database.CoeffCrop) error {
+func IrrigationRCH(v *database.Setup, AllParcels []parcels.Parcel, cCData []database.CoeffCrop) error {
 	v.Logger.Info("Starting to write RCH information from Irrigated Parcels")
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Irrigated Recharge Results").WithRemoveWhenDone(true).Start()
 

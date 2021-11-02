@@ -18,9 +18,6 @@ func MakeModflowFiles() error {
 		return err
 	}
 
-	// TODO: Get description from DB and display on CLI
-	// TODO: Write this into the WEL and RCH File Header
-
 	path, err := MakeOutputDir(fileName)
 	if err != nil {
 		return err

@@ -15,10 +15,20 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	timeStart := time.Now()
 
 	pterm.Info.Println("Setting up results database")
-	v := database.Setup{}
-	if err := v.NewSetup(debug, eF, myEnv, false, mDesc); err != nil {
+	var opts = []database.Option{database.WithDescription(mDesc), database.WithLogger()}
+	if debug {
+		opts = append(opts, database.WithDebug())
+	}
+
+	if eF {
+		opts = append(opts, database.WithExcessFlow())
+	}
+
+	v, err := database.NewSetup(myEnv, opts...)
+	if err != nil {
 		return err
 	}
+
 	v.Logger.Infof("Model Run Started at: %s", timeStart.Format(time.UnixDate))
 
 	pterm.Info.Printf("Model Description: %s\n", mDesc)

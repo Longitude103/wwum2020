@@ -33,7 +33,7 @@ func (d *Diversion) applyEffAcres(eff float64, acres float64) {
 // getDiversions retrieves the diversions from the pg database and returns a slice of Diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
 // excess flow from the daily diversions based on excess flow periods.
-func getDiversions(v database.Setup) (diversions []Diversion, err error) {
+func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
 
 	if v.ExcessFlow {
 		divQry := fmt.Sprintf(`select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), 

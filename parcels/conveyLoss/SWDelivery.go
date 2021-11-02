@@ -6,7 +6,7 @@ import (
 
 // GetSurfaceWaterDelivery function returns a slice of Diversion that is a monthly amount of surface water delivered to
 // an acre of land. The units of the Diversion are in acre-feet per acre for use in subsequent processes.
-func GetSurfaceWaterDelivery(v database.Setup) ([]Diversion, error) {
+func GetSurfaceWaterDelivery(v *database.Setup) ([]Diversion, error) {
 	diversions, err := getDiversions(v)
 	if err != nil {
 		v.Logger.Errorf("Error in getDiversions: %s", err)

@@ -10,7 +10,7 @@ import (
 )
 
 // Dryland gets a slice of dryland parcels and writes out the values to the results' database.
-func Dryland(v database.Setup, dryParcels []parcels.Parcel, cCData []database.CoeffCrop) error {
+func Dryland(v *database.Setup, dryParcels []parcels.Parcel, cCData []database.CoeffCrop) error {
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Dryland Recharge Results").WithRemoveWhenDone(true).Start()
 
 	for y := v.SYear; y < v.EYear+1; y++ {

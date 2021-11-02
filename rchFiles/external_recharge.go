@@ -7,7 +7,7 @@ import (
 
 // CreateExternalRecharge is a function that creates the external recharge values in the results' database by getting
 // the data from postgres DB and saving those values into the results DB.
-func CreateExternalRecharge(v database.Setup) error {
+func CreateExternalRecharge(v *database.Setup) error {
 	v.Logger.Info("Starting External Recharge function")
 
 	v.Logger.Info("Getting information from database")

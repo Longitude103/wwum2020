@@ -15,7 +15,7 @@ import (
 // the parcel pumping, it then loops through the years for each parcel and sends the diversions, calls parcel NIR, sets the
 // efficiency for the parcel, adds SW delivery, adds the known pumping, and then calls the simulate pumping for all other
 // parcels. Finally it writes out the pumping per parcel and then operates the WSPP routine to finish the RO and DP.
-func ParcelPump(v database.Setup, csResults map[string][]fileio.StationResults,
+func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, cCrops []database.CoeffCrop) (AllParcels []Parcel, err error) {
 
 	spinner, _ := pterm.DefaultSpinner.Start("Getting Cert Usage and Efficiencies")

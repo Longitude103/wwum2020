@@ -12,7 +12,7 @@ import (
 // NaturalVeg is a function that calculates the area of each cell the is natural vegetation and applies the dryland pasture
 // crop type to that area. It then calculates the RO and DP for that crop at that cell location and saves it out as a
 // result value in the RCH file. It does use the Adjustment Factors used in previous models.
-func NaturalVeg(v database.Setup, wStations []database.WeatherStation,
+func NaturalVeg(v *database.Setup, wStations []database.WeatherStation,
 	csResults map[string][]fileio.StationResults, cCoefficients []database.CoeffCrop) error {
 	v.Logger.Infow("Starting Natural Vegetation Ops.")
 

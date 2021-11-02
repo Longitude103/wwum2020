@@ -5,7 +5,7 @@ import (
 	"github.com/pterm/pterm"
 )
 
-func CreateExternalWells(v database.Setup) error {
+func CreateExternalWells(v *database.Setup) error {
 	v.Logger.Info("Starting External Wells Process")
 
 	spin, _ := pterm.DefaultSpinner.Start("Getting External Wells and results DB")

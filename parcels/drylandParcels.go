@@ -10,7 +10,7 @@ import (
 
 // DryLandParcels is a function that returns all the dryland parcels for the years of the simulation and also calls the
 // methods to determine parcelNIR and dryland WSPP
-func DryLandParcels(v database.Setup, csResults map[string][]fileio.StationResults,
+func DryLandParcels(v *database.Setup, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, cCrop []database.CoeffCrop) (dryParcels []Parcel, err error) {
 
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Dryland Parcel Operations").WithRemoveWhenDone(true).Start()

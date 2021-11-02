@@ -7,7 +7,7 @@ import (
 
 // Conveyance function finds the diversions and calculates the conveyance loss for all cells where there is a canal. This
 // outputs to the results table in sqlite. Might update to return delivery by canal.
-func Conveyance(v database.Setup) (err error) {
+func Conveyance(v *database.Setup) (err error) {
 	spRates := map[string]float64{"interstate": 0.4869, "highline": 0.2617, "lowline": 0.2513}
 
 	spinner, _ := pterm.DefaultSpinner.Start("Getting Canal Cells and Diversions")

@@ -7,7 +7,7 @@ import (
 
 // SteadyStateWells is a function to get the steady state wells from the DB and write them into the results db for the
 // model year(s) in the proper nodes and with the proper amounts.
-func SteadyStateWells(v database.Setup) error {
+func SteadyStateWells(v *database.Setup) error {
 	spin, _ := pterm.DefaultSpinner.Start("Getting Steady State Wells and Pumping")
 	// get wells from DB with their node number
 	v.Logger.Info("Starting Steady State Wells Addition")

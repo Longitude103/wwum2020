@@ -16,7 +16,7 @@ type ExtWell struct {
 
 // GetExternalWells is a function to query the external pumping from the database and returns a slice of ExtWell as well
 // as includes handling the debug mode.
-func GetExternalWells(v Setup) (extWells []ExtWell, err error) {
+func GetExternalWells(v *Setup) (extWells []ExtWell, err error) {
 	extQuery := fmt.Sprintf("select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on "+
 		"st_contains(mc.geom, ext_pumping.geom) where yr >= %d and yr <= %d;", v.SYear, v.EYear)
 

@@ -10,6 +10,7 @@ import (
 
 type Setup struct {
 	PgDb       *sqlx.DB
+	SqliteDB   bool
 	SlDb       *sqlx.DB
 	SYear      int
 	EYear      int
@@ -18,52 +19,76 @@ type Setup struct {
 	RchDb      *RchDB
 	AppDebug   bool
 	ExcessFlow bool
+	Desc       string
 }
+
+type Option func(*Setup)
 
 // NewSetup is an initialization function for the Setup struct that sets the initial database connections, logger, and stores
 // the flags for excess flow and debug.
-func (s *Setup) NewSetup(debug, ef bool, myEnv map[string]string, noSqlite bool, mDesc string) error {
-	l, err := NewLogger()
-	if err != nil {
-		return err
+func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
+	s := &Setup{EYear: 1953, SYear: 2020, SqliteDB: true}
+	for _, option := range options {
+		option(s)
 	}
 
-	s.Logger = l.Sugar()
-	s.Logger.Infow("Setting Up Results database, getting postgres DB Connection.")
-
-	if debug {
-		s.AppDebug = debug
+	if s.AppDebug {
 		s.Logger.Info("Debug is Set, limited records retrieved for speed.")
 	}
 
-	if ef {
-		s.ExcessFlow = ef
+	if s.ExcessFlow {
 		s.Logger.Info("Using Excess Flows")
 	}
 
-	if !noSqlite {
-		s.SlDb, err = GetSqlite(s.Logger, mDesc)
+	if s.SqliteDB {
+		var err error
+		s.SlDb, err = GetSqlite(s.Logger, s.Desc)
 		if err != nil {
-			return err
+			return s, err
 		}
 
 		s.PNirDB, err = PNirDB(s.SlDb)
 		if err != nil {
-			return err
+			return s, err
 		}
 
 		s.RchDb, err = ResultsRchDB(s.SlDb)
 		if err != nil {
-			return err
+			return s, err
 		}
 	}
 
+	var err error
 	s.PgDb, err = PgConnx(myEnv)
 	if err != nil {
-		return err
+		return s, err
 	}
 
-	return nil
+	return s, nil
+}
+
+func WithLogger() Option {
+	return func(s *Setup) {
+		l, _ := NewLogger()
+		s.Logger = l.Sugar()
+		s.Logger.Infow("Setting Up Results database, getting postgres DB Connection.")
+	}
+}
+
+func WithDebug() Option {
+	return func(s *Setup) { s.AppDebug = true }
+}
+
+func WithExcessFlow() Option {
+	return func(s *Setup) { s.ExcessFlow = true }
+}
+
+func WithNoSQLite() Option {
+	return func(s *Setup) { s.SqliteDB = false }
+}
+
+func WithDescription(textDesc string) Option {
+	return func(s *Setup) { s.Desc = textDesc }
 }
 
 // SetYears is an initializer method for the Setup struct to set the start and end years of the application run.

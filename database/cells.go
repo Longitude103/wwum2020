@@ -66,7 +66,7 @@ func GetCells(v Setup) (cells []ModelCell, err error) {
 // GetCellAreas is a function to return the amount of area within each model cell that is covered by parcels of irrigated and
 // dryland. It also returns the area, soil code, and zone of the cell in a slice of CellIntersect Struct. It implements the
 // debug mode to only return 200 cells which were selected as having good data.
-func GetCellAreas(v Setup, y int) (cells []CellIntersect, err error) {
+func GetCellAreas(v *Setup, y int) (cells []CellIntersect, err error) {
 	query := fmt.Sprintf(`select m.node, m.soil_code, m.coeff_zone, m.mtg, st_area(geom)/43560 cell_area, st_x(st_transform(st_centroid(geom), 4326)) pointx,
        st_y(st_transform(st_centroid(geom), 4326)) pointy, nip_area, ndp_area, sip_area, sdp_area from model_cells m
            left join (select node, sum(st_area(st_intersection(c.geom, ni.geom))/43560) nip_area from public.model_cells c 

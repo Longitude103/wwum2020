@@ -16,7 +16,7 @@ type ExtRch struct {
 
 // GetExtRecharge is a function to return a slice of ExtRch filled with the ext_recharge data from the database and
 // used in the model to create the recharge values for the external non-NRD areas.
-func GetExtRecharge(v Setup) (eRch []ExtRch, err error) {
+func GetExtRecharge(v *Setup) (eRch []ExtRch, err error) {
 	query := fmt.Sprintf("select yr, mnth, file_type, rch, node, st_area(mc.geom)/43560 cell_size from "+
 		"ext_recharge inner join model_cells mc on st_contains(mc.geom, ext_recharge.geom) where yr >= %d "+
 		"and yr <= %d ;", v.SYear, v.EYear)

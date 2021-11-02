@@ -9,7 +9,7 @@ import (
 
 // WriteWELResults is a function that gets the pumping amounts for the parcel and assigns them to a well or wells that
 // supply that parcel.
-func WriteWELResults(v database.Setup, parcels *[]parcels.Parcel) error {
+func WriteWELResults(v *database.Setup, parcels *[]parcels.Parcel) error {
 	spin, _ := pterm.DefaultSpinner.Start("Getting Well Parcels and Well Nodes")
 	v.Logger.Info("Starting WriteWELResults...")
 	// get a list of the wells and associated parcels

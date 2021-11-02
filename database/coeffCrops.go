@@ -28,7 +28,7 @@ const (
 
 // GetCoeffCrops is a function that calls the database to get the list of coefficients for each crop and zone in the model
 // and returns a slice of CoeffCrop.
-func GetCoeffCrops(v Setup) (CoeffCrops []CoeffCrop, err error) {
+func GetCoeffCrops(v *Setup) (CoeffCrops []CoeffCrop, err error) {
 	query := `select * from rswb.coeffcrops;`
 
 	if err := v.PgDb.Select(&CoeffCrops, query); err != nil {

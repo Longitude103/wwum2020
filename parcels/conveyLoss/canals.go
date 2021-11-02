@@ -36,7 +36,7 @@ type Canal struct {
 // getCanalCells is a function that gets the cells in the model that the canal passes through and the associated data
 // of canal length and types through that cell. It returns a slice of CanalCell for processing. It also implements AppDebug
 // to reduce the number of cells it returns if the app is in debug mode.
-func getCanalCells(v database.Setup) ([]CanalCell, error) {
+func getCanalCells(v *database.Setup) ([]CanalCell, error) {
 	query := `SELECT c.id, c.type_2, c.district_id, c.eff, a.node, st_area(a.geom) / 43560 cell_area,
 		   ST_Length(ST_Intersection(a.geom, c.geom)), c.c_flag, d.dnr_fact, s.sat_fact, u.usgs_fact, c.clink_id, c1.eff eff2,
 		   c2.latcount, c3.tot_lat_ln, c4.tot_can_ln
@@ -65,7 +65,7 @@ func getCanalCells(v database.Setup) ([]CanalCell, error) {
 
 // getCanals returns a slice of Canal with the canal id, name, efficiency and total acres for that all the years that
 // are listed.
-func getCanals(v database.Setup) (canals []Canal, err error) {
+func getCanals(v *database.Setup) (canals []Canal, err error) {
 	for i := v.SYear; i < v.EYear+1; i++ {
 		query := fmt.Sprintf(`select id, name, eff, area, %d yr from sw.canals left join (select sw_id, sum(st_area(geom) / 43560) area
 				from np.t%d_irr where sw = true and sw_id is not null group by sw_id UNION ALL select sw_id, 
