@@ -18,7 +18,7 @@ There are several CLI functions called with the CLI and this is a list of them. 
 also get a list by running the program without anything. The "flag" package is used for the CLI which enables the use
 of flags in the CLI. This is a core go package.
 
-- runModel -> is the operation to start the main model run function, and it includes the following flags:
+- runModel => is the operation to start the main model run function, and it includes the following flags:
   - Required Flags: 
     - --Desc: A description of the model being run
     - --CSDir: The directory path to the CropSim Results text files
@@ -28,10 +28,14 @@ of flags in the CLI. This is a core go package.
     - --EndYr: end year of the distribution, defaults to: 2020
 
 
-- mfFiles -> is the CLI function to use the results from the `runModel` function and results database to create
+- mfFiles => is the CLI function to use the results from the `runModel` function and results database to create
   new MODFLOW files for MODFLOW 6 in the form of RCH6 and WEL6 files. It creates an "OutputFiles" directory in the
   same location as the binary for the result files.
-    
+
+
+- qcResults => is a CLI function to retrieve information from the results' database for information about the run. The initial
+  function asks questions about which results database to analyze and then produces an Annual Recharge Summary by recharge
+  type. In addition, it can also create a GeoJSON file for further analysis
 ### Common CLI Examples
 - Production runModel:
   - Windows -> In Powershell: `wwum2020-amd64.exe runModel --Desc "Test Run" --CSDir "<path>\WWUMM2020\CropSim\Run005_WWUM2020\Output"`
@@ -51,13 +55,26 @@ of flags in the CLI. This is a core go package.
   - `go run main.go runModel --CSDir "<path>" --debug`
 
 ### Output
-To store the large volume of output, we're going to use SQLite3 as the storage container. 
-This gives the ability to still be SQL enabled, but also allow compressing and store the data in Binary Format.
-The only text files that are output are the rch and wel files. The package used is the [go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) package in the repo.
-The file is named results.db that will be in the same dir as the executable.
+To store the large volume of output from `runModel`, the CLI uses a SQLite3 file as the storage container and is named
+`results<timestamp>.sqlite` that will be in the same dir as the executable. This gives the ability to still be SQL enabled, but also allow compressing and store the data in Binary Format.
+The text file output from the `runModel` is `results<timestamp>.log` file. This file includes run details and 
+any additional information about errors that might occur while operating. The `mfFiles` function creates two text files that 
+are the rch and wel files. The wel6 and rch6 files are stored
+in an `OutputFiles` directory created in the same location as the executable file and then in sub-folders that correspond with
+the results database and are named the same.
 
 ### ModFlow Output Files
 The second command that is used by the app is the `mfFiles` command that enables you to write out ModFlow 6 files needed for the 
 further model runs.
 
-- Run the model using `go run main.go mfFiles`
+- Create the MODFLOW 6 files by using `./wwum2020-amd64.exe mfFiles` (Windows Example)
+
+### QC Results
+This function is intended to analyze the results database and produce some totaling and output files that can make it easier
+to spot problems and issues with the runs. This creates a recharge table section that outputs the selected annual amount of 
+recharge by type. In addition, there is an optional recharge output that will allow you to create a GeoJSON file that can be used
+by that can be added to GIS desktop software or online mapping software for spatial analysis of the results by model grid. 
+We've tested this on [QGIS](https://qgis.org) and it should also work on ESRI products.
+
+- Create the QC Results by using `./wwum2020-amd64.exe qcResults` (Windows Example)
+    
