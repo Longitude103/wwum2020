@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -111,7 +113,9 @@ func (s *Setup) SetYears(sYear, eYear int) error {
 // NewLogger is a function to setup the new zap.logger and set the path and file name.
 func NewLogger() (*zap.Logger, error) {
 	cfg := zap.NewProductionConfig()
-	path := fmt.Sprintf("./results%s.log", time.Now().Format(time.RFC3339))
+	wd, _ := os.Getwd()
+	fileName := fmt.Sprintf("results%s.log", time.Now().Format(time.RFC3339))
+	path := filepath.Join(wd, fileName)
 
 	cfg.OutputPaths = []string{
 		path,

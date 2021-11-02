@@ -195,10 +195,9 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outp
 }
 
 func MakeOutputDir(fileName string) (string, error) {
-	rootPath := "."
-	subPath := fmt.Sprintf("/OutputFiles/%s", fileName[:len(fileName)-7])
-
-	path := filepath.Join(rootPath, subPath)
+	wd, _ := os.Getwd()
+	subPath := filepath.Join("OutputFiles", fileName[:len(fileName)-7])
+	path := filepath.Join(wd, subPath)
 
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return "", err

@@ -91,7 +91,8 @@ func (q *QC) rechargeGeoJson() error {
 	spin.Success()
 
 	fn := fmt.Sprintf("%d_Recharge.geojson", q.Year)
-	path := filepath.Join("./", q.fileName)
+	wd, _ := os.Getwd()
+	path := filepath.Join(wd, q.fileName)
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
 	}

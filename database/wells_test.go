@@ -16,8 +16,9 @@ func TestGetMIWells(t *testing.T) {
 		os.Exit(1)
 	}
 
-	var v Setup
-	if err := v.NewSetup(false, false, myEnv, true); err != nil {
+	var v *Setup
+	v, err = NewSetup(myEnv)
+	if err != nil {
 		t.Error("Could not setup DB connection")
 	}
 
