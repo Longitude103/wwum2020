@@ -2,7 +2,7 @@ package fileio
 
 import (
 	"bufio"
-	"go.uber.org/zap"
+	"github.com/Longitude103/wwum2020/logging"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -30,7 +30,7 @@ type MonthlyValues struct {
 
 // LoadTextFiles loads cropsim text files from a location and returns a map of the results to use in further processing.
 // This should include all the files and results for each station and each year.
-func LoadTextFiles(filePath string, logger *zap.SugaredLogger) (map[string][]StationResults, error) {
+func LoadTextFiles(filePath string, logger *logging.TheLogger) (map[string][]StationResults, error) {
 	logger.Infof("File Path: %s", filePath)
 	//fmt.Println("File Path:", filePath)
 	fls, err := os.ReadDir(filePath)
@@ -56,7 +56,7 @@ func LoadTextFiles(filePath string, logger *zap.SugaredLogger) (map[string][]Sta
 }
 
 // getFileData is an function that breaks down the station data and puts it into a struct to work with.
-func getFileData(filePath string, logger *zap.SugaredLogger) ([]StationResults, error) {
+func getFileData(filePath string, logger *logging.TheLogger) ([]StationResults, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		logger.Errorf("Error in getting %s file data, err: %s", file.Name(), err)

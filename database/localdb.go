@@ -2,9 +2,9 @@ package database
 
 import (
 	"fmt"
+	"github.com/Longitude103/wwum2020/logging"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"go.uber.org/zap"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,7 +13,7 @@ import (
 
 // GetSqlite gets or sets the connection string for the sqlite3 results database.
 //  It takes no args, and returns the db object for the connection
-func GetSqlite(logger *zap.SugaredLogger, mDesc string) (*sqlx.DB, error) {
+func GetSqlite(logger *logging.TheLogger, mDesc string) (*sqlx.DB, error) {
 	wd, _ := os.Getwd()
 	dbName := fmt.Sprintf("results%s.sqlite", time.Now().Format(time.RFC3339))
 	logger.Infof("created sqlite results db named: %s", dbName)

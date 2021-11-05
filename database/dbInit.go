@@ -1,14 +1,14 @@
 package database
 
 import (
+	"github.com/Longitude103/wwum2020/logging"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
 )
 
 // InitializeDb creates the database results table if it doesn't exist, so the records of the
 // transaction can be stored properly, also creates file_keys table for result file_type integer
 // and a foreign key restriction to results table
-func InitializeDb(db *sqlx.DB, logger *zap.SugaredLogger, mDesc string) error {
+func InitializeDb(db *sqlx.DB, logger *logging.TheLogger, mDesc string) error {
 	stmt, err := db.Prepare(`
 		create table if not exists file_keys
 			(

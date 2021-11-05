@@ -14,7 +14,7 @@ import (
 // result value in the RCH file. It does use the Adjustment Factors used in previous models.
 func NaturalVeg(v *database.Setup, wStations []database.WeatherStation,
 	csResults map[string][]fileio.StationResults, cCoefficients []database.CoeffCrop) error {
-	v.Logger.Infow("Starting Natural Vegetation Ops.")
+	v.Logger.Info("Starting Natural Vegetation Ops.")
 
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Natural Vegetation Operations").WithRemoveWhenDone(true).Start()
 	for yr := v.SYear; yr < v.EYear+1; yr++ {

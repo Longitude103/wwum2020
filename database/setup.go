@@ -3,8 +3,8 @@ package database
 import (
 	"errors"
 	"fmt"
+	"github.com/Longitude103/wwum2020/logging"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"time"
@@ -16,7 +16,7 @@ type Setup struct {
 	SlDb       *sqlx.DB
 	SYear      int
 	EYear      int
-	Logger     *zap.SugaredLogger
+	Logger     *logging.TheLogger
 	PNirDB     *DB
 	RchDb      *RchDB
 	AppDebug   bool
@@ -71,9 +71,13 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 
 func WithLogger() Option {
 	return func(s *Setup) {
-		l, _ := NewLogger()
-		s.Logger = l.Sugar()
-		s.Logger.Infow("Setting Up Results database, getting postgres DB Connection.")
+		wd, _ := os.Getwd()
+		fileName := fmt.Sprintf("results%s.log", time.Now().Format(time.RFC3339))
+		path := filepath.Join(wd, fileName)
+
+		l := logging.NewLogger(path)
+		l.Info("Setting Up Results database, getting postgres DB Connection.")
+		s.Logger = l
 	}
 }
 
@@ -108,18 +112,4 @@ func (s *Setup) SetYears(sYear, eYear int) error {
 	}
 
 	return nil
-}
-
-// NewLogger is a function to setup the new zap.logger and set the path and file name.
-func NewLogger() (*zap.Logger, error) {
-	cfg := zap.NewProductionConfig()
-	wd, _ := os.Getwd()
-	fileName := fmt.Sprintf("results%s.log", time.Now().Format(time.RFC3339))
-	path := filepath.Join(wd, fileName)
-
-	cfg.OutputPaths = []string{
-		path,
-	}
-
-	return cfg.Build()
 }
