@@ -149,5 +149,6 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	v.Logger.Infof("Model Runtime: %s", time.Now().Sub(timeStart))
 	v.Logger.Info("Model Completed Normally")
 	pterm.Info.Println("Model Completed Normally, check logs for details of run")
+	v.Logger.Close()
 	return nil
 }
