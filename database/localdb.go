@@ -6,7 +6,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 )
@@ -15,9 +14,11 @@ import (
 //  It takes no args, and returns the db object for the connection
 func GetSqlite(logger *logging.TheLogger, mDesc string) (*sqlx.DB, error) {
 	wd, _ := os.Getwd()
-	dbName := fmt.Sprintf("results%s.sqlite", time.Now().Format(time.RFC3339))
+	tn := time.Now()
+	dbName := fmt.Sprintf("results%s-%d-%d.sqlite", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
+
 	logger.Infof("created sqlite results db named: %s", dbName)
-	db, err := sqlx.Open("sqlite3", path.Join(wd, dbName))
+	db, err := sqlx.Open("sqlite3", filepath.FromSlash(filepath.Join(wd, dbName)))
 	if err != nil {
 		logger.Errorf("Error in creating SQLite DB: %s", err)
 		return nil, err

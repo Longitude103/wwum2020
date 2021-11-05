@@ -43,6 +43,7 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 	}
 
 	if s.SqliteDB {
+		s.Logger.Info("Setting Up Results database, getting postgres DB Connection.")
 		var err error
 		s.SlDb, err = GetSqlite(s.Logger, s.Desc)
 		if err != nil {
@@ -72,11 +73,11 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 func WithLogger() Option {
 	return func(s *Setup) {
 		wd, _ := os.Getwd()
-		fileName := fmt.Sprintf("results%s.log", time.Now().Format(time.RFC3339))
+		tn := time.Now()
+		fileName := fmt.Sprintf("results%s-%d-%d.log", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
 		path := filepath.Join(wd, fileName)
 
 		l := logging.NewLogger(path)
-		l.Info("Setting Up Results database, getting postgres DB Connection.")
 		s.Logger = l
 	}
 }
