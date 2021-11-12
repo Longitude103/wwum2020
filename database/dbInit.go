@@ -115,6 +115,23 @@ func InitializeDb(db *sqlx.DB, logger *logging.TheLogger, mDesc string) error {
 		return err
 	}
 
+	stmt, err = db.Prepare(`create table if not exists swDelivery
+									(
+										canalId integer,
+										dt TIMESTAMP,
+										delAmount real
+									);`)
+	if err != nil {
+		logger.Errorf("Error in statement of SW Delivery table: %s", err)
+		return err
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		logger.Errorf("Error in creating SW Delivery table: %s", err)
+		return err
+	}
+
 	// add results table for parcelPumping
 	stmt, err = db.Prepare(`create table if not exists parcelPumping
 									(
