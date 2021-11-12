@@ -1,6 +1,7 @@
 package conveyLoss
 
 import (
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/pterm/pterm"
 )
@@ -44,21 +45,7 @@ func Conveyance(v *database.Setup) (err error) {
 			}
 		}
 
-		factor := 0.0
-		switch cell.CFlag {
-		case 1: // DNR Factor
-			factor = cell.DnrFact.Float64
-		case 4: // SatThick Factor
-			factor = cell.SatFact.Float64
-		case 2: // USGS Factor
-			factor = cell.UsgsFact.Float64
-		default: // default
-			if cell.CanalType == "Lateral" || cell.CanalType == "Spill" {
-				factor = cell.StLength / cell.TotalLatLn.Float64
-			} else {
-				factor = cell.StLength / cell.TotalCanLn
-			}
-		}
+		factor := getFactor(cell)
 
 		// special cases for cells with Minatare, Mitchell Gering, and Highline and Lowline
 		switch cell.CanalId {
@@ -98,20 +85,31 @@ func Conveyance(v *database.Setup) (err error) {
 				structureLoss = strLossPercent * div.DivAmount.Float64
 			}
 
-			ft := 114               // np by default
+			ft := 113               // np by default
 			if cell.CanalId == 54 { // western canal, only sp canal
-				ft = 113
+				ft = 114
 			}
 
 			//if cell.Node == 51030 {
 			//	fmt.Printf("Data for 51030: dt: %v, file: %d, st_loss: %g, factor: %g\n", div.DivDate.Time, ft, structureLoss, factor)
 			//}
 
-			if structureLoss > 0 {
-				err := v.RchDb.Add(database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,
-					FileType: ft, Result: structureLoss * factor * 1.9835})
-				if err != nil {
-					return err
+			if v.AppDebug {
+				if cell.CanalId == 26 {
+					fmt.Printf("Div: %+v\n", div)
+					fmt.Printf("StructureLoss: %f, Factor: %f\n", structureLoss, factor)
+					fmt.Printf("Cell Data: %+v\n", cell)
+					d := database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,
+						FileType: ft, Result: structureLoss * factor * 1.9835}
+					fmt.Printf("Cell Result: %+v\n", d)
+				}
+			} else {
+				if structureLoss > 0 {
+					err := v.RchDb.Add(database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,
+						FileType: ft, Result: structureLoss * factor * 1.9835})
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -130,4 +128,41 @@ func filterCanal(diversions []Diversion, canal int) (canalDiversion []Diversion)
 		}
 	}
 	return canalDiversion
+}
+
+func getFactor(cell CanalCell) (factor float64) {
+	switch cell.CFlag {
+	case 1: // DNR Factor
+		if cell.DnrFact.Valid == false {
+			factor = defaultFactor(cell)
+		} else {
+			factor = cell.DnrFact.Float64
+		}
+	case 4: // SatThick Factor
+		if cell.SatFact.Valid == false {
+			factor = defaultFactor(cell)
+		} else {
+			factor = cell.SatFact.Float64
+		}
+	case 2: // USGS Factor
+		if cell.UsgsFact.Valid == false {
+			factor = defaultFactor(cell)
+		} else {
+			factor = cell.UsgsFact.Float64
+		}
+	default: // default
+		factor = defaultFactor(cell)
+	}
+
+	return factor
+}
+
+func defaultFactor(cell CanalCell) (factor float64) {
+	if cell.CanalType == "Lateral" || cell.CanalType == "Spill" {
+		factor = cell.StLength / cell.TotalLatLn.Float64
+	} else {
+		factor = cell.StLength / cell.TotalCanLn
+	}
+
+	return factor
 }
