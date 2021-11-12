@@ -17,7 +17,7 @@ func dbConnection() *database.Setup {
 	}
 
 	var v *database.Setup
-	v, err = database.NewSetup(myEnv, database.WithLogger(), database.WithNoSQLite())
+	v, err = database.NewSetup(myEnv, database.WithLogger(), database.WithNoSQLite(), database.WithDebug())
 	if err != nil {
 		fmt.Println("Error in NewSetup")
 	}
@@ -55,12 +55,11 @@ func Test_getCanalCells(t *testing.T) {
 		t.Errorf("Error getting canal cells: %s", err)
 	}
 
-	for i, cell := range cc {
-		fmt.Printf("Cell: %+v\n", cell)
-
-		if i == 10 {
-			break
+	for _, cell := range cc {
+		if cell.CLinkId == 26 {
+			cell.print()
 		}
+
 	}
 
 	if len(cc) == 0 {

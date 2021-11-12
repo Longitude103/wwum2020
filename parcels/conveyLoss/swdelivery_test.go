@@ -16,14 +16,10 @@ func Test_GetSurfaceWaterDelivery(t *testing.T) {
 	}
 
 	for i, diversion := range div {
-		fmt.Printf("Diversion: %+v\n", diversion)
-
-		if i == 10 {
-			break
+		if i > 160 && i < 160 {
+			diversion.print()
 		}
 	}
-
-	// check for canal 2 having zero 1997 delivery
 }
 
 func Test_filterCnl(t *testing.T) {

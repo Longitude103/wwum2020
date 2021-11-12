@@ -13,8 +13,22 @@ func Test_getDiversions(t *testing.T) {
 		t.Error("Get Diversions errored")
 	}
 
-	for i := 0; i < 12; i++ {
-		fmt.Printf("Diversion: %+v\n", divs[i])
+	for _, div := range divs {
+		if div.CanalId == 26 {
+			fmt.Printf("Laramie Div: %+v\n", div)
+		}
+
+		if div.CanalId == 13 {
+			fmt.Printf("Mitchell Div: %+v\n", div)
+		}
+
+		if div.CanalId == 32 {
+			fmt.Printf("Gering Div: %+v\n", div)
+		}
+
+		if div.CanalId == 15 {
+			fmt.Printf("Enterprise Div: %+v\n", div)
+		}
 	}
 
 	if divs[1].DivAmount.Float64 != 12797.0 {

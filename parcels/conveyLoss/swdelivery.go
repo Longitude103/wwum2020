@@ -7,6 +7,15 @@ import (
 // GetSurfaceWaterDelivery function returns a slice of Diversion that is a monthly amount of surface water delivered to
 // an acre of land. The units of the Diversion are in acre-feet per acre for use in subsequent processes.
 func GetSurfaceWaterDelivery(v *database.Setup) ([]Diversion, error) {
+	var db *database.SWDelDB
+	var err error
+	if !v.AppDebug {
+		db, err = database.SWDeliveryDB(v.SlDb)
+		if err != nil {
+			return []Diversion{}, err
+		}
+	}
+
 	diversions, err := getDiversions(v)
 	if err != nil {
 		v.Logger.Errorf("Error in getDiversions: %s", err)
@@ -22,10 +31,23 @@ func GetSurfaceWaterDelivery(v *database.Setup) ([]Diversion, error) {
 	for i := 0; i < len(diversions); i++ {
 		c := filterCnl(canals, (&diversions[i]).CanalId, (&diversions[i]).DivDate.Time.Year())
 		if c.Area.Valid {
+			// apply efficiency and convert to AF
 			(&diversions[i]).applyEffAcres(c.Eff, c.Area.Float64)
 		} else {
 			(&diversions[i]).DivAmount.Float64 = 0
 		}
+	}
+
+	if !v.AppDebug {
+		for i := 0; i < len(diversions); i++ {
+			if err := db.Add(database.SWDelResult{CanalId: diversions[i].CanalId, Dt: diversions[i].DivDate.Time,
+				DelAmount: diversions[i].DivAmount.Float64}); err != nil {
+				return []Diversion{}, err
+			}
+		}
+
+		_ = db.Flush()
+		_ = db.Close()
 	}
 
 	return diversions, nil

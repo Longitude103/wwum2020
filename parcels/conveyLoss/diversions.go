@@ -30,9 +30,13 @@ func (d *Diversion) applyEffAcres(eff float64, acres float64) {
 	d.DivAmount.Float64 = d.DivAmount.Float64 * eff * 1.9835 / acres
 }
 
+func (d *Diversion) print() {
+	fmt.Printf("Canal ID: %d, DivDate: %d-%d, DivAmount: %.3f\n", d.CanalId, d.DivDate.Time.Month(), d.DivDate.Time.Year(), d.DivAmount.Float64)
+}
+
 // getDiversions retrieves the diversions from the pg database and returns a slice of Diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
-// excess flow from the daily diversions based on excess flow periods.
+// excess flow from the daily diversions based on excess flow periods. Result diversions are in day cfs.
 func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
 
 	if v.ExcessFlow {

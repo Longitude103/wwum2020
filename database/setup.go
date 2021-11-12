@@ -35,7 +35,7 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 	}
 
 	if s.AppDebug {
-		s.Logger.Info("Debug is Set, limited records retrieved for speed.")
+		s.Logger.Info("Debug is Set, limited records retrieved for speed, no output DB")
 	}
 
 	if s.ExcessFlow {
