@@ -14,7 +14,7 @@ func TestFilterCCDryLand(t *testing.T) {
 
 	var cS = []CoeffCrop{c1, c2, c3, c4, c5}
 
-	dEA, _, _, _, err := FilterCCDryLand(cS, 1, 8)
+	dEA, _, _, _, _, err := FilterCCDryLand(cS, 1, 8)
 	if err != nil {
 		t.Error("Error with crop 8, zone 1")
 	}
@@ -23,7 +23,7 @@ func TestFilterCCDryLand(t *testing.T) {
 		t.Errorf("should have returned 1.1, but got %f", dEA)
 	}
 
-	dEA, _, _, _, err = FilterCCDryLand(cS, 1, 7)
+	dEA, _, _, _, _, err = FilterCCDryLand(cS, 1, 7)
 	if err != nil {
 		t.Error("Error with crop 7, zone 1")
 	}
@@ -32,7 +32,7 @@ func TestFilterCCDryLand(t *testing.T) {
 		t.Errorf("should have returned 1.2, but got %f", dEA)
 	}
 
-	dEA, _, _, _, err = FilterCCDryLand(cS, 1, 15)
+	dEA, _, _, _, _, err = FilterCCDryLand(cS, 1, 15)
 	if err != nil {
 		t.Error("Error with crop 15, zone 1")
 	}
@@ -40,7 +40,7 @@ func TestFilterCCDryLand(t *testing.T) {
 		t.Errorf("should have returned 1.3, but got %f", dEA)
 	}
 
-	dEA, _, _, _, err = FilterCCDryLand(cS, 2, 7)
+	dEA, _, _, _, _, err = FilterCCDryLand(cS, 2, 7)
 	if err != nil {
 		t.Error("Error with crop 7, zone 2")
 	}
@@ -48,7 +48,7 @@ func TestFilterCCDryLand(t *testing.T) {
 		t.Errorf("should have returned 1.4, but got %f", dEA)
 	}
 
-	dEA, _, _, _, err = FilterCCDryLand(cS, 2, 15)
+	dEA, _, _, _, _, err = FilterCCDryLand(cS, 2, 15)
 	if err != nil {
 		t.Error("Error with crop 15, zone 2")
 	}
@@ -56,7 +56,7 @@ func TestFilterCCDryLand(t *testing.T) {
 		t.Errorf("this is crop 15 (not found) and defaults to crop 7 and should have returned 1.4, but got %f", dEA)
 	}
 
-	_, _, _, _, err = FilterCCDryLand(cS, 2, 9)
+	_, _, _, _, _, err = FilterCCDryLand(cS, 2, 9)
 	if err == nil {
 		t.Error("Should have produced an error since crop isn't found, but it didn't")
 	}

@@ -1,7 +1,6 @@
 package conveyLoss
 
 import (
-	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/pterm/pterm"
 )
@@ -95,14 +94,14 @@ func Conveyance(v *database.Setup) (err error) {
 			//}
 
 			if v.AppDebug {
-				if cell.CanalId == 26 {
-					fmt.Printf("Div: %+v\n", div)
-					fmt.Printf("StructureLoss: %f, Factor: %f\n", structureLoss, factor)
-					fmt.Printf("Cell Data: %+v\n", cell)
-					d := database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,
-						FileType: ft, Result: structureLoss * factor * 1.9835}
-					fmt.Printf("Cell Result: %+v\n", d)
-				}
+				// if cell.CanalId == 26 {
+				// 	fmt.Printf("Div: %+v\n", div)
+				// 	fmt.Printf("StructureLoss: %f, Factor: %f\n", structureLoss, factor)
+				// 	fmt.Printf("Cell Data: %+v\n", cell)
+				// 	d := database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,
+				// 		FileType: ft, Result: structureLoss * factor * 1.9835}
+				// 	fmt.Printf("Cell Result: %+v\n", d)
+				// }
 			} else {
 				if structureLoss > 0 {
 					err := v.RchDb.Add(database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,

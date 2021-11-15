@@ -29,6 +29,10 @@ func Test_getDiversions(t *testing.T) {
 		if div.CanalId == 15 {
 			fmt.Printf("Enterprise Div: %+v\n", div)
 		}
+
+		if div.CanalId == 29 {
+			fmt.Printf("Minatare Div: %+v\n", div)
+		}
 	}
 
 	if divs[1].DivAmount.Float64 != 12797.0 {
