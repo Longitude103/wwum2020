@@ -2,10 +2,11 @@ package parcels
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/pterm/pterm"
-	"sync"
 )
 
 // DryLandParcels is a function that returns all the dryland parcels for the years of the simulation and also calls the
@@ -26,9 +27,9 @@ func DryLandParcels(v *database.Setup, csResults map[string][]fileio.StationResu
 			wg.Add(1)
 			go func(d int) {
 				defer wg.Done()
-				err := (&annDryParcels[d]).parcelNIR(v.PNirDB, y, wStations, csResults, DryLand)
+				err := (&annDryParcels[d]).parcelNIR(v, y, wStations, csResults, DryLand)
 				if err != nil {
-					v.Logger.Errorf("error in dry parcel NIR:", err)
+					v.Logger.Errorf("error in dry parcel NIR: %s", err)
 					v.Logger.Errorf("Parcel trace: %+v", annDryParcels[d])
 				}
 			}(i)

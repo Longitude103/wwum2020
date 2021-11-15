@@ -2,12 +2,13 @@ package parcels
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
 	"github.com/pterm/pterm"
-	"sync"
-	"time"
 )
 
 // ParcelPump is the main function for the parcels, it gets the usage, efficiencies, operates the surface water convayance
@@ -45,21 +46,24 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 
 	var parcels []Parcel
 
-	spinner, _ = pterm.DefaultSpinner.Start("Setting Parcel Pumping")
-	v.Logger.Info("Setting Parcel Pumping")
-	pPumpDB, err := database.ParcelPumpDB(v.SlDb)
-	if err != nil {
-		spinner.Fail("Failed Setting Parcel Pumping")
-		return nil, err
-	}
-	spinner.Success()
-
-	defer func(pPumpDB *database.PPDB) {
-		err := pPumpDB.Close()
+	var pPumpDB *database.PPDB
+	if !v.AppDebug {
+		spinner, _ = pterm.DefaultSpinner.Start("Setting Parcel Pumping")
+		v.Logger.Info("Setting Parcel Pumping")
+		pPumpDB, err = database.ParcelPumpDB(v.SlDb)
 		if err != nil {
-			return
+			spinner.Fail("Failed Setting Parcel Pumping")
+			return nil, err
 		}
-	}(pPumpDB)
+		spinner.Success()
+
+		defer func(pPumpDB *database.PPDB) {
+			err := pPumpDB.Close()
+			if err != nil {
+				return
+			}
+		}(pPumpDB)
+	}
 
 	// 1. load parcels
 	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Parcel Operations").WithRemoveWhenDone(true).Start()
@@ -76,7 +80,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 			wg.Add(1)
 			go func(ip int) {
 				defer wg.Done()
-				err := (&parcels[ip]).parcelNIR(v.PNirDB, y, wStations, csResults, Irrigated)
+				err := (&parcels[ip]).parcelNIR(v, y, wStations, csResults, Irrigated)
 				if err != nil {
 					v.Logger.Errorf("Parcel NIR Error: %s", err)
 					v.Logger.Errorf("Parcel Trace: %+v", parcels[ip])
@@ -85,7 +89,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 				(&parcels[ip]).setAppEfficiency(efficiencies, y)
 
 				// add SW Delivery to the parcels
-				if parcels[ip].Sw.Bool == true {
+				if parcels[ip].Sw.Bool {
 					(&parcels[ip]).parcelSWDelivery(filteredDiversions)
 				}
 			}(i) // must be a pointer to work
@@ -105,23 +109,25 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 		p.UpdateTitle(fmt.Sprintf("Simulating %d Parcel Pumping", y))
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
-			if (&parcels[p]).Gw.Bool == true {
+			if (&parcels[p]).Gw.Bool {
 				if err := (&parcels[p]).estimatePumping(cCrops); err != nil {
 					return []Parcel{}, err
 				}
 			}
 		}
 
-		// write out parcel pumping for each parcel in sqlite results
-		p.UpdateTitle(fmt.Sprintf("Saving %d Parcel Pumping Results", y))
-		for p := 0; p < len(parcels); p++ {
-			if parcels[p].Gw.Bool == true {
-				// Add data to pumpingStruct and then append
-				for m := 1; m < 13; m++ {
-					if parcels[p].Pump[m-1] > 0 {
-						dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
-						_ = pPumpDB.Add(database.Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt,
-							Pump: parcels[p].Pump[m-1]})
+		if !v.AppDebug {
+			// write out parcel pumping for each parcel in sqlite results
+			p.UpdateTitle(fmt.Sprintf("Saving %d Parcel Pumping Results", y))
+			for p := 0; p < len(parcels); p++ {
+				if parcels[p].Gw.Bool {
+					// Add data to pumpingStruct and then append
+					for m := 1; m < 13; m++ {
+						if parcels[p].Pump[m-1] > 0 {
+							dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+							_ = pPumpDB.Add(database.Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt,
+								Pump: parcels[p].Pump[m-1]})
+						}
 					}
 				}
 			}

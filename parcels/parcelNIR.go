@@ -8,7 +8,7 @@ import (
 // parcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.
 // It produces an intermediate results table of NIR in local sqlite for review and adds three maps to the parcel struct
 // Values populated by this method are total acre-feet for the parcel
-func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.WeatherStation,
+func (p *Parcel) parcelNIR(v *database.Setup, Year int, wStations []database.WeatherStation,
 	csResults map[string][]fileio.StationResults, it IrrType) error {
 	var parcelNIR, parcelRo, parcelDp, parcelEt, parcelDryEt [12]float64
 
@@ -64,11 +64,13 @@ func (p *Parcel) parcelNIR(pNirDB *database.DB, Year int, wStations []database.W
 	}
 	//fmt.Printf("Weighted Parcel ID: %d, NIR is: %v\n", p.ParcelNo, parcelNIR)
 
-	// save parcelNIR to sqlite only for irrigated
-	if it == Irrigated {
-		err := pNirDB.Add(database.PNir{ParcelNo: p.ParcelNo, Nrd: p.Nrd, ParcelNIR: parcelNIR, Year: Year, IrrType: int(it)})
-		if err != nil {
-			return err
+	if !v.AppDebug {
+		// save parcelNIR to sqlite only for irrigated
+		if it == Irrigated {
+			err := v.PNirDB.Add(database.PNir{ParcelNo: p.ParcelNo, Nrd: p.Nrd, ParcelNIR: parcelNIR, Year: Year, IrrType: int(it)})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
