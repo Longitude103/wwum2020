@@ -15,9 +15,9 @@ func Test_GetSurfaceWaterDelivery(t *testing.T) {
 		t.Errorf("Error Getting SW Delivery: %s", err)
 	}
 
-	for i, diversion := range div {
+	for i, d := range div[v.SYear] {
 		if i > 160 && i < 160 {
-			diversion.print()
+			d.print()
 		}
 	}
 }

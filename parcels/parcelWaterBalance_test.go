@@ -62,8 +62,7 @@ func TestParcel_WaterBalanceWWSP(t *testing.T) {
 	fmt.Println("RO is:", p10.Ro)
 	fmt.Println("Dp is:", p10.Dp)
 
-	var err error
-	err = p10.waterBalanceWSPP(true)
+	err := p10.waterBalanceWSPP(true)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
@@ -79,8 +78,7 @@ func TestParcel_WaterBalanceWWSP_SWOnly(t *testing.T) {
 	fmt.Println("RO is:", p11.Ro)
 	fmt.Println("Dp is:", p11.Dp)
 
-	var err error
-	err = p11.waterBalanceWSPP(true)
+	err := p11.waterBalanceWSPP(true)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
@@ -95,8 +93,7 @@ func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
 	fmt.Println("RO is:", p12.Ro)
 	fmt.Println("Dp is:", p12.Dp)
 
-	var err error
-	err = p12.waterBalanceWSPP(true)
+	err := p12.waterBalanceWSPP(true)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}

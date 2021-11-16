@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Longitude103/wwum2020/database"
+	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
 )
 
 type Parcel struct {
@@ -215,14 +216,14 @@ func (p *Parcel) SetWelFileType() (fileType int, err error) {
 	if p.Nrd == "np" {
 		if p.FirstIrr.Int64 < 1998 || p.Yr < 1998 {
 			// pre1998 condition
-			if p.Sw.Bool == true {
+			if p.Sw.Bool {
 				return 201, nil
 			} else {
 				return 202, nil
 			}
 		} else {
 			// post 97 parcel
-			if p.Sw.Bool == true {
+			if p.Sw.Bool {
 				return 203, nil
 			} else {
 				return 204, nil
@@ -233,14 +234,14 @@ func (p *Parcel) SetWelFileType() (fileType int, err error) {
 	if p.Nrd == "sp" {
 		if p.FirstIrr.Int64 < 1998 || p.Yr < 1998 {
 			// pre1998 condition
-			if p.Sw.Bool == true {
+			if p.Sw.Bool {
 				return 205, nil
 			} else {
 				return 206, nil
 			}
 		} else {
 			// post 97 parcel
-			if p.Sw.Bool == true {
+			if p.Sw.Bool {
 				return 207, nil
 			} else {
 				return 208, nil
@@ -249,7 +250,7 @@ func (p *Parcel) SetWelFileType() (fileType int, err error) {
 	}
 
 	fmt.Printf("Parcel data %+v\n", p)
-	return 0, errors.New("could not determine file type\n")
+	return 0, errors.New("could not determine file type")
 }
 
 func (p *Parcel) changeFallow() {

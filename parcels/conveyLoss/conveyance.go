@@ -132,19 +132,19 @@ func filterCanal(diversions []Diversion, canal int) (canalDiversion []Diversion)
 func getFactor(cell CanalCell) (factor float64) {
 	switch cell.CFlag {
 	case 1: // DNR Factor
-		if cell.DnrFact.Valid == false {
+		if !cell.DnrFact.Valid {
 			factor = defaultFactor(cell)
 		} else {
 			factor = cell.DnrFact.Float64
 		}
 	case 4: // SatThick Factor
-		if cell.SatFact.Valid == false {
+		if !cell.SatFact.Valid {
 			factor = defaultFactor(cell)
 		} else {
 			factor = cell.SatFact.Float64
 		}
 	case 2: // USGS Factor
-		if cell.UsgsFact.Valid == false {
+		if !cell.UsgsFact.Valid {
 			factor = defaultFactor(cell)
 		} else {
 			factor = cell.UsgsFact.Float64
