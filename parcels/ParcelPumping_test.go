@@ -3,6 +3,7 @@ package parcels
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Longitude103/wwum2020/database"
@@ -28,7 +29,7 @@ func dbConnection() *database.Setup {
 	var v *database.Setup
 	v, err = database.NewSetup(myEnv, database.WithLogger(), database.WithNoSQLite(), database.WithDebug())
 	if err != nil {
-		fmt.Println("Error in NewSetup")
+		fmt.Printf("Error in NewSetup: %s", err)
 	}
 
 	if err = v.SetYears(1997, 1997); err != nil {
@@ -71,9 +72,17 @@ func Test_ParcelPump(t *testing.T) {
 	}
 
 	for i, parcel := range irrParcels {
-		fmt.Println(parcel.String())
+		v.Logger.Debug(parcel.String())
+		v.Logger.Debug(parcel.NIRString())
+		v.Logger.Debug(strings.Repeat("-", 100))
+		v.Logger.Debug(parcel.SWString())
+		v.Logger.Debug(parcel.pumpString())
+		v.Logger.Debug(strings.Repeat("-", 100))
+		v.Logger.Debug(parcel.RoString())
+		v.Logger.Debug(parcel.DpString())
+		v.Logger.Debug(strings.Repeat("=", 100))
 
-		if i == 10 {
+		if i == 15 {
 			break
 		}
 	}

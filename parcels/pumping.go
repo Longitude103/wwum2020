@@ -18,7 +18,7 @@ func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) error {
 
 		// get application efficiency
 		var swAvailableCU, nirRemaining [12]float64
-		if p.Sw.Bool == true {
+		if p.Sw.Bool {
 			for i := 0; i < 12; i++ {
 				swAvailableCU[i] = p.SWDel[i] * nirAdj * p.AppEff
 			}

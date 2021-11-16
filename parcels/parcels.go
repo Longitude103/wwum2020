@@ -191,7 +191,72 @@ GROUP BY i.parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c
 }
 
 func (p *Parcel) String() string {
-	return fmt.Sprintf("Parcel No: %d, NRD: %s, Year: %d", p.ParcelNo, p.Nrd, p.Yr)
+	return fmt.Sprintf("Parcel No: %d, NRD: %s, Year: %d, Area: %.2f, SWFac: %s, SWID: %d, IrrType: %s, Soil: %d, Coeff: %d AppEff: %.2f", p.ParcelNo, p.Nrd, p.Yr, p.Area, p.SwFac.String, p.SwID.Int64, p.IrrType.String, p.SoilCode, p.CoeffZone, p.AppEff)
+}
+
+func (p *Parcel) NIRString() string {
+	var nirString string
+	for i, n := range p.Nir {
+		nirString += strconv.FormatFloat(n, 'f', 2, 64)
+
+		if i < 11 {
+			nirString += ", "
+		}
+	}
+
+	return fmt.Sprintf("Parcel No: %d, NIR (acre-feet): %s", p.ParcelNo, nirString)
+}
+
+func (p *Parcel) SWString() string {
+	var swString string
+	for i, n := range p.SWDel {
+		swString += strconv.FormatFloat(n, 'f', 2, 64)
+
+		if i < 11 {
+			swString += ", "
+		}
+	}
+
+	return fmt.Sprintf("Parcel No: %d, SWDel (acre-feet): %s", p.ParcelNo, swString)
+}
+
+func (p *Parcel) RoString() string {
+	var roString string
+	for i, n := range p.Ro {
+		roString += strconv.FormatFloat(n, 'f', 2, 64)
+
+		if i < 11 {
+			roString += ", "
+		}
+	}
+
+	return fmt.Sprintf("Parcel No: %d, RunOff (acre-feet): %s", p.ParcelNo, roString)
+}
+
+func (p *Parcel) DpString() string {
+	var dpString string
+	for i, n := range p.Dp {
+		dpString += strconv.FormatFloat(n, 'f', 2, 64)
+
+		if i < 11 {
+			dpString += ", "
+		}
+	}
+
+	return fmt.Sprintf("Parcel No: %d, DeepPerc (acre-feet): %s", p.ParcelNo, dpString)
+}
+
+func (p *Parcel) pumpString() string {
+	var pString string
+	for i, n := range p.Pump {
+		pString += strconv.FormatFloat(n, 'f', 2, 64)
+
+		if i < 11 {
+			pString += ", "
+		}
+	}
+
+	return fmt.Sprintf("Parcel No: %d, Pumping (acre-feet): %s", p.ParcelNo, pString)
 }
 
 func (p *Parcel) PrintNIR() string {
