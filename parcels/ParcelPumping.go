@@ -22,7 +22,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 	spinner, _ := pterm.DefaultSpinner.Start("Getting Cert Usage and Efficiencies")
 	// cert usage
 	v.Logger.Info("Getting Cert Usage")
-	usage := getUsage(v.PgDb)
+	usage := getUsage(v)
 
 	v.Logger.Info("Getting Efficiencies")
 	efficiencies := database.GetAppEfficiency(v.PgDb)
@@ -72,7 +72,6 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 	for y := v.SYear; y < v.EYear+1; y++ {
 		p.UpdateTitle(fmt.Sprintf("Getting %d Parels", y))
 		parcels = getParcels(v, y)
-		filteredDiversions := conveyLoss.FilterSWDeliveryByYear(swDelivery, y)
 
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel NIR", y))
 		for i := 0; i < len(parcels); i++ {
@@ -90,7 +89,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 
 				// add SW Delivery to the parcels
 				if parcels[ip].Sw.Bool {
-					(&parcels[ip]).parcelSWDelivery(filteredDiversions)
+					(&parcels[ip]).parcelSWDelivery(swDelivery[y])
 				}
 			}(i) // must be a pointer to work
 
@@ -100,8 +99,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 		// add usage to parcel
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
 		v.Logger.Info("Setting Annual Usage")
-		annUsage := filterUsage(usage, y)
-		if err := distUsage(annUsage, &parcels); err != nil {
+		if err := distUsage(usage[y], &parcels); err != nil {
 			return []Parcel{}, err
 		}
 

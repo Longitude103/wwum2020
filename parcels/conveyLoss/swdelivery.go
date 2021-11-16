@@ -4,15 +4,15 @@ import (
 	"github.com/Longitude103/wwum2020/database"
 )
 
-// GetSurfaceWaterDelivery function returns a slice of Diversion that is a monthly amount of surface water delivered to
+// GetSurfaceWaterDelivery function returns a map with a key of year and a value of slice of Diversion that is a monthly amount of surface water delivered to
 // an acre of land. The units of the Diversion are in acre-feet per acre for use in subsequent processes.
-func GetSurfaceWaterDelivery(v *database.Setup) ([]Diversion, error) {
+func GetSurfaceWaterDelivery(v *database.Setup) (map[int][]Diversion, error) {
 	var db *database.SWDelDB
 	var err error
 	if !v.AppDebug {
 		db, err = database.SWDeliveryDB(v.SlDb)
 		if err != nil {
-			return []Diversion{}, err
+			return nil, err
 		}
 	}
 
@@ -42,7 +42,7 @@ func GetSurfaceWaterDelivery(v *database.Setup) ([]Diversion, error) {
 		for i := 0; i < len(diversions); i++ {
 			if err := db.Add(database.SWDelResult{CanalId: diversions[i].CanalId, Dt: diversions[i].DivDate.Time,
 				DelAmount: diversions[i].DivAmount.Float64}); err != nil {
-				return []Diversion{}, err
+				return nil, err
 			}
 		}
 
@@ -50,7 +50,13 @@ func GetSurfaceWaterDelivery(v *database.Setup) ([]Diversion, error) {
 		_ = db.Close()
 	}
 
-	return diversions, nil
+	mapDivs := make(map[int][]Diversion)
+
+	for y := v.SYear; y < v.EYear+1; y++ {
+		mapDivs[y] = FilterSWDeliveryByYear(diversions, y)
+	}
+
+	return mapDivs, nil
 }
 
 // filterCnl filters the list of canals to a specific one.
