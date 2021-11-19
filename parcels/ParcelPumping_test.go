@@ -71,19 +71,23 @@ func Test_ParcelPump(t *testing.T) {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
 	}
 
-	for i, parcel := range irrParcels {
-		v.Logger.Debug(parcel.String())
-		v.Logger.Debug(parcel.NIRString())
-		v.Logger.Debug(strings.Repeat("-", 100))
-		v.Logger.Debug(parcel.SWString())
-		v.Logger.Debug(parcel.pumpString())
-		v.Logger.Debug(strings.Repeat("-", 100))
-		v.Logger.Debug(parcel.RoString())
-		v.Logger.Debug(parcel.DpString())
-		v.Logger.Debug(strings.Repeat("=", 100))
+	i := 0
+	for _, parcel := range irrParcels {
+		if parcel.SwID.Int64 == 2 {
+			i += 1
+			v.Logger.Debug(parcel.String())
+			v.Logger.Debug(parcel.NIRString())
+			v.Logger.Debug(strings.Repeat("-", 100))
+			v.Logger.Debug(parcel.SWString())
+			v.Logger.Debug(parcel.pumpString())
+			v.Logger.Debug(strings.Repeat("-", 100))
+			v.Logger.Debug(parcel.RoString())
+			v.Logger.Debug(parcel.DpString())
+			v.Logger.Debug(strings.Repeat("=", 100))
 
-		if i == 15 {
-			break
+			if i > 15 {
+				break
+			}
 		}
 	}
 

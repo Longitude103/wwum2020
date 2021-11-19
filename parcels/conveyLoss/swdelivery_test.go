@@ -16,7 +16,7 @@ func Test_GetSurfaceWaterDelivery(t *testing.T) {
 	}
 
 	for i, d := range div[v.SYear] {
-		if i > 160 && i < 160 {
+		if i < 60 {
 			d.print()
 		}
 	}

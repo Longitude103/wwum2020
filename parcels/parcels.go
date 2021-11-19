@@ -99,7 +99,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 	}
 
 	if v.AppDebug {
-		return parcels[:10]
+		// return parcels[:10]
 	}
 
 	return parcels
@@ -217,7 +217,7 @@ func (p *Parcel) SWString() string {
 		}
 	}
 
-	return fmt.Sprintf("Parcel No: %d, SWDel (acre-feet): %s", p.ParcelNo, swString)
+	return fmt.Sprintf("Parcel No: %d, SWID: %d, SWDel (acre-feet): %s", p.ParcelNo, p.SwID.Int64, swString)
 }
 
 func (p *Parcel) RoString() string {
