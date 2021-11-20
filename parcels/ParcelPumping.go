@@ -75,7 +75,6 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel NIR", y))
 		for i := 0; i < len(parcels); i++ {
-			// this might be the issue??
 			wg.Add(1)
 			go func(ip int) {
 				defer wg.Done()

@@ -73,7 +73,7 @@ func Test_ParcelPump(t *testing.T) {
 
 	i := 0
 	for _, parcel := range irrParcels {
-		if parcel.SwID.Int64 == 2 {
+		if parcel.ParcelNo == 310 {
 			i += 1
 			v.Logger.Debug(parcel.String())
 			v.Logger.Debug(parcel.NIRString())
