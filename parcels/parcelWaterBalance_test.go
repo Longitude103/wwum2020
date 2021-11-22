@@ -58,11 +58,13 @@ var p12 = Parcel{ParcelNo: 159988, AppEff: 0.65,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
 func TestParcel_WaterBalanceWWSP(t *testing.T) {
+	v := dbConnection()
+
 	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p10.Ro)
 	fmt.Println("Dp is:", p10.Dp)
 
-	err := p10.waterBalanceWSPP(true)
+	err := p10.waterBalanceWSPP(v)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
@@ -74,11 +76,12 @@ func TestParcel_WaterBalanceWWSP(t *testing.T) {
 }
 
 func TestParcel_WaterBalanceWWSP_SWOnly(t *testing.T) {
+	v := dbConnection()
 	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p11.Ro)
 	fmt.Println("Dp is:", p11.Dp)
 
-	err := p11.waterBalanceWSPP(true)
+	err := p11.waterBalanceWSPP(v)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
@@ -89,11 +92,12 @@ func TestParcel_WaterBalanceWWSP_SWOnly(t *testing.T) {
 }
 
 func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
+	v := dbConnection()
 	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p12.Ro)
 	fmt.Println("Dp is:", p12.Dp)
 
-	err := p12.waterBalanceWSPP(true)
+	err := p12.waterBalanceWSPP(v)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}

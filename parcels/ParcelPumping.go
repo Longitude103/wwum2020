@@ -142,7 +142,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 			//	}
 			//}(p)
 
-			err := (&parcels[p]).waterBalanceWSPP(false)
+			err := (&parcels[p]).waterBalanceWSPP(v)
 			if err != nil {
 				v.Logger.Errorf("error in parcel WSPP: %s\n", err)
 				v.Logger.Errorf("Parcel trace: %+v\n", parcels[p])

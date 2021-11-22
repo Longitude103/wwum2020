@@ -4,14 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"math"
+
+	"github.com/Longitude103/wwum2020/database"
 )
 
 // waterBalanceWSPP method takes all the parcel information (SW delivery and GW Pumping) and creates a water balance to
 // determine the amount of Runoff and Deep Percolation that occurs off of each parcel and sets those values within the
 // parcel struct. This uses the methodology that is within the WSPP program.
-func (p *Parcel) waterBalanceWSPP(verbose bool) error {
+func (p *Parcel) waterBalanceWSPP(v *database.Setup) error {
+	// TODO: Change v.AppDebug to v.AppDebug
+
 	girFactor, fsl := setGirFact(p.AppEff)
-	if verbose {
+	if v.AppDebug {
 		fmt.Printf("GIR: %g, fsl: %g\n", girFactor, fsl)
 	}
 
@@ -26,14 +30,14 @@ func (p *Parcel) waterBalanceWSPP(verbose bool) error {
 		return err
 	}
 
-	if verbose {
+	if v.AppDebug {
 		fmt.Println("AppWat:", appWAT)
 		fmt.Println("pslIrr:", pslIrr)
 		fmt.Println("RoDpWt:", roDpWt)
 	}
 
 	ro1, dp1 := setInitialRoDp(p.Ro, p.Dp, 1, 1)
-	if verbose {
+	if v.AppDebug {
 		fmt.Println("RO1:", ro1)
 		fmt.Println("DP1:", dp1)
 	}
@@ -41,7 +45,7 @@ func (p *Parcel) waterBalanceWSPP(verbose bool) error {
 	gainApWat, gainPsl, gainIrrEt, gainDryEt := setPreGain(p.Et, p.DryEt, appWAT, pslIrr)
 	cIR := math.Max(gainIrrEt-gainDryEt, 0.0001)
 	gIR := totalNir * girFactor
-	if verbose {
+	if v.AppDebug {
 		fmt.Printf("gainApWat: %g, gainPsl: %g, gainIrrEt: %g, gainDryEt: %g\n", gainApWat, gainPsl, gainIrrEt, gainDryEt)
 		fmt.Printf("cIR: %g, gIR: %g\n", cIR, gIR)
 	}
@@ -59,7 +63,7 @@ func (p *Parcel) waterBalanceWSPP(verbose bool) error {
 	et := setET(etBase, distGain)
 	deltaET := setDeltaET(et, 0.95)
 
-	if verbose {
+	if v.AppDebug {
 		fmt.Println("etGain:", eTGain)
 		fmt.Println("distGain:", distGain)
 		fmt.Println("EtBase:", etBase)
@@ -68,13 +72,13 @@ func (p *Parcel) waterBalanceWSPP(verbose bool) error {
 	}
 
 	ro3, dp3 := distDeltaET(deltaET, roDpWt)
-	if verbose {
+	if v.AppDebug {
 		fmt.Println("RO3:", ro3)
 		fmt.Println("DP3:", dp3)
 	}
 
 	ro2, dp2 := excessIrrReturnFlow(pslIrr, distGain, roDpWt)
-	if verbose {
+	if v.AppDebug {
 		fmt.Println("RO2:", ro2)
 		fmt.Println("DP2:", dp2)
 	}
