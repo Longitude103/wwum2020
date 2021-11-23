@@ -2,10 +2,11 @@ package conveyLoss
 
 import (
 	"fmt"
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/joho/godotenv"
 	"os"
 	"testing"
+
+	"github.com/Longitude103/wwum2020/database"
+	"github.com/joho/godotenv"
 )
 
 func dbConnection() *database.Setup {
@@ -31,6 +32,8 @@ func dbConnection() *database.Setup {
 
 func Test_getCanals(t *testing.T) {
 	v := dbConnection()
+	v.SYear = 1953
+	v.EYear = 1953
 
 	c, err := getCanals(v)
 	if err != nil {
@@ -38,7 +41,7 @@ func Test_getCanals(t *testing.T) {
 	}
 
 	for _, canal := range c {
-		fmt.Printf("Canal: %+v\n", canal)
+		v.Logger.Debugf("Canal: %+v\n", canal)
 	}
 
 	if len(c) == 0 {

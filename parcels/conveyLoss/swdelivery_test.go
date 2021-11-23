@@ -10,15 +10,16 @@ import (
 func Test_GetSurfaceWaterDelivery(t *testing.T) {
 	v := dbConnection()
 
+	v.SYear = 1953
+	v.EYear = 1953
+
 	div, err := GetSurfaceWaterDelivery(v)
 	if err != nil {
 		t.Errorf("Error Getting SW Delivery: %s", err)
 	}
 
-	for i, d := range div[v.SYear] {
-		if i < 60 {
-			d.print()
-		}
+	for _, d := range div[v.SYear] {
+		v.Logger.Debug(d.printString())
 	}
 }
 
