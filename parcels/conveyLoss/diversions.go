@@ -31,14 +31,15 @@ func (d *Diversion) applyEffAcres(eff float64, acres float64) {
 	d.DivAmount.Float64 = d.DivAmount.Float64 * eff * 1.9835 / acres
 }
 
-func (d *Diversion) print() {
-	fmt.Printf("Canal ID: %d, DivDate: %d-%d, DivAmount: %.3f\n", d.CanalId, d.DivDate.Time.Month(), d.DivDate.Time.Year(), d.DivAmount.Float64)
+func (d *Diversion) printString() string {
+	return fmt.Sprintf("Canal ID: %d, DivDate: %d-%d, DivAmount: %.3f", d.CanalId, d.DivDate.Time.Month(), d.DivDate.Time.Year(), d.DivAmount.Float64)
 }
 
 // getDiversions retrieves the diversions from the pg database and returns a slice of Diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
 // excess flow from the daily diversions based on excess flow periods. Result diversions are in day cfs.
 func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
+	// TODO: Change this to be a map[canalid][]Diversion
 
 	if v.ExcessFlow {
 		divQry := fmt.Sprintf(`select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), 
@@ -146,7 +147,9 @@ group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order b
 
 	}
 
-	return diversions, nil
+	amendedDivs := adjLaramie(diversions)
+
+	return amendedDivs, nil
 }
 
 // Find is a filter function for slice of int in a int
@@ -183,4 +186,45 @@ func monthlyDiversion(dailyDiversion []Diversion, m int, y int, cID int) (mDiver
 		Valid: true}, DivAmount: sql.NullFloat64{Float64: totalDiversion, Valid: true}, CanalId: cID}
 
 	return mDiversion
+}
+
+// adjLaramie fills the diversions for the Laramie portion of the canal when there are no records for the stateline flow. Before this time
+// there are only records for the river diversion in WY. This creates those records by converting the WY diversion amounts to stateline diversions
+// based on the time period percentages from years of overlap.
+func adjLaramie(diversions []Diversion) (amendDivs []Diversion) {
+	for d := 0; d < len(diversions); d++ {
+		if diversions[d].DivDate.Time.Before(time.Date(1981, 1, 1, 0, 0, 0, 0, time.UTC)) && diversions[d].CanalId == 272 {
+			// record that needs to be used to create one for 52200 Laramie
+			amendDivs = append(amendDivs, Diversion{CanalId: 26, DivDate: diversions[d].DivDate, DivAmount: sql.NullFloat64{Valid: true,
+				Float64: laramieCanalFlow(int(diversions[d].DivDate.Time.Month()), diversions[d].DivAmount.Float64)}})
+		} else {
+			amendDivs = append(amendDivs, diversions[d])
+		}
+	}
+
+	return amendDivs
+}
+
+// laramieCanalFlow is a function to recieve a month and flow amount and returns the adjusted diversion at the stateline. This was created by
+// comparing the diversions at the state line with the river diversions by month and creating the percentage that flows into NE. Default is the average
+// of the values in case there are some outliers.
+func laramieCanalFlow(m int, div float64) float64 {
+	remainingFlowPercent := 0.0
+
+	switch m {
+	case 5:
+		remainingFlowPercent = .3597
+	case 6:
+		remainingFlowPercent = .3274
+	case 7:
+		remainingFlowPercent = .4052
+	case 8:
+		remainingFlowPercent = .4127
+	case 9:
+		remainingFlowPercent = 0.4645
+	default:
+		remainingFlowPercent = .3954
+	}
+
+	return remainingFlowPercent * div
 }
