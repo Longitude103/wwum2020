@@ -1,6 +1,8 @@
 package conveyLoss
 
 import (
+	"time"
+
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/pterm/pterm"
 )
@@ -23,6 +25,7 @@ func Conveyance(v *database.Setup) (err error) {
 		return err
 	}
 	spinner.Success()
+	checkDivTotal := 0.0
 
 	p, _ := pterm.DefaultProgressbar.WithTotal(len(canalCells)).WithTitle("Process Canal Cells").WithRemoveWhenDone(true).Start()
 	// loop over cells
@@ -94,13 +97,17 @@ func Conveyance(v *database.Setup) (err error) {
 			//}
 
 			if v.AppDebug {
-				if cell.CanalId == 26 {
+				if cell.Node == 7597 || cell.Node == 7598 || cell.Node == 7601 {
 					v.Logger.Debugf("Div: %+v\n", div)
-					v.Logger.Debugf("StructureLoss: %f, Factor: %f\n", structureLoss, factor)
+					v.Logger.Debugf("Structure Loss Percent: %f, StructureLoss: %f, Factor: %f\n", strLossPercent, structureLoss, factor)
 					v.Logger.Debugf("Cell Data: %+v\n", cell)
 					d := database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,
 						FileType: ft, Result: structureLoss * factor * 1.9835}
 					v.Logger.Debugf("Cell Result: %+v\n", d)
+				}
+
+				if cell.CanalId == 2 && div.DivDate.Time.Equal(time.Date(1953, 4, 1, 0, 0, 0, 0, time.UTC)) {
+					checkDivTotal += structureLoss * factor * 1.9835
 				}
 			} else {
 				if structureLoss > 0 {
@@ -114,6 +121,9 @@ func Conveyance(v *database.Setup) (err error) {
 		}
 	}
 
+	if v.AppDebug {
+		v.Logger.Debugf("Check Total is %f", checkDivTotal)
+	}
 	pterm.Success.Println("Canal Loss Calculations")
 	v.Logger.Info("Canal Loss Completed Successfully")
 	return nil
@@ -129,33 +139,37 @@ func filterCanal(diversions []Diversion, canal int) (canalDiversion []Diversion)
 	return canalDiversion
 }
 
+// getFactor is a function that returns the loss factor of the cell based on the "CFlag" of that cell. I can also give a default value
+// if there is not a flag set or one of the flags is missing.
 func getFactor(cell CanalCell) (factor float64) {
-	switch cell.CFlag {
-	case 1: // DNR Factor
-		if !cell.DnrFact.Valid {
-			factor = defaultFactor(cell)
-		} else {
-			factor = cell.DnrFact.Float64
-		}
-	case 4: // SatThick Factor
-		if !cell.SatFact.Valid {
-			factor = defaultFactor(cell)
-		} else {
-			factor = cell.SatFact.Float64
-		}
-	case 2: // USGS Factor
-		if !cell.UsgsFact.Valid {
-			factor = defaultFactor(cell)
-		} else {
-			factor = cell.UsgsFact.Float64
-		}
-	default: // default
-		factor = defaultFactor(cell)
-	}
+	// switch cell.CFlag {
+	// case 1: // DNR Factor
+	// 	if !cell.DnrFact.Valid {
+	// 		factor = defaultFactor(cell)
+	// 	} else {
+	// 		factor = cell.DnrFact.Float64
+	// 	}
+	// case 4: // SatThick Factor
+	// 	if !cell.SatFact.Valid {
+	// 		factor = defaultFactor(cell)
+	// 	} else {
+	// 		factor = cell.SatFact.Float64
+	// 	}
+	// case 2: // USGS Factor
+	// 	if !cell.UsgsFact.Valid {
+	// 		factor = defaultFactor(cell)
+	// 	} else {
+	// 		factor = cell.UsgsFact.Float64
+	// 	}
+	// default: // default
+	// 	factor = defaultFactor(cell)
+	// }
 
-	return factor
+	return defaultFactor(cell)
 }
 
+// defaultFactor is a function that returns the default factor of the canal which is the portion of the canal length within that
+// cell and or the portion of lateral length within the cell divided by the total lateral length.
 func defaultFactor(cell CanalCell) (factor float64) {
 	if cell.CanalType == "Lateral" || cell.CanalType == "Spill" {
 		factor = cell.StLength / cell.TotalLatLn.Float64
