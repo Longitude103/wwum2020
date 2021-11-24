@@ -2,13 +2,14 @@ package actions
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/Longitude103/wwum2020/rchFiles"
 	"github.com/Longitude103/wwum2020/wells"
 	"github.com/pterm/pterm"
-	"time"
 )
 
 func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, myEnv map[string]string) error {
@@ -146,7 +147,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	pterm.Success.Println("Successfully Completed MI Well Ops")
 
 	_ = v.SlDb.Close() // close the db before ending the program
-	v.Logger.Infof("Model Runtime: %s", time.Now().Sub(timeStart))
+	v.Logger.Infof("Model Runtime: %s", time.Since(timeStart))
 	v.Logger.Info("Model Completed Normally")
 	pterm.Info.Println("Model Completed Normally, check logs for details of run")
 	v.Logger.Close()

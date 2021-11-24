@@ -2,14 +2,15 @@ package actions
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Longitude103/Flogo"
 	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/jmoiron/sqlx"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 func MakeModflowFiles() error {
@@ -64,7 +65,7 @@ func MakeModflowFiles() error {
 		return err
 	}
 
-	for k, _ := range singleWELResults {
+	for k := range singleWELResults {
 		fn := fmt.Sprintf("%sWEL", k)
 		if err := MakeFiles(singleWELResults[k], true, false, fn, path, mDesc); err != nil {
 			return err
@@ -75,7 +76,7 @@ func MakeModflowFiles() error {
 		return err
 	}
 
-	for k, _ := range singleRCHResults {
+	for k := range singleRCHResults {
 		fn := fmt.Sprintf("%sRCH", k)
 		if err := MakeFiles(singleRCHResults[k], false, true, fn, path, mDesc); err != nil {
 			return err

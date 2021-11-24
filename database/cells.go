@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Longitude103/gisUtils"
 	"math"
 	"sort"
+
+	"github.com/Longitude103/gisUtils"
 )
 
 type ModelCell struct {
@@ -56,9 +57,9 @@ func GetCells(v Setup) (cells []ModelCell, err error) {
 		return nil, err
 	}
 
-	if v.AppDebug {
-		return cells[:50], nil
-	}
+	// if v.AppDebug {
+	// 	return cells[:50], nil
+	// }
 
 	return
 }
@@ -83,9 +84,9 @@ func GetCellAreas(v *Setup, y int) (cells []CellIntersect, err error) {
 		return nil, err
 	}
 
-	if v.AppDebug {
-		return cells[6600:6800], nil
-	}
+	// if v.AppDebug {
+	// 	return cells[6600:6800], nil
+	// }
 
 	return cells, nil
 }
