@@ -130,7 +130,7 @@ func (q *QC) rechargeGeoJson() error {
 			if q.Monthly {
 				fc.Properties[mn.String()+"_AF"] = res
 				fc.Properties[mn.String()+"_Feet/Month"] = res / mCells[i].Ac
-				fc.Properties[mn.String()+"_Feet/Day"] = res / mCells[i].Ac / float64(Utils.TimeExt{T: time.Date(q.Year, time.Month(m), 1, 0, 0, 0, 0, time.UTC)}.DaysInMonth())
+				fc.Properties[mn.String()+"_Feet/Day"] = res / mCells[i].Ac / float64(Utils.TimeExt{T: time.Date(q.Year, mn, 1, 0, 0, 0, 0, time.UTC)}.DaysInMonth())
 			}
 			annTotal += res
 		}
