@@ -3,11 +3,13 @@ package qc
 import (
 	"bufio"
 	"fmt"
-	"github.com/paulmach/orb/geojson"
-	"github.com/pterm/pterm"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/Longitude103/wwum2020/Utils"
+	"github.com/paulmach/orb/geojson"
+	"github.com/pterm/pterm"
 )
 
 type rchResults struct {
@@ -126,14 +128,16 @@ func (q *QC) rechargeGeoJson() error {
 			mn := time.Month(m)
 			res := findResult(rResMap[m], mCells[i].Node)
 			if q.Monthly {
-				fc.Properties[mn.String()] = res
-				fc.Properties[mn.String()+"_rate"] = res / mCells[i].Ac
+				fc.Properties[mn.String()+"_AF"] = res
+				fc.Properties[mn.String()+"_Feet/Month"] = res / mCells[i].Ac
+				fc.Properties[mn.String()+"_Feet/Day"] = res / mCells[i].Ac / float64(Utils.TimeExt{T: time.Date(q.Year, time.Month(m), 1, 0, 0, 0, 0, time.UTC)}.DaysInMonth())
 			}
 			annTotal += res
 		}
 
-		fc.Properties["Annual_Total"] = annTotal
-		fc.Properties["AnnTotal_rate"] = annTotal / mCells[i].Ac
+		fc.Properties["AnnTotal_AF"] = annTotal
+		fc.Properties["AnnTotal_Feet/Year"] = annTotal / mCells[i].Ac
+		fc.Properties["AnnTotal_Feet/Day"] = annTotal / mCells[i].Ac / 365.25
 
 		// marshal that item back to json
 		d, err := fc.MarshalJSON()
