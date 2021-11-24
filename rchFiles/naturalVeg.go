@@ -2,11 +2,12 @@ package rchFiles
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
 	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/pterm/pterm"
-	"time"
 )
 
 // NaturalVeg is a function that calculates the area of each cell the is natural vegetation and applies the dryland pasture
@@ -61,6 +62,16 @@ func NaturalVeg(v *database.Setup, wStations []database.WeatherStation,
 					_, roToRch := calcRo(annData.MonthlyData[m].Ro, diffRo, st.Weight, vegArea, aRo, cells[i].GetLossFactor(), perToRch)
 					deepPerc := calcDp(annData.MonthlyData[m].Dp, diffDp, roToRch, st.Weight, vegArea, aDp)
 
+					if v.AppDebug {
+						if m == 6 && cellResult[m].Node == 51763 {
+							v.Logger.Debugf("st: %+v, VegArea: %f, CellLossFactor: %f", st, vegArea, cells[i].GetLossFactor())
+							v.Logger.Debugf("MonthET: %f, MonthRO: %f, MonthDP: %f", annData.MonthlyData[m].Et, annData.MonthlyData[m].Ro, annData.MonthlyData[m].Dp)
+							v.Logger.Debugf("diffRo: %f, diffDp: %f", diffRo, diffDp)
+							v.Logger.Debugf("roToRch: %f", roToRch)
+							v.Logger.Debugf("deepPerc: %f", deepPerc)
+						}
+					}
+
 					cellResult[m].Result += deepPerc
 				}
 			}
@@ -68,14 +79,21 @@ func NaturalVeg(v *database.Setup, wStations []database.WeatherStation,
 			p.UpdateTitle(fmt.Sprintf("Saving %d Natural Veg Save Results", yr))
 			for m := 0; m < 12; m++ {
 				if cellResult[m].Result > 0 {
-					if cells[i].Node == 94418 && m == 6 {
-						fmt.Printf("cellResult: %+v", cellResult[m])
+					if v.AppDebug {
+						if m == 6 && cellResult[m].Node == 51763 {
+							v.Logger.Debugf("Cells Value: %+v", cells[i])
+							v.Logger.Debugf("Distances: %+v", dist)
+							v.Logger.Debugf("etAdj: %f, etAdjToRo: %f, perToRch: %f, aDp: %f, aRo: %f", etAdj, etAdjToRo, perToRch, aDp, aRo)
+							v.Logger.Debugf("Result: %+v", cellResult)
+						}
+						// v.Logger.Debugf("Result: %+v", cellResult)
+					} else {
+						if err := v.RchDb.Add(cellResult[m]); err != nil {
+							v.Logger.Errorf("Error Adding Result to RchDB Buffer, Result: %+v", cellResult)
+							return err
+						}
 					}
 
-					if err := v.RchDb.Add(cellResult[m]); err != nil {
-						v.Logger.Errorf("Error Adding Result to RchDB Buffer, Result: %+v", cellResult)
-						return err
-					}
 				}
 			}
 		}
