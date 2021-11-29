@@ -60,6 +60,7 @@ For help with those functions type: runModel -h or mfFiles -h`
 	rModelCSDir := runModelCmd.String("CSDir", "", "REQUIRED! - CropSim Directory path")
 	rModelEF := runModelCmd.Bool("excessFlow", false, "Sets to use Excess Flow or Not, default = false")
 	rModelDesc := runModelCmd.String("Desc", "", "REQUIRED! - Model Description")
+	rModelP97 := runModelCmd.Bool("p97", false, "If flag set, a post 97 run will be made")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -83,7 +84,7 @@ For help with those functions type: runModel -h or mfFiles -h`
 
 		fmt.Println("Run Full Model")
 
-		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelDesc, *rModelStartY, *rModelEndY, *rModelEF, myEnv); err != nil {
+		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelDesc, *rModelStartY, *rModelEndY, *rModelEF, *rModelP97, myEnv); err != nil {
 			fmt.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}

@@ -21,6 +21,7 @@ type Setup struct {
 	RchDb      *RchDB
 	AppDebug   bool
 	ExcessFlow bool
+	Post97     bool
 	Desc       string
 }
 
@@ -96,6 +97,10 @@ func WithNoSQLite() Option {
 
 func WithDescription(textDesc string) Option {
 	return func(s *Setup) { s.Desc = textDesc }
+}
+
+func WithPost97() Option {
+	return func(s *Setup) { s.Post97 = true }
 }
 
 // SetYears is an initializer method for the Setup struct to set the start and end years of the application run.

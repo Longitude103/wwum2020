@@ -12,7 +12,7 @@ import (
 	"github.com/pterm/pterm"
 )
 
-func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, myEnv map[string]string) error {
+func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, p97 bool, myEnv map[string]string) error {
 	timeStart := time.Now()
 
 	pterm.Info.Println("Setting up results database")
@@ -23,6 +23,10 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 
 	if eF {
 		opts = append(opts, database.WithExcessFlow())
+	}
+
+	if p97 {
+		opts = append(opts, database.WithPost97())
 	}
 
 	v, err := database.NewSetup(myEnv, opts...)
