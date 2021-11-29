@@ -228,3 +228,14 @@ func laramieCanalFlow(m int, div float64) float64 {
 
 	return remainingFlowPercent * div
 }
+
+// FilterDivs function that receives a slice of divs and filters them to a canal that is given as an int
+func FilterDivs(divs []Diversion, canal int) (d []Diversion) {
+	for _, v := range divs {
+		if v.CanalId == canal {
+			d = append(d, v)
+		}
+	}
+
+	return d
+}

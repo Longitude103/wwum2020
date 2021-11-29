@@ -2,6 +2,7 @@ package parcels
 
 import (
 	"database/sql"
+	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
 	"testing"
 )
@@ -88,8 +89,8 @@ func TestPumping_estimatePumping(t *testing.T) {
 		t.Errorf("Should not return error")
 	}
 
-	mayPump := roundTo(p1.Pump[4], 2)
-	junePump := roundTo(p1.Pump[5], 2)
+	mayPump := Utils.RoundTo(p1.Pump[4], 2)
+	junePump := Utils.RoundTo(p1.Pump[5], 2)
 	if mayPump != 2.58 || junePump != 17.06 {
 		t.Errorf("Pumping is not calculated correctly: May got %f, expected 2.58; June got %f, expected 17.06", mayPump, junePump)
 	}

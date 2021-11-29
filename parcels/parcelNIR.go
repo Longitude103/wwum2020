@@ -5,10 +5,10 @@ import (
 	"github.com/Longitude103/wwum2020/fileio"
 )
 
-// parcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.
+// ParcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.
 // It produces an intermediate results table of NIR in local sqlite for review and adds three maps to the parcel struct
 // Values populated by this method are total acre-feet for the parcel
-func (p *Parcel) parcelNIR(v *database.Setup, Year int, wStations []database.WeatherStation,
+func (p *Parcel) ParcelNIR(v *database.Setup, Year int, wStations []database.WeatherStation,
 	csResults map[string][]fileio.StationResults, it IrrType) error {
 	var parcelNIR, parcelRo, parcelDp, parcelEt, parcelDryEt [12]float64
 

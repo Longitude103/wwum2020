@@ -3,9 +3,8 @@ package parcels
 import (
 	"errors"
 	"fmt"
-	"math"
-
 	"github.com/Longitude103/wwum2020/database"
+	"math"
 )
 
 // waterBalanceWSPP method takes all the parcel information (SW delivery and GW Pumping) and creates a water balance to
@@ -110,11 +109,6 @@ func sumAnnual(data [12]float64) (total float64) {
 	}
 
 	return
-}
-
-// roundTo rounds a float number to a specified number of decimal places.
-func roundTo(n float64, decimals uint32) float64 {
-	return math.Round(n*math.Pow(10, float64(decimals))) / math.Pow(10, float64(decimals))
 }
 
 // setAppWat is a function that sets the applied water (appWat), surface loss of water (sL) and

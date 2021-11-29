@@ -18,7 +18,7 @@ func DryLandParcels(v *database.Setup, csResults map[string][]fileio.StationResu
 	v.Logger.Info("Getting Dryland parcels")
 	for y := v.SYear; y < v.EYear+1; y++ {
 		p.UpdateTitle(fmt.Sprintf("Getting %d Dryland Parcels", y))
-		annDryParcels := getDryParcels(v, y)
+		annDryParcels := GetDryParcels(v, y)
 
 		// method is used to set RO and DP, just poorly named.
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Dryland Parcels return flows", y))
@@ -27,7 +27,7 @@ func DryLandParcels(v *database.Setup, csResults map[string][]fileio.StationResu
 			wg.Add(1)
 			go func(d int) {
 				defer wg.Done()
-				err := (&annDryParcels[d]).parcelNIR(v, y, wStations, csResults, DryLand)
+				err := (&annDryParcels[d]).ParcelNIR(v, y, wStations, csResults, DryLand)
 				if err != nil {
 					v.Logger.Errorf("error in dry parcel NIR: %s", err)
 					v.Logger.Errorf("Parcel trace: %+v", annDryParcels[d])

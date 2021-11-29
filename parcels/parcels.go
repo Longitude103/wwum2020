@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Longitude103/wwum2020/database"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
 )
 
@@ -56,9 +56,9 @@ const (
 	DryLand   IrrType = 1
 )
 
-// getParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
+// GetParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
 // can be multiples of the same parcels listed with different soil types. It sets the year into a field in the struct.
-func getParcels(v *database.Setup, Year int) []Parcel {
+func GetParcels(v *database.Setup, Year int) []Parcel {
 	query := fmt.Sprintf(`SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw, subarea,
        irrig_type, sw_fac, first_irr, cert_num::varchar, model_id, sw_id, st_area(i.geom)/43560 area, 'np' nrd,
        st_x(st_transform(st_centroid(i.geom), 4326)) pointx, st_y(st_transform(st_centroid(i.geom), 4326)) pointy,
@@ -105,8 +105,8 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 	return parcels
 }
 
-// filterParcelByCert filters a slice of parcels by the CertNum and returns a slice of the parcels that have that CertNum.
-func filterParcelByCert(p *[]Parcel, c string) (fParcels []int) {
+// FilterParcelByCert filters a slice of parcels by the CertNum and returns a slice of the parcels that have that CertNum.
+func FilterParcelByCert(p *[]Parcel, c string) (fParcels []int) {
 	for i := 0; i < len(*p); i++ {
 		if (*p)[i].CertNum.String == c {
 			fParcels = append(fParcels, i)
@@ -119,7 +119,7 @@ func filterParcelByCert(p *[]Parcel, c string) (fParcels []int) {
 // parcelSWDelivery method uses the diversions to then calculate the total amount of surface water delivered to a parcel
 // from those diversions. It returns nothing, but sets SWDel inside the Parcel
 func (p *Parcel) parcelSWDelivery(diversions []conveyLoss.Diversion) {
-	canalDivs := filterDivs(diversions, int(p.SwID.Int64))
+	canalDivs := conveyLoss.FilterDivs(diversions, int(p.SwID.Int64))
 
 	var swDelivery [12]float64
 	for m := 0; m < 12; m++ {
@@ -133,18 +133,7 @@ func (p *Parcel) parcelSWDelivery(diversions []conveyLoss.Diversion) {
 	p.SWDel = swDelivery
 }
 
-// filterDivs function that receives a slice of divs and filters them to a canal that is given as an int
-func filterDivs(divs []conveyLoss.Diversion, canal int) (d []conveyLoss.Diversion) {
-	for _, v := range divs {
-		if v.CanalId == canal {
-			d = append(d, v)
-		}
-	}
-
-	return d
-}
-
-func getDryParcels(v *database.Setup, Year int) []Parcel {
+func GetDryParcels(v *database.Setup, Year int) []Parcel {
 	query := fmt.Sprintf(`SELECT i.parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov,
        st_area(i.geom)/43560 area, 'np' nrd, st_x(st_transform(st_centroid(i.geom), 4326)) pointx,
        st_y(st_transform(st_centroid(i.geom), 4326)) pointy, sum(st_area(st_intersection(m.geom, i.geom))/43560) s_area,

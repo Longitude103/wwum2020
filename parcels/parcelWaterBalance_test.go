@@ -3,7 +3,7 @@ package parcels
 import (
 	"database/sql"
 	"fmt"
-	"math"
+	"github.com/Longitude103/wwum2020/Utils"
 	"strings"
 	"testing"
 )
@@ -106,14 +106,14 @@ func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
 	fmt.Println("Post Process Dp is:", p12.Dp)
 
 	// need to test July and August
-	if roundTo(p12.Ro[6], 2) != 0.66 || roundTo(p12.Ro[7], 2) != 0.70 {
-		t.Errorf("July RO got %g, expected 0.66", roundTo(p12.Ro[6], 2))
-		t.Errorf("August RO got %g, expected 0.70", roundTo(p12.Ro[7], 2))
+	if Utils.RoundTo(p12.Ro[6], 2) != 0.66 || Utils.RoundTo(p12.Ro[7], 2) != 0.70 {
+		t.Errorf("July RO got %g, expected 0.66", Utils.RoundTo(p12.Ro[6], 2))
+		t.Errorf("August RO got %g, expected 0.70", Utils.RoundTo(p12.Ro[7], 2))
 	}
 
-	if roundTo(p12.Dp[6], 2) != 0.66 || roundTo(p12.Dp[7], 2) != 0.15 {
-		t.Errorf("July DP got %g, expected 0.66", roundTo(p12.Dp[6], 2))
-		t.Errorf("August DP got %g, expected 0.15", roundTo(p12.Dp[7], 2))
+	if Utils.RoundTo(p12.Dp[6], 2) != 0.66 || Utils.RoundTo(p12.Dp[7], 2) != 0.15 {
+		t.Errorf("July DP got %g, expected 0.66", Utils.RoundTo(p12.Dp[6], 2))
+		t.Errorf("August DP got %g, expected 0.15", Utils.RoundTo(p12.Dp[7], 2))
 	}
 	fmt.Println(strings.Repeat("=", 120))
 }
@@ -182,11 +182,11 @@ func TestParcel_setRoDpWt(t *testing.T) {
 func TestParcel_setInitialRoDp(t *testing.T) {
 	ro, dp := setInitialRoDp(p12.Ro, p12.Dp, 1, 1)
 
-	if roundTo(ro[0], 3) != 0.0 || roundTo(ro[1], 3) != 0.0 || roundTo(ro[2], 3) != 0.0 || roundTo(ro[3], 3) != 1.040 {
+	if Utils.RoundTo(ro[0], 3) != 0.0 || Utils.RoundTo(ro[1], 3) != 0.0 || Utils.RoundTo(ro[2], 3) != 0.0 || Utils.RoundTo(ro[3], 3) != 1.040 {
 		t.Errorf("incorrect initial values for RO, should be 0.0, 0.0, 0.0, 1.040... and got %v", ro)
 	}
 
-	if roundTo(dp[0], 3) != 0.0 || roundTo(dp[1], 3) != 0.0 || roundTo(dp[2], 3) != 0.0 || roundTo(dp[5], 3) != 0.390 {
+	if Utils.RoundTo(dp[0], 3) != 0.0 || Utils.RoundTo(dp[1], 3) != 0.0 || Utils.RoundTo(dp[2], 3) != 0.0 || Utils.RoundTo(dp[5], 3) != 0.390 {
 		t.Errorf("incorrect initial values for DP, should be 0.0, 0.0, 0.0, 0.390... and got %v", dp)
 	}
 }
@@ -205,15 +205,6 @@ func TestParcel_setPreGain(t *testing.T) {
 	}
 }
 
-func TestParcel_roundTo(t *testing.T) {
-	pi := math.Pi
-
-	if roundTo(pi, 3) != 3.142 {
-		t.Errorf("round function not working: got %g, expected 3.142", roundTo(pi, 3))
-	}
-
-}
-
 func TestParcel_setEtGain(t *testing.T) {
 	appWat := 6.07
 	psl := 5.76
@@ -228,8 +219,8 @@ func TestParcel_setEtGain(t *testing.T) {
 		t.Error(err)
 	}
 
-	if roundTo(gain, 2) != 3.95 {
-		t.Errorf("error in gain function, got: %g, expected 3.95", roundTo(gain, 2))
+	if Utils.RoundTo(gain, 2) != 3.95 {
+		t.Errorf("error in gain function, got: %g, expected 3.95", Utils.RoundTo(gain, 2))
 	}
 }
 
@@ -244,8 +235,8 @@ func TestParcel_distEtGain(t *testing.T) {
 		t.Error(err)
 	}
 
-	if roundTo(dist[6], 3) != 1.193 || roundTo(dist[7], 3) != 1.686 {
-		t.Errorf("distETGain calculated incorrectly: July %g, expected 1.193; August %g, expected 1.686", roundTo(dist[6], 3), roundTo(dist[7], 3))
+	if Utils.RoundTo(dist[6], 3) != 1.193 || Utils.RoundTo(dist[7], 3) != 1.686 {
+		t.Errorf("distETGain calculated incorrectly: July %g, expected 1.193; August %g, expected 1.686", Utils.RoundTo(dist[6], 3), Utils.RoundTo(dist[7], 3))
 	}
 
 	psl = [12]float64{0, 0, 0, 0, 0.98, 24.794, 35.672, 32.242, 4.9, 0, 0, 0}
@@ -256,8 +247,8 @@ func TestParcel_distEtGain(t *testing.T) {
 		t.Error(err)
 	}
 
-	if roundTo(dist[3], 3) != 0.170 {
-		t.Errorf("distETGain calculated incorrectly when remaining gain present: April %g, expected 0.170", roundTo(dist[3], 3))
+	if Utils.RoundTo(dist[3], 3) != 0.170 {
+		t.Errorf("distETGain calculated incorrectly when remaining gain present: April %g, expected 0.170", Utils.RoundTo(dist[3], 3))
 	}
 }
 
@@ -290,8 +281,8 @@ func TestParcel_setDeltaET(t *testing.T) {
 
 	delta := setDeltaET(etIrr, factor)
 
-	if roundTo(delta[0], 3) != 0.013 || roundTo(delta[5], 3) != 0.244 {
-		t.Errorf("setDeltaET calculated incorrect: Jan delta: %g, expected 0.013; June delat: %g, expected 0.244", roundTo(delta[0], 3), roundTo(delta[5], 3))
+	if Utils.RoundTo(delta[0], 3) != 0.013 || Utils.RoundTo(delta[5], 3) != 0.244 {
+		t.Errorf("setDeltaET calculated incorrect: Jan delta: %g, expected 0.013; June delat: %g, expected 0.244", Utils.RoundTo(delta[0], 3), Utils.RoundTo(delta[5], 3))
 	}
 }
 
@@ -301,12 +292,12 @@ func TestParcel_distDeltaET(t *testing.T) {
 
 	ro, dp := distDeltaET(deltaET, roDpWt)
 
-	if roundTo(ro[3], 3) != 0.056 || roundTo(ro[5], 3) != 0.208 {
-		t.Errorf("distDeltaET calculated RO incorrect: April: %g, expected 0.056; Jun: %g, expected 0.208", roundTo(ro[3], 3), roundTo(ro[5], 3))
+	if Utils.RoundTo(ro[3], 3) != 0.056 || Utils.RoundTo(ro[5], 3) != 0.208 {
+		t.Errorf("distDeltaET calculated RO incorrect: April: %g, expected 0.056; Jun: %g, expected 0.208", Utils.RoundTo(ro[3], 3), Utils.RoundTo(ro[5], 3))
 	}
 
-	if roundTo(dp[3], 3) != 0.014 || roundTo(dp[5], 3) != 0.052 {
-		t.Errorf("distDeltaET calculated DP incorrect: April: %g, expected 0.014; Jun: %g, expected 0.052", roundTo(dp[3], 3), roundTo(dp[5], 3))
+	if Utils.RoundTo(dp[3], 3) != 0.014 || Utils.RoundTo(dp[5], 3) != 0.052 {
+		t.Errorf("distDeltaET calculated DP incorrect: April: %g, expected 0.014; Jun: %g, expected 0.052", Utils.RoundTo(dp[3], 3), Utils.RoundTo(dp[5], 3))
 	}
 }
 
@@ -317,12 +308,12 @@ func TestParcel_excessIrrReturnFlow(t *testing.T) {
 
 	ro, dp := excessIrrReturnFlow(psl, etGain, roDpWt)
 
-	if roundTo(ro[6], 3) != 0.515 || roundTo(ro[7], 3) != 0.416 {
-		t.Errorf("excessIrrReturnFlow RO calculated incorrect: July %g, expected 0.515; Aug %g, expected 0.416", roundTo(ro[6], 3), roundTo(ro[7], 3))
+	if Utils.RoundTo(ro[6], 3) != 0.515 || Utils.RoundTo(ro[7], 3) != 0.416 {
+		t.Errorf("excessIrrReturnFlow RO calculated incorrect: July %g, expected 0.515; Aug %g, expected 0.416", Utils.RoundTo(ro[6], 3), Utils.RoundTo(ro[7], 3))
 	}
 
-	if roundTo(dp[6], 3) != 0.515 || roundTo(dp[7], 3) != 0.104 {
-		t.Errorf("excessIrrReturnFlow DP calculated incorrect: July %g, expected 0.515; Aug %g, expected 0.104", roundTo(dp[6], 3), roundTo(dp[7], 3))
+	if Utils.RoundTo(dp[6], 3) != 0.515 || Utils.RoundTo(dp[7], 3) != 0.104 {
+		t.Errorf("excessIrrReturnFlow DP calculated incorrect: July %g, expected 0.515; Aug %g, expected 0.104", Utils.RoundTo(dp[6], 3), Utils.RoundTo(dp[7], 3))
 	}
 
 }

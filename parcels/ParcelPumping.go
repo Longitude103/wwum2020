@@ -71,14 +71,14 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 
 	for y := v.SYear; y < v.EYear+1; y++ {
 		p.UpdateTitle(fmt.Sprintf("Getting %d Parels", y))
-		parcels = getParcels(v, y)
+		parcels = GetParcels(v, y)
 
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel NIR", y))
 		for i := 0; i < len(parcels); i++ {
 			wg.Add(1)
 			go func(ip int) {
 				defer wg.Done()
-				err := (&parcels[ip]).parcelNIR(v, y, wStations, csResults, Irrigated)
+				err := (&parcels[ip]).ParcelNIR(v, y, wStations, csResults, Irrigated)
 				if err != nil {
 					v.Logger.Errorf("Parcel NIR Error: %s", err)
 					v.Logger.Errorf("Parcel Trace: %+v", parcels[ip])
@@ -160,7 +160,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 func distUsage(annUsage []Usage, parcels *[]Parcel) error {
 	for _, u := range annUsage {
 		// filter parcels to this usage cert
-		filteredParcels := filterParcelByCert(parcels, u.CertNum)
+		filteredParcels := FilterParcelByCert(parcels, u.CertNum)
 
 		totalNIR := 0.0
 		totalMonthlyNIR := [12]float64{}

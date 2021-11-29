@@ -1,6 +1,7 @@
 package parcels
 
 import (
+	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/fileio"
 	"testing"
 )
@@ -16,9 +17,9 @@ func TestParcel_pValues(t *testing.T) {
 
 	v := pValues(p1.Nir, crops, cCoverage, 0.5, 10)
 
-	v1 := roundTo(v[4], 2)
-	v2 := roundTo(v[5], 2)
-	v3 := roundTo(v[6], 2)
+	v1 := Utils.RoundTo(v[4], 2)
+	v2 := Utils.RoundTo(v[5], 2)
+	v3 := Utils.RoundTo(v[6], 2)
 
 	if v1 != 1.02 || v2 != 2.06 || v3 != 4.33 {
 		t.Errorf("Error with pValues: got %f, expected 1.02; got %f, expected 2.06; got %f, expected 4.33", v1, v2, v3)

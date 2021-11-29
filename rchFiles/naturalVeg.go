@@ -2,11 +2,11 @@ package rchFiles
 
 import (
 	"fmt"
+	"github.com/Longitude103/wwum2020/parcels"
 	"time"
 
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
-	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/pterm/pterm"
 )
 
