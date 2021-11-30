@@ -43,6 +43,26 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 		return err
 	}
 
+	noteDb, err := database.ResultsNoteDB(v.SlDb)
+	if err != nil {
+		return err
+	}
+
+	sYearNote := fmt.Sprintf("Start Year: %d", v.SYear)
+	eYearNote := fmt.Sprintf("End Year: %d", v.EYear)
+	if err := noteDb.Add(database.Note{Nt: sYearNote}); err != nil {
+		return err
+	}
+	if err := noteDb.Add(database.Note{Nt: eYearNote}); err != nil {
+		return err
+	}
+
+	if v.Post97 {
+		if err := noteDb.Add(database.Note{Nt: "In Post 97 Mode"}); err != nil {
+			return err
+		}
+	}
+
 	spinnerSuccess, _ := pterm.DefaultSpinner.Start("Reading CropSim Results files")
 	csResults, err := fileio.LoadTextFiles(*CSDir, v.Logger)
 	if err != nil {
