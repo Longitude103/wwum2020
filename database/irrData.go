@@ -20,8 +20,10 @@ type IrrCell struct {
 // GetCellsIrr gets the cells that have irrigation within them and splits them by parcel. If a cell has multiple parcels
 // there will be multiples of the same cell listed. This includes both nrd irrigated acres.
 func GetCellsIrr(v *Setup, yr int) ([]IrrCell, error) {
-	if v.Post97 {
-		return GetCellsIrrPost97(v, yr)
+	if yr > 1996 {
+		if v.Post97 {
+			return GetCellsIrrPost97(v, yr)
+		}
 	}
 
 	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, 
