@@ -50,6 +50,10 @@ type MIPumping struct {
 // GetWellParcels is a function that gets all the well parcel junction table values and creates one struct from them
 // and also includes the year of the join as well as the nrd.
 func GetWellParcels(v *Setup) ([]WellParcel, error) {
+	if v.Post97 {
+		return GetWellParcelsPost97(v)
+	}
+
 	const query = "select parcel_id, wellid, nrd, yr from public.alljct();"
 
 	var wellParcels []WellParcel
@@ -63,6 +67,55 @@ func GetWellParcels(v *Setup) ([]WellParcel, error) {
 	}
 
 	return wellParcels, nil
+}
+
+// GetWellParcelsPost97 is a function that gets all the well parcel junction table values and creates one struct from them
+// and also includes the year of the join as well as the nrd but replaces any GWO parcels with the 1997 GWO parcels.
+func GetWellParcelsPost97(v *Setup) ([]WellParcel, error) {
+	pre97queryFormatString := `select parcel_id, wellid, 'np' nrd, %d yr from np.t%d_jct union all
+								select parcel_id, wellid, 'sp' nrd, %d yr from sp.t%d_jct;`
+
+	var wellParcels97GWO []WellParcel
+	// query to get 1997 GWO parcel well relationships
+	gwo97Query := "select j.parcel_id, j.wellid, 'np' nrd, 1997 yr from np.t1997_jct j inner join (select parcel_id from np.t1997_irr where sw = false and gw = true) gwo on gwo.parcel_id = j.parcel_id union all select j.parcel_id, j.wellid, 'sp' nrd, 1997 yr from sp.t1997_jct j inner join (select parcel_id from sp.t1997_irr where sw = false and gw = true) gwo on gwo.parcel_id = j.parcel_id;"
+	if err := v.PgDb.Select(&wellParcels97GWO, gwo97Query); err != nil {
+		fmt.Println("Err: ", err)
+		return nil, errors.New("error getting 97 Ground water only parcel wells from db function")
+	}
+
+	var allWellParcels []WellParcel
+	for yr := v.SYear; yr < v.EYear+1; yr++ {
+		var qry string
+		var wellParcels []WellParcel
+		if yr < 1998 {
+			qry = fmt.Sprintf(pre97queryFormatString, yr, yr, yr, yr)
+
+			if err := v.PgDb.Select(&wellParcels, qry); err != nil {
+				fmt.Println("Err: ", err)
+				return wellParcels, errors.New("error getting parcel wells from db function")
+			}
+		} else {
+			coMingledQuery := fmt.Sprintf(`select j.parcel_id, j.wellid, 'np' nrd, %d yr from np.t%d_jct j inner join (select parcel_id from np.t%d_irr where sw = true and gw = true) gwo on gwo.parcel_id = j.parcel_id
+													union all
+ 												  select j.parcel_id, j.wellid, 'sp' nrd, %d yr from sp.t%d_jct j inner join (select parcel_id from sp.t%d_irr where sw = true and gw = true) gwo on gwo.parcel_id = j.parcel_id;`, yr, yr, yr, yr, yr, yr)
+
+			if err := v.PgDb.Select(&wellParcels, coMingledQuery); err != nil {
+				fmt.Println("Err: ", err)
+				return wellParcels, errors.New("error getting parcel wells from db function")
+			}
+
+			for i := 0; i < len(wellParcels97GWO); i++ {
+				modWellParcel := wellParcels97GWO[i]
+				modWellParcel.Yr = yr
+
+				wellParcels = append(wellParcels, modWellParcel)
+			}
+		}
+
+		allWellParcels = append(allWellParcels, wellParcels...)
+	}
+
+	return allWellParcels, nil
 }
 
 // GetWellNode is a function that gets the wellid, regno and node number of the well so that we can add a location to
