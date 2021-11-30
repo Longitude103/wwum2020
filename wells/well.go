@@ -2,6 +2,7 @@ package wells
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/pterm/pterm"
@@ -44,7 +45,7 @@ func WriteWELResults(v *database.Setup, parcels *[]parcels.Parcel) error {
 			// can be one or multiple wells
 			for _, w := range wls {
 				if welResult, err = addToResults(wellNode, welResult, w, (*parcels)[p], count); err != nil {
-					v.Logger.Errorf("Error adding results %s for well %d", err, w)
+					v.Logger.Errorf("Error adding results %s for well %d, parcel %+v", err, w, (*parcels)[p])
 					return err
 				}
 			}
@@ -95,7 +96,7 @@ func getNode(wellNodes []database.WellNode, well int, nrd string) (int, error) {
 		}
 	}
 
-	return 0, errors.New("no well found in getNode")
+	return 0, errors.New(fmt.Sprintf("no well found in getNode, well: %d, nrd: %s", well, nrd))
 }
 
 // addToResults is the function that creates another result from the parcel and adds to the result slice.
