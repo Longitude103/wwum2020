@@ -37,7 +37,7 @@ func MunicipalIndWells(v *database.Setup) error {
 			}
 		}
 
-		if yr >= 1997 {
+		if yr > 1997 {
 			if v.Post97 {
 				for _, well := range wells {
 					if well.Stop97 == false && well.Start97 == false {

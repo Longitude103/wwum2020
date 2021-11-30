@@ -37,7 +37,7 @@ func IrrigationRCH(v *database.Setup, AllParcels []parcels.Parcel, cCData []data
 		for i := 0; i < len(irrCells); i++ {
 			p, err := parcelFilterById(parcelList, irrCells[i].ParcelId, irrCells[i].Nrd)
 			if err != nil {
-				v.Logger.Errorf("parcelFilterById error for parcel Id: %d, and nrd: %s", irrCells[i].ParcelId, irrCells[i].Nrd)
+				v.Logger.Errorf("parcelFilterById error for parcel Id: %d, year: %d, and nrd: %s", irrCells[i].ParcelId, y, irrCells[i].Nrd)
 				return err
 			}
 			fileType, err := assignRCHType(p.Nrd, p.Sw.Bool, p.Gw.Bool, post97(p.FirstIrr.Int64))

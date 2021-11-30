@@ -20,7 +20,7 @@ type IrrCell struct {
 // GetCellsIrr gets the cells that have irrigation within them and splits them by parcel. If a cell has multiple parcels
 // there will be multiples of the same cell listed. This includes both nrd irrigated acres.
 func GetCellsIrr(v *Setup, yr int) ([]IrrCell, error) {
-	if yr > 1996 {
+	if yr > 1997 {
 		if v.Post97 {
 			return GetCellsIrrPost97(v, yr)
 		}

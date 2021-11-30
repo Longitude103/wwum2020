@@ -111,7 +111,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 func get97GWOParcels(v *database.Setup, Year int) []Parcel {
 	query := "SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, " +
 		"d.crop_int crop4, crop4_cov, sw, gw, subarea, irrig_type, sw_fac, first_irr, cert_num::varchar, model_id, sw_id, " +
-		"st_area(i.geom)/43560 area, 'np' nrd,\n       st_x(st_transform(st_centroid(i.geom), 4326)) pointx, " +
+		"st_area(i.geom)/43560 area, 'np' nrd, st_x(st_transform(st_centroid(i.geom), 4326)) pointx, " +
 		"st_y(st_transform(st_centroid(i.geom), 4326)) pointy, sum(st_area(st_intersection(m.geom, i.geom))/43560) " +
 		"s_area, m.soil_code, m.coeff_zone FROM np.t1997_irr i inner join public.model_cells m on st_intersects(i.geom, m.geom) " +
 		"LEFT join public.crops a on crop1 = a.crop_name LEFT join public.crops b on crop2 = b.crop_name " +
@@ -126,7 +126,7 @@ func get97GWOParcels(v *database.Setup, Year int) []Parcel {
 		"crop4_cov, sw, gw, subarea, irr_type as irrig_type, sw_fac, first_irr, i.id as cert_num, null as model_id, " +
 		"sw_id, st_area(i.geom)/43560 area, 'sp' nrd, st_x(st_transform(st_centroid(i.geom), 4326)) pointx, " +
 		"st_y(st_transform(st_centroid(i.geom), 4326)) pointy, sum(st_area(st_intersection(m.geom, i.geom))/43560) " +
-		"s_area, m.soil_code, m.coeff_zone\nFROM sp.t1997_irr i inner join public.model_cells m on st_intersects(i.geom, m.geom) " +
+		"s_area, m.soil_code, m.coeff_zone FROM sp.t1997_irr i inner join public.model_cells m on st_intersects(i.geom, m.geom) " +
 		"LEFT join public.crops a on crop1 = a.crop_name LEFT join public.crops b on crop2 = b.crop_name " +
 		"LEFT join public.crops c on crop3 = c.crop_name LEFT join public.crops d on crop4 = d.crop_name " +
 		"WHERE sw = false and gw = true GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, " +
