@@ -142,6 +142,7 @@ func get97GWOParcels(v *database.Setup, Year int) []Parcel {
 
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = Year
+		parcels[i].ParcelNo = parcels[i].ParcelNo + 30000 // was having duplicates, now will be unique
 		parcels[i].changeFallow()
 		parcels[i].noCropCheck()
 	}

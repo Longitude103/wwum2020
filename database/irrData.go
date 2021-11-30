@@ -73,7 +73,7 @@ from public.model_cells c
 	}
 
 	query97GWO := `SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area,
-       parcel_id, nrd
+       parcel_id + 30000 as parcel_id, nrd
 from public.model_cells c
     inner join (SELECT parcel_id, 'np' nrd, geom
     from np.t1997_irr where sw = false and gw = true

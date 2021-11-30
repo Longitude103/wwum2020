@@ -77,7 +77,10 @@ func GetWellParcelsPost97(v *Setup) ([]WellParcel, error) {
 
 	var wellParcels97GWO []WellParcel
 	// query to get 1997 GWO parcel well relationships
-	gwo97Query := "select j.parcel_id, j.wellid, 'np' nrd, 1997 yr from np.t1997_jct j inner join (select parcel_id from np.t1997_irr where sw = false and gw = true) gwo on gwo.parcel_id = j.parcel_id union all select j.parcel_id, j.wellid, 'sp' nrd, 1997 yr from sp.t1997_jct j inner join (select parcel_id from sp.t1997_irr where sw = false and gw = true) gwo on gwo.parcel_id = j.parcel_id;"
+	gwo97Query := `select j.parcel_id + 30000 as parcel_id, j.wellid, 'np' nrd, 1997 yr from np.t1997_jct j inner join (select parcel_id from np.t1997_irr where sw = false and gw = true) gwo on gwo.parcel_id = j.parcel_id 
+					union all 
+				   select j.parcel_id + 30000 as parcel_id, j.wellid, 'sp' nrd, 1997 yr from sp.t1997_jct j inner join (select parcel_id from sp.t1997_irr where sw = false and gw = true) gwo on gwo.parcel_id = j.parcel_id;`
+
 	if err := v.PgDb.Select(&wellParcels97GWO, gwo97Query); err != nil {
 		fmt.Println("Err: ", err)
 		return nil, errors.New("error getting 97 Ground water only parcel wells from db function")
