@@ -78,13 +78,15 @@ func TestPumping_adjustmentFactor(t *testing.T) {
 }
 
 func TestPumping_estimatePumping(t *testing.T) {
+	v := dbConnection()
+
 	//zero pumping
 	p1.Pump = [12]float64{}
 	// alter NIR
 	p1.Nir = [12]float64{0, 0, 0, 0, 3, 25, 40, 45, 20, 0, 0, 0}
 	p1.Subarea = sql.NullString{String: "FA", Valid: true}
 
-	err := p1.estimatePumping(cCrops)
+	err := p1.estimatePumping(v, cCrops)
 	if err != nil {
 		t.Errorf("Should not return error")
 	}
@@ -95,8 +97,23 @@ func TestPumping_estimatePumping(t *testing.T) {
 		t.Errorf("Pumping is not calculated correctly: May got %f, expected 2.58; June got %f, expected 17.06", mayPump, junePump)
 	}
 
-	err = p2.estimatePumping(cCrops)
-	if err == nil {
-		t.Errorf("should return an error with this test parcel")
+	// testing that it doesn't estimate for parcels after 2016
+	p3.Yr = 2017
+	_ = p3.estimatePumping(v, cCrops)
+	want := 2.34
+	got := Utils.RoundTo(p3.Pump[6], 2)
+
+	if want != got {
+		t.Errorf("Wanted Pumping %f (shouldn't have changed), Got Pumping %f", want, got)
+	}
+
+	// testing post97 settings
+	v.Post97 = true
+	_ = p3.estimatePumping(v, cCrops)
+	want = 7.66
+	got = Utils.RoundTo(p3.Pump[6], 2)
+
+	if want != got {
+		t.Errorf("Wanted Pumping %f, Got Pumping %f", want, got)
 	}
 }

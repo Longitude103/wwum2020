@@ -107,7 +107,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
 			if (&parcels[p]).Gw.Bool {
-				if err := (&parcels[p]).estimatePumping(cCrops); err != nil {
+				if err := (&parcels[p]).estimatePumping(v, cCrops); err != nil {
 					return []Parcel{}, err
 				}
 			}

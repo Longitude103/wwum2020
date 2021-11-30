@@ -98,8 +98,52 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 		parcels[i].noCropCheck()
 	}
 
-	if v.AppDebug {
-		// return parcels[:10]
+	if Year > 1997 && v.Post97 {
+		p97GWO := get97GWOParcels(v, Year)
+		parcels = parcelsPost97(parcels, p97GWO)
+	}
+
+	return parcels
+}
+
+// get97GWOParcels returns a list of groundwater only parcels with crops irrigation types and areas. Returns data for both nrds. There
+// can be multiples of the same parcels listed with different soil types. It sets the year into a field in the struct.
+func get97GWOParcels(v *database.Setup, Year int) []Parcel {
+	query := "SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, " +
+		"d.crop_int crop4, crop4_cov, sw, gw, subarea, irrig_type, sw_fac, first_irr, cert_num::varchar, model_id, sw_id, " +
+		"st_area(i.geom)/43560 area, 'np' nrd,\n       st_x(st_transform(st_centroid(i.geom), 4326)) pointx, " +
+		"st_y(st_transform(st_centroid(i.geom), 4326)) pointy, sum(st_area(st_intersection(m.geom, i.geom))/43560) " +
+		"s_area, m.soil_code, m.coeff_zone FROM np.t1997_irr i inner join public.model_cells m on st_intersects(i.geom, m.geom) " +
+		"LEFT join public.crops a on crop1 = a.crop_name LEFT join public.crops b on crop2 = b.crop_name " +
+		"LEFT join public.crops c on crop3 = c.crop_name LEFT join public.crops d on crop4 = d.crop_name " +
+		"WHERE sw = false and gw = true GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, " +
+		"c.crop_int, crop3_cov, d.crop_int, crop4_cov, sw, gw, irrig_type, sw_fac, cert_num::varchar, model_id, st_area(i.geom)/43560, " +
+		"st_x(st_transform(st_centroid(i.geom), 4326)), st_y(st_transform(st_centroid(i.geom), 4326)), m.soil_code, " +
+		"crop1_cov, crop2, crop2_cov, crop3, crop3_cov, crop4, crop4_cov, sw, gw, irrig_type, sw_fac, first_irr, " +
+		"cert_num::varchar, model_id, st_area(i.geom)/43560, st_x(st_transform(st_centroid(i.geom), 4326)), " +
+		"st_y(st_transform(st_centroid(i.geom), 4326)), nrd, m.soil_code, m.coeff_zone UNION ALL SELECT parcel_id, " +
+		"a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, " +
+		"crop4_cov, sw, gw, subarea, irr_type as irrig_type, sw_fac, first_irr, i.id as cert_num, null as model_id, " +
+		"sw_id, st_area(i.geom)/43560 area, 'sp' nrd, st_x(st_transform(st_centroid(i.geom), 4326)) pointx, " +
+		"st_y(st_transform(st_centroid(i.geom), 4326)) pointy, sum(st_area(st_intersection(m.geom, i.geom))/43560) " +
+		"s_area, m.soil_code, m.coeff_zone\nFROM sp.t1997_irr i inner join public.model_cells m on st_intersects(i.geom, m.geom) " +
+		"LEFT join public.crops a on crop1 = a.crop_name LEFT join public.crops b on crop2 = b.crop_name " +
+		"LEFT join public.crops c on crop3 = c.crop_name LEFT join public.crops d on crop4 = d.crop_name " +
+		"WHERE sw = false and gw = true GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, " +
+		"c.crop_int, crop3_cov, d.crop_int, crop4_cov, sw, gw, irrig_type, sw_fac, first_irr, i.id, model_id, " +
+		"st_area(i.geom)/43560, st_x(st_transform(st_centroid(i.geom), 4326)), " +
+		"st_y(st_transform(st_centroid(i.geom), 4326)), nrd, m.soil_code, m.coeff_zone;"
+
+	var parcels []Parcel
+	err := v.PgDb.Select(&parcels, query)
+	if err != nil {
+		v.Logger.Errorf("Error in getting parcels for year %d, error: %s", Year, err)
+	}
+
+	for i := 0; i < len(parcels); i++ {
+		parcels[i].Yr = Year
+		parcels[i].changeFallow()
+		parcels[i].noCropCheck()
 	}
 
 	return parcels
@@ -133,6 +177,7 @@ func (p *Parcel) parcelSWDelivery(diversions []conveyLoss.Diversion) {
 	p.SWDel = swDelivery
 }
 
+// GetDryParcels is a function that returns a slice of Parcel for a year of the dryland only parcels in the model.
 func GetDryParcels(v *database.Setup, Year int) []Parcel {
 	query := fmt.Sprintf(`SELECT i.parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov,
        st_area(i.geom)/43560 area, 'np' nrd, st_x(st_transform(st_centroid(i.geom), 4326)) pointx,
@@ -179,10 +224,12 @@ GROUP BY i.parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c
 	return parcels
 }
 
+// String is a method of the parcel to return a string of data about the parcel for identification
 func (p *Parcel) String() string {
 	return fmt.Sprintf("Parcel No: %d, NRD: %s, Year: %d, Area: %.2f, SWFac: %s, SWID: %d, IrrType: %s, Soil: %d, Coeff: %d AppEff: %.2f", p.ParcelNo, p.Nrd, p.Yr, p.Area, p.SwFac.String, p.SwID.Int64, p.IrrType.String, p.SoilCode, p.CoeffZone, p.AppEff)
 }
 
+// NIRString is a method to return the string of the NIR values and parcel number
 func (p *Parcel) NIRString() string {
 	var nirString string
 	for i, n := range p.Nir {
@@ -196,6 +243,7 @@ func (p *Parcel) NIRString() string {
 	return fmt.Sprintf("Parcel No: %d, NIR (acre-feet): %s", p.ParcelNo, nirString)
 }
 
+// SWString is a method to return a string of data of the surface water delivery and canal id of a parcel
 func (p *Parcel) SWString() string {
 	var swString string
 	for i, n := range p.SWDel {
@@ -209,6 +257,7 @@ func (p *Parcel) SWString() string {
 	return fmt.Sprintf("Parcel No: %d, SWID: %d, SWDel (acre-feet): %s", p.ParcelNo, p.SwID.Int64, swString)
 }
 
+// RoString is a method to return a string of formatted data of the runoff data of a parcel
 func (p *Parcel) RoString() string {
 	var roString string
 	for i, n := range p.Ro {
@@ -222,6 +271,7 @@ func (p *Parcel) RoString() string {
 	return fmt.Sprintf("Parcel No: %d, RunOff (acre-feet): %s", p.ParcelNo, roString)
 }
 
+// DpString is a method to return a string of formatted data of the deep percolation data of a parcel
 func (p *Parcel) DpString() string {
 	var dpString string
 	for i, n := range p.Dp {
@@ -235,6 +285,7 @@ func (p *Parcel) DpString() string {
 	return fmt.Sprintf("Parcel No: %d, DeepPerc (acre-feet): %s", p.ParcelNo, dpString)
 }
 
+// pumpString is a method to return a string of data of the pumping
 func (p *Parcel) pumpString() string {
 	var pString string
 	for i, n := range p.Pump {
@@ -248,6 +299,7 @@ func (p *Parcel) pumpString() string {
 	return fmt.Sprintf("Parcel No: %d, Pumping (acre-feet): %s", p.ParcelNo, pString)
 }
 
+// PrintNIR is a method to return a string of the NIR of the parcel into a readable format
 func (p *Parcel) PrintNIR() string {
 	str := strings.Builder{}
 
@@ -261,6 +313,7 @@ func (p *Parcel) PrintNIR() string {
 	return str.String()
 }
 
+// GetXY is a method that returns the x and y coordinates of the centroid of the parcel
 func (p *Parcel) GetXY() (x float64, y float64) {
 	return p.PointX, p.PointY
 }
@@ -307,6 +360,8 @@ func (p *Parcel) SetWelFileType() (fileType int, err error) {
 	return 0, errors.New("could not determine file type")
 }
 
+// changeFallow is a method that changes any parcel with fallow to winter wheat as fallow is already built into winter wheat
+// and rotates in that data.
 func (p *Parcel) changeFallow() {
 	if p.Crop1.Int64 == 15 {
 		p.Crop1.Int64 = 12
@@ -325,6 +380,8 @@ func (p *Parcel) changeFallow() {
 	}
 }
 
+// noCropCheck is a method to ensure that the parcel includes a crop to prevent errors in subsequent processes. It defaults
+// a parcel to all corn if there is no crop present
 func (p *Parcel) noCropCheck() {
 	cropT := p.Crop1.Int64 + p.Crop2.Int64 + p.Crop3.Int64 + p.Crop4.Int64
 
@@ -334,4 +391,15 @@ func (p *Parcel) noCropCheck() {
 		p.Crop1Cov.Float64 = 1.0
 		p.Crop1Cov.Valid = true
 	}
+}
+
+// isGWO is a method that returns a bool if the parcel is groundwater only
+func (p Parcel) isGWO() bool {
+	if p.Gw.Valid && p.Gw.Bool == true {
+		if p.Sw.Valid == false || p.Sw.Bool == false {
+			return true
+		}
+	}
+
+	return false
 }

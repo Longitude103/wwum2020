@@ -8,15 +8,13 @@ import (
 
 // estimatePumping is a method that is called on parcels that shouldEstimate == true so that we can estimate
 // the amount of pumping that was done at the parcel since a well is present, but not metered. It fills the Pump field of the Parcel struct
-func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) error {
-
-	if se, err := p.shouldEstimate(); err != nil || se {
+func (p *Parcel) estimatePumping(v *database.Setup, cCrops []database.CoeffCrop) error {
+	if se, err := p.shouldEstimate(v.Post97); err != nil || se {
 		nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
 		if err != nil {
-			return err
+			v.Logger.Errorf("Error in Parcel: %d Adjustment Factor: %s", p.ParcelNo, err)
 		}
 
-		// get application efficiency
 		var swAvailableCU, nirRemaining [12]float64
 		if p.Sw.Bool {
 			for i := 0; i < 12; i++ {
@@ -35,12 +33,19 @@ func (p *Parcel) estimatePumping(cCrops []database.CoeffCrop) error {
 		return nil
 	}
 
+	// shouldn't estimate
 	return nil
 }
 
 // shouldEstimate is a method that determines if the parcel should estimate pumping or if the pumping should not be estimated
 // as it will have a pumping value assigned from the data.
-func (p *Parcel) shouldEstimate() (bool, error) {
+func (p *Parcel) shouldEstimate(p97 bool) (bool, error) {
+	if p97 {
+		if p.isGWO() {
+			return true, nil
+		}
+	}
+
 	if p.Nrd == "np" { // NPNRD parcel
 		if p.Yr > 2016 {
 			return false, nil

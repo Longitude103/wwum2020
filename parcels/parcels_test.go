@@ -123,3 +123,13 @@ func TestParcel_noCropCheck(t *testing.T) {
 		t.Errorf("noCropCheck failed, crop should be 8 but got %d, crop coverage should be 1.0 but got %f", p3.Crop1.Int64, p3.Crop1Cov.Float64)
 	}
 }
+
+func Test_isGWO(t *testing.T) {
+	if p1.isGWO() {
+		t.Error("Parcel 1 is Not Ground water only and returned as it is Groundwater only")
+	}
+
+	if !p3.isGWO() {
+		t.Error("Parcel 3 is Ground Water only but returned that is wasn't Groundwater only")
+	}
+}
