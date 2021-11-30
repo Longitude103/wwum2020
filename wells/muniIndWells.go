@@ -38,13 +38,25 @@ func MunicipalIndWells(v *database.Setup) error {
 		}
 
 		if yr >= 1997 {
-			for _, well := range wells {
-				if well.Stop97 == false && well.Start97 == false {
-					wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
-				}
+			if v.Post97 {
+				for _, well := range wells {
+					if well.Stop97 == false && well.Start97 == false {
+						wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: 1997})...)
+					}
 
-				if well.Start97 {
-					wlResult = append(wlResult, pumpMIWell(well, Utils.TimeExt{Y: yr})...)
+					if well.Start97 {
+						wlResult = append(wlResult, pumpMIWell(well, Utils.TimeExt{Y: 1997})...)
+					}
+				}
+			} else {
+				for _, well := range wells {
+					if well.Stop97 == false && well.Start97 == false {
+						wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
+					}
+
+					if well.Start97 {
+						wlResult = append(wlResult, pumpMIWell(well, Utils.TimeExt{Y: yr})...)
+					}
 				}
 			}
 		}

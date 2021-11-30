@@ -43,6 +43,10 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 		s.Logger.Info("Using Excess Flows")
 	}
 
+	if s.Post97 {
+		s.Logger.Info("Is in Post 97 Mode; 97 Land Use for Groundwater Only and MI Pumping is held constant")
+	}
+
 	if s.SqliteDB {
 		s.Logger.Info("Setting Up Results database, getting postgres DB Connection.")
 		var err error
