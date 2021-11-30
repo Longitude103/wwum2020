@@ -170,6 +170,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	}
 	pterm.Success.Println("Successfully Completed MI Well Ops")
 
+	_ = noteDb.Close()
 	_ = v.SlDb.Close() // close the db before ending the program
 	v.Logger.Infof("Model Runtime: %s", time.Since(timeStart))
 	v.Logger.Info("Model Completed Normally")

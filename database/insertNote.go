@@ -35,13 +35,13 @@ func ResultsNoteDB(sqlDB *sqlx.DB) (*NoteDB, error) {
 
 func (db *NoteDB) Add(n Note) error {
 	if len(db.buffer) == cap(db.buffer) {
-		return errors.New("conveyance loss buffer is full")
+		return errors.New("notes buffer is full")
 	}
 
 	db.buffer = append(db.buffer, n)
 	if len(db.buffer) == cap(db.buffer) {
 		if err := db.Flush(); err != nil {
-			return fmt.Errorf("unable to flush conveyance loss: %w", err)
+			return fmt.Errorf("unable to flush notes buffer: %w", err)
 		}
 	}
 
