@@ -128,16 +128,16 @@ func (q *QC) rechargeGeoJson() error {
 			mn := time.Month(m)
 			res := findResult(rResMap[m], mCells[i].Node)
 			if q.Monthly {
-				fc.Properties[mn.String()+"_AF"] = res
-				fc.Properties[mn.String()+"_Feet/Month"] = res / mCells[i].Ac
-				fc.Properties[mn.String()+"_Feet/Day"] = res / mCells[i].Ac / float64(Utils.TimeExt{T: time.Date(q.Year, mn, 1, 0, 0, 0, 0, time.UTC)}.DaysInMonth())
+				fc.Properties[mn.String()[:3]+"_AF"] = res
+				fc.Properties[mn.String()[:3]+"_Ft/m"] = res / mCells[i].Ac
+				fc.Properties[mn.String()[:3]+"_Ft/d"] = res / mCells[i].Ac / float64(Utils.TimeExt{T: time.Date(q.Year, mn, 1, 0, 0, 0, 0, time.UTC)}.DaysInMonth())
 			}
 			annTotal += res
 		}
 
-		fc.Properties["AnnTotal_AF"] = annTotal
-		fc.Properties["AnnTotal_Feet/Year"] = annTotal / mCells[i].Ac
-		fc.Properties["AnnTotal_Feet/Day"] = annTotal / mCells[i].Ac / 365.25
+		fc.Properties["AnTl_AF"] = annTotal
+		fc.Properties["AnTl_Ft/y"] = annTotal / mCells[i].Ac
+		fc.Properties["AnTl_Ft/d"] = annTotal / mCells[i].Ac / 365.25
 
 		// marshal that item back to json
 		d, err := fc.MarshalJSON()
