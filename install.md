@@ -14,3 +14,13 @@ In "GO" you can get the binary by running `go build` and if you want a different
 you can use `go build -o <name>` for a different file name.
 
 There are several potential paths that can be used, but this is good for Linux, might be others for Windows.
+
+# Docker Implementation
+I have included a docker file in the application to all this to be run as a container to enable it to be isolated and to run on different systems with minimal issues. To build the container use the following command: `docker build -t wwum2020:<version> .` the ":<version>" can be removed if you are just building it locally.
+
+To run a container from an image then use the following command `docker run -it -v $(pwd)/bin/CropSimOutput:/app/CropSimOutput -v $(pwd)/bin/OutputFiles:/app/OutputFiles wwum2020:1.2.4`. This command does the following things:
+
+- runs the container in "-it" interactive mode so you have the command line from bash
+- adds a bind mount to the local system for the CropSimOutput to the location within the container that is required
+- adds another bind mount for the OutputFiles so when they are created those files are already on the host system for futher processes
+
