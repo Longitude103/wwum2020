@@ -60,7 +60,12 @@ func getCanalCells(v *database.Setup) ([]CanalCell, error) {
 }
 
 func (c *CanalCell) print() {
-	fmt.Printf("ID: %d, Type: %s, Eff: %.2f, Node: %d, cell_area: %.1f, St_Len: %.2f, c_flag: %d, dnr_fact: %.2f, sat_fact: %.2f, usgs_fact: %.2f, clink_id: %d, total_lat: %.2f, total_Can: %.2f\n", c.CanalId, c.CanalType, c.Eff.Float64, c.Node, c.CellArea, c.StLength,
+	fmt.Printf("CanalId: %d, Type: %s, Eff: %.2f, Node: %d, cell_area: %.1f, St_Len: %.2f, c_flag: %d, dnr_fact: %.2f, sat_fact: %.2f, usgs_fact: %.2f, clink_id: %d, total_lat: %.2f, total_Can: %.2f\n", c.CanalId, c.CanalType, c.Eff.Float64, c.Node, c.CellArea, c.StLength,
+		c.CFlag, c.DnrFact.Float64, c.SatFact.Float64, c.UsgsFact.Float64, c.CLinkId, c.TotalLatLn.Float64, c.TotalCanLn)
+}
+
+func (c *CanalCell) sprint() string {
+	return fmt.Sprintf("CanalId: %d, Type: %s, Eff: %.2f, Node: %d, cell_area: %.1f, St_Len: %.2f, c_flag: %d, dnr_fact: %.2f, sat_fact: %.2f, usgs_fact: %.2f, clink_id: %d, total_lat: %.2f, total_Can: %.2f\n", c.CanalId, c.CanalType, c.Eff.Float64, c.Node, c.CellArea, c.StLength,
 		c.CFlag, c.DnrFact.Float64, c.SatFact.Float64, c.UsgsFact.Float64, c.CLinkId, c.TotalLatLn.Float64, c.TotalCanLn)
 }
 

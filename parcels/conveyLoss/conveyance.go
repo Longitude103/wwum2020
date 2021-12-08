@@ -37,6 +37,7 @@ func Conveyance(v *database.Setup) (err error) {
 		// determine efficiency and get total loss factor
 		if cell.CanalType == "Lateral" || cell.CanalType == "Spill" {
 			strLossPercent = (1 - cell.CanalEff.Float64) * 1 / 6
+			cell.CanalId = cell.CLinkId
 			cellIdDiv = cell.CLinkId
 		} else {
 			cellIdDiv = cell.CanalId
@@ -50,7 +51,7 @@ func Conveyance(v *database.Setup) (err error) {
 		factor := getFactor(cell)
 
 		// special cases for cells with Minatare, Mitchell Gering, and Highline and Lowline
-		switch cell.CanalId {
+		switch cellIdDiv {
 		case 29: // Use the same diversions for north and south Minatare cells
 			cellIdDiv = 30
 		case 13: //  Mitchell Gering use Mitchell and Gering diversions for Gering Canal
@@ -62,6 +63,12 @@ func Conveyance(v *database.Setup) (err error) {
 		// if prev_id != cell_id_div save off and get new canal diversions -- not sure we need this...
 		// filter diversions to the canal
 		canalDiversions := filterCanal(diversions, cellIdDiv)
+
+		if cell.Node == 15661 {
+			v.Logger.Debugf("Cell Properties: %s", cell.sprint())
+			v.Logger.Debugf("cellIdDiv: %d", cellIdDiv)
+			v.Logger.Debugf("CellDiversions: %+v", canalDiversions)
+		}
 
 		structureLoss := 0.0
 		for _, div := range canalDiversions {
@@ -92,12 +99,8 @@ func Conveyance(v *database.Setup) (err error) {
 				ft = 114
 			}
 
-			//if cell.Node == 51030 {
-			//	fmt.Printf("Data for 51030: dt: %v, file: %d, st_loss: %g, factor: %g\n", div.DivDate.Time, ft, structureLoss, factor)
-			//}
-
 			if v.AppDebug {
-				if cell.Node == 7597 || cell.Node == 7598 || cell.Node == 7601 {
+				if cell.Node == 17467 || cell.Node == 17468 || cell.Node == 7601 {
 					v.Logger.Debugf("Div: %+v\n", div)
 					v.Logger.Debugf("Structure Loss Percent: %f, StructureLoss: %f, Factor: %f\n", strLossPercent, structureLoss, factor)
 					v.Logger.Debugf("Cell Data: %+v\n", cell)

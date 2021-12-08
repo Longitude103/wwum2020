@@ -59,8 +59,8 @@ func Test_getCanalCells(t *testing.T) {
 	}
 
 	for _, cell := range cc {
-		if cell.CLinkId == 26 {
-			cell.print()
+		if cell.CLinkId == 25 {
+			v.Logger.Debugf("Canal 25: %+v", cell)
 		}
 
 	}

@@ -2,6 +2,7 @@ package conveyLoss
 
 import (
 	"github.com/Longitude103/wwum2020/database"
+	"time"
 )
 
 // GetSurfaceWaterDelivery function returns a map with a key of year and a value of slice of Diversion that is a monthly amount of surface water delivered to
@@ -22,6 +23,8 @@ func GetSurfaceWaterDelivery(v *database.Setup) (map[int][]Diversion, error) {
 		return nil, err
 	}
 
+	geringDivs := getGeringDivs(diversions)
+
 	canals, err := getCanals(v)
 	if err != nil {
 		v.Logger.Errorf("Error in getCanals: %s", err)
@@ -29,10 +32,16 @@ func GetSurfaceWaterDelivery(v *database.Setup) (map[int][]Diversion, error) {
 	}
 
 	for i := 0; i < len(diversions); i++ {
-		c := filterCnl(canals, (&diversions[i]).CanalId, (&diversions[i]).DivDate.Time.Year())
+		c := filterCnl(canals, diversions[i].CanalId, diversions[i].DivDate.Time.Year())
 		if c.Area.Valid {
-			// apply efficiency and convert to AF
-			(&diversions[i]).applyEffAcres(c.Eff, c.Area.Float64)
+			if diversions[i].CanalId == 13 && diversions[i].DivDate.Time.Year() > 1984 {
+				// fix diversions for Mitchell Canal after 1985
+				diversions[i].DivAmount.Float64 = fixMitchell(diversions[i], geringDivs, c.Eff, c.Area.Float64)
+			} else {
+				// apply efficiency and convert to AF
+				(&diversions[i]).applyEffAcres(c.Eff, c.Area.Float64)
+			}
+
 		} else {
 			(&diversions[i]).DivAmount.Float64 = 0
 		}
@@ -57,6 +66,33 @@ func GetSurfaceWaterDelivery(v *database.Setup) (map[int][]Diversion, error) {
 	}
 
 	return mapDivs, nil
+}
+
+func getGeringDivs(diversions []Diversion) map[int][]Diversion {
+	var geringDiv = make(map[int][]Diversion)
+
+	for _, diversion := range diversions {
+		if diversion.CanalId == 32 {
+			if diversion.DivDate.Time.After(time.Date(1984, time.Month(12), 1, 0, 0, 0, 0, time.UTC)) {
+				geringDiv[diversion.DivDate.Time.Year()] = append(geringDiv[diversion.DivDate.Time.Year()], diversion)
+			}
+		}
+	}
+
+	return geringDiv
+}
+
+func fixMitchell(diversion Diversion, geringDivs map[int][]Diversion, eff float64, acres float64) float64 {
+	divs := geringDivs[diversion.DivDate.Time.Year()]
+	adjDiv := 0.0
+
+	for _, div := range divs {
+		if diversion.DivDate.Time.Equal(div.DivDate.Time) {
+			adjDiv = (diversion.DivAmount.Float64*eff - div.DivAmount.Float64) / acres
+		}
+	}
+
+	return adjDiv
 }
 
 // filterCnl filters the list of canals to a specific one.
