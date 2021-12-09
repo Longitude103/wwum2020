@@ -2,7 +2,6 @@ package actions
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -19,7 +18,7 @@ func MakeModflowFiles() error {
 		return err
 	}
 
-	path, err := MakeOutputDir(fileName)
+	path, err := Utils.MakeOutputDir(fileName)
 	if err != nil {
 		return err
 	}
@@ -193,16 +192,4 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outp
 	}
 
 	return nil
-}
-
-func MakeOutputDir(fileName string) (string, error) {
-	wd, _ := os.Getwd()
-	subPath := filepath.Join("OutputFiles", fileName[:len(fileName)-7])
-	path := filepath.Join(wd, subPath)
-
-	if err := os.MkdirAll(path, os.ModePerm); err != nil {
-		return "", err
-	}
-
-	return path, nil
 }

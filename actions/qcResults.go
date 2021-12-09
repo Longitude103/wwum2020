@@ -2,6 +2,7 @@ package actions
 
 import (
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/qc"
 )
@@ -12,7 +13,7 @@ func QcResults(myEnv map[string]string) error {
 		return err
 	}
 
-	path, err := MakeOutputDir(fileName)
+	path, err := Utils.MakeOutputDir(fileName)
 	if err != nil {
 		return err
 	}
