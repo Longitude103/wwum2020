@@ -3,8 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type FileKeys struct {
@@ -45,9 +46,9 @@ func GetFileKeys(db *sqlx.DB, wel bool) ([]string, error) {
 	var resultFileKeys []string
 	var query string
 	if wel { // give the wel file_keys
-		query = fmt.Sprint("SELECT file_key, description FROM file_keys WHERE file_key > 199;")
+		query = "SELECT file_key, description FROM file_keys WHERE file_key > 199;"
 	} else { // give the rch file_keys
-		query = fmt.Sprint("SELECT file_key, description FROM file_keys WHERE file_key < 200;")
+		query = "SELECT file_key, description FROM file_keys WHERE file_key < 200;"
 	}
 
 	if err := db.Select(&fKeys, query); err != nil {

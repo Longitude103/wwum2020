@@ -34,7 +34,7 @@ func GetDryCells(v *Setup, yr int) []DryCell {
 }
 
 func (d DryCell) GetLossFactor() float64 {
-	if d.Mtg.Valid == false || d.Mtg.Float64 == 0 {
+	if !d.Mtg.Valid || d.Mtg.Float64 == 0 {
 		return 0.5
 	}
 

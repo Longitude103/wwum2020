@@ -163,7 +163,7 @@ func returnF64(v sql.NullFloat64) float64 {
 }
 
 func (c CellIntersect) GetLossFactor() float64 {
-	if c.Mtg.Valid == false || c.Mtg.Float64 == 0 {
+	if !c.Mtg.Valid || c.Mtg.Float64 == 0 {
 		return 0.5
 	}
 

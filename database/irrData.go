@@ -44,7 +44,7 @@ func GetCellsIrr(v *Setup, yr int) ([]IrrCell, error) {
 }
 
 func (i IrrCell) GetLossFactor() float64 {
-	if i.Mtg.Valid == false || i.Mtg.Float64 == 0 {
+	if !i.Mtg.Valid || i.Mtg.Float64 == 0 {
 		return 0.5
 	}
 

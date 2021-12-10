@@ -129,7 +129,7 @@ func GetWellNode(v *Setup) (wellNodes []WellNode, err error) {
 		"inner join model_cells mc on st_contains(mc.geom, sw.geom)"
 
 	if err := v.PgDb.Select(&wellNodes, query); err != nil {
-		return wellNodes, errors.New("error getting well node locations from DB\n")
+		return wellNodes, errors.New("error getting well node locations from DB")
 	}
 
 	if v.AppDebug {
@@ -146,12 +146,12 @@ func GetSSWells(v *Setup) (ssWells []SSWell, err error) {
 		"st_contains(mc.geom, st_translate(ss_wells.geom, 20, 20));"
 
 	if err := v.PgDb.Select(&ssWells, ssQuery); err != nil {
-		return ssWells, errors.New("error getting steady state wells from DB\n")
+		return ssWells, errors.New("error getting steady state wells from DB")
 	}
 
 	for i := 0; i < len(ssWells); i++ {
 		if err := ssWells[i].monthlyVolume(); err != nil {
-			return ssWells, errors.New("error setting monthly volumes\n")
+			return ssWells, errors.New("error setting monthly volumes")
 		}
 	}
 
