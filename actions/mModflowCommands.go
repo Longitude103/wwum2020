@@ -86,7 +86,7 @@ func MakeModflowFiles() error {
 }
 
 func suggestFiles(toComplete string) []string {
-	files, _ := filepath.Glob(toComplete + "*.sqlite")
+	files, _ := filepath.Glob("./OutputFiles/*/*.sqlite")
 	return files
 }
 
