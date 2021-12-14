@@ -21,7 +21,7 @@ type lg interface {
 func GetSqlite(logger lg, mDesc string) (*sqlx.DB, error) {
 	// wd, _ := os.Getwd()
 	tn := time.Now()
-	fmt.Printf("results%s-%d-%d\n", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
+	// fmt.Printf("results%s-%d-%d\n", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
 	dbName := fmt.Sprintf("results%s-%d-%d.sqlite", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
 	oDir := fmt.Sprintf("results%s-%d-%d", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
 	path, err := Utils.MakeOutputDir(oDir)
