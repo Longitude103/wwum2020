@@ -78,7 +78,7 @@ func GetCellAreas(v *Setup, y int) (cells []CellIntersect, err error) {
                inner join sp.t%d_irr si on st_intersects(c.geom, si.geom) group by node) si on m.node = si.node
            left join (select node, sum(st_area(st_intersection(c.geom, sd.geom))/43560) sdp_area from public.model_cells c 
                inner join sp.t%d_dry sd on st_intersects(c.geom, sd.geom) group by node) sd on m.node = sd.node 
-			where m.nat_veg = true;`, y, y, y, y)
+			where m.nat_veg = true and m.cell_type = %d;`, y, y, y, y, v.CellType())
 
 	if err = v.PgDb.Select(&cells, query); err != nil {
 		return nil, err

@@ -124,9 +124,9 @@ func GetWellParcelsPost97(v *Setup) ([]WellParcel, error) {
 // GetWellNode is a function that gets the wellid, regno and node number of the well so that we can add a location to
 // the well when it is written out along with the nrd.
 func GetWellNode(v *Setup) (wellNodes []WellNode, err error) {
-	const query = "select wellid, regcd, node, 'np' nrd from np.npnrd_wells nw inner join model_cells mc " +
-		"on st_contains(mc.geom, nw.geom) union all select wellid, regcd, node, 'sp' nrd from sp.spnrd_wells sw " +
-		"inner join model_cells mc on st_contains(mc.geom, sw.geom)"
+	query := fmt.Sprintf("select wellid, regcd, node, 'np' nrd from np.npnrd_wells nw inner join model_cells mc "+
+		"on st_contains(mc.geom, nw.geom) where mc.cell_type = %d union all select wellid, regcd, node, 'sp' nrd from sp.spnrd_wells sw "+
+		"inner join model_cells mc on st_contains(mc.geom, sw.geom) where mc.cell_type = %d", v.CellType(), v.CellType())
 
 	if err := v.PgDb.Select(&wellNodes, query); err != nil {
 		return wellNodes, errors.New("error getting well node locations from DB")
@@ -142,8 +142,8 @@ func GetWellNode(v *Setup) (wellNodes []WellNode, err error) {
 // GetSSWells is a function that gets the data from the postgres DB and returns a slice of SSWell and also includes a call
 // to the SSWell.monthlyVolume() method to set the monthly data from the annual data that is in the database.
 func GetSSWells(v *Setup) (ssWells []SSWell, err error) {
-	const ssQuery = "select ss_wells.id, wellname, defaultq, node from ss_wells inner join model_cells mc on " +
-		"st_contains(mc.geom, st_translate(ss_wells.geom, 20, 20));"
+	ssQuery := fmt.Sprintf("select ss_wells.id, wellname, defaultq, node from ss_wells inner join model_cells mc on "+
+		"st_contains(mc.geom, st_translate(ss_wells.geom, 20, 20)) where mc.cell_type = %d;", v.CellType())
 
 	if err := v.PgDb.Select(&ssWells, ssQuery); err != nil {
 		return ssWells, errors.New("error getting steady state wells from DB")
@@ -176,8 +176,8 @@ func (s *SSWell) monthlyVolume() (err error) {
 }
 
 func GetMIWells(v *Setup) (miWells []MIWell, err error) {
-	const miQuery = "SELECT mi.id, mi.wellname, mi.defaultq, mi.muni_well, mi.indust_well, mi.stop_97, mi.start_97, " +
-		"mc.node FROM mi_wells mi inner join model_cells mc on st_contains(mc.geom, st_translate(mi.geom, 20, 20));"
+	miQuery := fmt.Sprintf("SELECT mi.id, mi.wellname, mi.defaultq, mi.muni_well, mi.indust_well, mi.stop_97, mi.start_97, "+
+		"mc.node FROM mi_wells mi inner join model_cells mc on st_contains(mc.geom, st_translate(mi.geom, 20, 20)) where mc.cell_type = %d;", v.CellType())
 
 	if err = v.PgDb.Select(&miWells, miQuery); err != nil {
 		return miWells, errors.New("error getting Municipal and industrial wells")

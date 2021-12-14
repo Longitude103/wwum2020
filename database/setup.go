@@ -3,11 +3,12 @@ package database
 import (
 	"errors"
 	"fmt"
-	"github.com/Longitude103/wwum2020/logging"
-	"github.com/jmoiron/sqlx"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/Longitude103/wwum2020/logging"
+	"github.com/jmoiron/sqlx"
 )
 
 type Setup struct {
@@ -22,6 +23,7 @@ type Setup struct {
 	AppDebug   bool
 	ExcessFlow bool
 	Post97     bool
+	OldGrid    bool
 	Desc       string
 }
 
@@ -107,6 +109,10 @@ func WithPost97() Option {
 	return func(s *Setup) { s.Post97 = true }
 }
 
+func WithOldGrid() Option {
+	return func(s *Setup) { s.OldGrid = true }
+}
+
 // SetYears is an initializer method for the Setup struct to set the start and end years of the application run.
 func (s *Setup) SetYears(sYear, eYear int) error {
 	if sYear > 1953 || sYear < time.Now().Year() {
@@ -122,4 +128,13 @@ func (s *Setup) SetYears(sYear, eYear int) error {
 	}
 
 	return nil
+}
+
+func (s *Setup) CellType() int {
+	ct := 2
+	if s.OldGrid {
+		ct = 1
+	}
+
+	return ct
 }

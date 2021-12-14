@@ -37,7 +37,7 @@ type Canal struct {
 // of canal length and types through that cell. It returns a slice of CanalCell for processing. It also implements AppDebug
 // to reduce the number of cells it returns if the app is in debug mode.
 func getCanalCells(v *database.Setup) ([]CanalCell, error) {
-	query := `SELECT c.id, c.type_2, c.district_id, c.eff, a.node, st_area(a.geom) / 43560 cell_area,
+	query := fmt.Sprintf(`SELECT c.id, c.type_2, c.district_id, c.eff, a.node, st_area(a.geom) / 43560 cell_area,
 		   ST_Length(ST_Intersection(a.geom, c.geom)), c.c_flag, d.dnr_fact, s.sat_fact, u.usgs_fact, c.clink_id, c1.eff eff2,
 		   c2.latcount, c3.tot_lat_ln, c4.tot_can_ln
 	FROM public.model_cells a JOIN sw.canals c ON ST_intersects(c.geom, a.geom)
@@ -47,7 +47,7 @@ func getCanalCells(v *database.Setup) ([]CanalCell, error) {
 		LEFT JOIN (SELECT SUM(ST_Length(geom)) as tot_can_ln, clink_id FROM sw.canals WHERE type_2 = 'Canal' GROUP BY clink_id) c4 on c4.clink_id = c.clink_id
 		LEFT OUTER JOIN sw.factors d on d.node = a.node AND c.c_flag = 1
 		LEFT OUTER JOIN sw.factors s on s.node = a.node AND c.c_flag = 4
-		LEFT OUTER JOIN sw.factors u on u.node = a.node AND c.c_flag = 2 WHERE c.id NOT IN (12,16,17,42,49,54,55,346,347,348,349,350,351,352,353,355) ORDER BY c.clink_id, a.node;`
+		LEFT OUTER JOIN sw.factors u on u.node = a.node AND c.c_flag = 2 WHERE c.id NOT IN (12,16,17,42,49,54,55,346,347,348,349,350,351,352,353,355) and a.cell_type = %d ORDER BY c.clink_id, a.node;`, v.CellType())
 
 	var canalCells []CanalCell
 

@@ -18,7 +18,7 @@ type ExtWell struct {
 // as includes handling the debug mode.
 func GetExternalWells(v *Setup) (extWells []ExtWell, err error) {
 	extQuery := fmt.Sprintf("select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on "+
-		"st_contains(mc.geom, ext_pumping.geom) where yr >= %d and yr <= %d;", v.SYear, v.EYear)
+		"st_contains(mc.geom, ext_pumping.geom) where yr >= %d and yr <= %d and mc.cell_type = %d;", v.SYear, v.EYear, v.CellType())
 
 	if err := v.PgDb.Select(&extWells, extQuery); err != nil {
 		return extWells, errors.New("error getting data from ext_pumping table from DB")

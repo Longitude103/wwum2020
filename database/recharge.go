@@ -19,7 +19,7 @@ type ExtRch struct {
 func GetExtRecharge(v *Setup) (eRch []ExtRch, err error) {
 	query := fmt.Sprintf("select yr, mnth, file_type, rch, node, st_area(mc.geom)/43560 cell_size from "+
 		"ext_recharge inner join model_cells mc on st_contains(mc.geom, ext_recharge.geom) where yr >= %d "+
-		"and yr <= %d ;", v.SYear, v.EYear)
+		"and yr <= %d and mc.cell_type = %d;", v.SYear, v.EYear, v.CellType())
 
 	if err := v.PgDb.Select(&eRch, query); err != nil {
 		return eRch, err

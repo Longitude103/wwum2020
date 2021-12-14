@@ -61,6 +61,7 @@ For help with those functions type: runModel -h or mfFiles -h`
 	rModelEF := runModelCmd.Bool("excessFlow", false, "Sets to use Excess Flow or Not, default = false")
 	rModelDesc := runModelCmd.String("Desc", "", "REQUIRED! - Model Description")
 	rModelP97 := runModelCmd.Bool("post97", false, "If flag set, a post 97 run will be made")
+	rModelGrid := runModelCmd.Bool("oldGrid", false, "If flag set, the model will use the 40 acre grid, not USG as default")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -82,7 +83,7 @@ For help with those functions type: runModel -h or mfFiles -h`
 			os.Exit(0)
 		}
 
-		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelDesc, *rModelStartY, *rModelEndY, *rModelEF, *rModelP97, myEnv); err != nil {
+		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelDesc, *rModelStartY, *rModelEndY, *rModelEF, *rModelP97, *rModelGrid, myEnv); err != nil {
 			fmt.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}
