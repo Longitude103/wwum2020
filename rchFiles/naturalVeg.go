@@ -2,8 +2,9 @@ package rchFiles
 
 import (
 	"fmt"
-	"github.com/Longitude103/wwum2020/parcels"
 	"time"
+
+	"github.com/Longitude103/wwum2020/parcels"
 
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
@@ -55,6 +56,12 @@ func NaturalVeg(v *database.Setup, wStations []database.WeatherStation,
 						annData = data
 						break
 					}
+				}
+
+				if annData.Station == "" {
+					v.Logger.Debugf("AnnData: %+v", annData)
+					v.Logger.Debugf("cell[i]: %+v", cells[i])
+
 				}
 
 				for m := 0; m < 12; m++ {

@@ -33,13 +33,14 @@ func dbConnection() *database.Setup {
 
 func Test_NaturalVeg(t *testing.T) {
 	v := dbConnection()
+	v.OldGrid = true
 
 	wStations, err := database.GetWeatherStations(v.PgDb)
 	if err != nil {
 		t.Error("Error getting weather stations")
 	}
 
-	csResults, err := fileio.LoadTextFiles("../bin/CropSimOutput/", v.Logger)
+	csResults, err := fileio.LoadTextFiles("../testData/CropSimOutput/", v.Logger)
 	if err != nil {
 		t.Error("Error getting CS Results")
 	}
