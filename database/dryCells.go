@@ -22,7 +22,7 @@ type DryCell struct {
 func GetDryCells(v *Setup, yr int) []DryCell {
 	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, d.geom))/43560 d_area, parcel_id, nrd
         from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, geom from np.t%d_dry UNION select parcel_id, 'sp' nrd, 
-		geom from sp.t%d_dry) d on st_intersects(c.geom, d.geom);`, yr, yr)
+		geom from sp.t%d_dry) d on st_intersects(c.geom, d.geom) where cell_type = %d;`, yr, yr, v.CellType())
 
 	var dryCells []DryCell
 	err := v.PgDb.Select(&dryCells, query)
