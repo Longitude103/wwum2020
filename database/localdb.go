@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -18,16 +16,8 @@ type lg interface {
 
 // GetSqlite gets or sets the connection string for the sqlite3 results database.
 //  It takes no args, and returns the db object for the connection
-func GetSqlite(logger lg, mDesc string) (*sqlx.DB, error) {
-	// wd, _ := os.Getwd()
-	tn := time.Now()
-	// fmt.Printf("results%s-%d-%d\n", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
-	dbName := fmt.Sprintf("results%s-%d-%d.sqlite", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
-	oDir := fmt.Sprintf("results%s-%d-%d", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
-	path, err := Utils.MakeOutputDir(oDir)
-	if err != nil {
-		return nil, err
-	}
+func GetSqlite(logger lg, mDesc string, path string, fileName string) (*sqlx.DB, error) {
+	dbName := fmt.Sprintf("results%s.sqlite", fileName)
 
 	logger.Infof("created sqlite results db named: %s", dbName)
 	db, err := sqlx.Open("sqlite3", filepath.FromSlash(filepath.Join(path, dbName)))

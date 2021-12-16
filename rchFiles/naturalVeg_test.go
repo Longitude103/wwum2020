@@ -19,7 +19,7 @@ func dbConnection() *database.Setup {
 	}
 
 	var v *database.Setup
-	v, err = database.NewSetup(myEnv, database.WithLogger(), database.WithNoSQLite(), database.WithDebug())
+	v, err = database.NewSetup(myEnv, database.WithNoSQLite(), database.WithDebug())
 	if err != nil {
 		fmt.Printf("Error in NewSetup: %s", err)
 	}

@@ -3,10 +3,10 @@ package database
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/logging"
 	"github.com/jmoiron/sqlx"
 )
@@ -33,6 +33,13 @@ type Option func(*Setup)
 // the flags for excess flow and debug.
 func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 	s := &Setup{EYear: 1953, SYear: 2020, SqliteDB: true}
+	path, fn, err := Utils.MakeOutputDir()
+	if err != nil {
+		return s, err
+	}
+
+	options = append(options, WithLogger(path, fn))
+
 	for _, option := range options {
 		option(s)
 	}
@@ -52,7 +59,7 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 	if s.SqliteDB {
 		s.Logger.Info("Setting Up Results database, getting postgres DB Connection.")
 		var err error
-		s.SlDb, err = GetSqlite(s.Logger, s.Desc)
+		s.SlDb, err = GetSqlite(s.Logger, s.Desc, path, fn)
 		if err != nil {
 			return s, err
 		}
@@ -68,7 +75,6 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 		}
 	}
 
-	var err error
 	s.PgDb, err = PgConnx(myEnv)
 	if err != nil {
 		return s, err
@@ -77,12 +83,10 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 	return s, nil
 }
 
-func WithLogger() Option {
+func WithLogger(path string, fileName string) Option {
 	return func(s *Setup) {
-		wd, _ := os.Getwd()
-		tn := time.Now()
-		fileName := fmt.Sprintf("results%s-%d-%d.log", tn.Format(time.RFC3339)[:len(tn.Format(time.RFC3339))-15], tn.Hour(), tn.Minute())
-		path := filepath.Join(wd, fileName)
+		fileName := fmt.Sprintf("results%s.log", fileName)
+		path := filepath.Join(path, fileName)
 
 		l := logging.NewLogger(path)
 		s.Logger = l

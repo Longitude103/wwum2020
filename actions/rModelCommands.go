@@ -16,7 +16,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	timeStart := time.Now()
 
 	pterm.Info.Println("Setting up results database")
-	var opts = []database.Option{database.WithDescription(mDesc), database.WithLogger()}
+	var opts = []database.Option{database.WithDescription(mDesc)}
 	if debug {
 		opts = append(opts, database.WithDebug())
 	}

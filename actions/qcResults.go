@@ -8,12 +8,12 @@ import (
 )
 
 func QcResults(myEnv map[string]string) error {
-	fileName, db, err := DbQuestion()
+	_, db, err := DbQuestion()
 	if err != nil {
 		return err
 	}
 
-	path, err := Utils.MakeOutputDir(fileName)
+	path, _, err := Utils.MakeOutputDir()
 	if err != nil {
 		return err
 	}

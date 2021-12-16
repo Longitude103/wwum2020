@@ -21,7 +21,7 @@ func (l *fakelog) Infof(template string, args ...interface{}) {
 func TestGetSqlite(t *testing.T) {
 	l := &fakelog{}
 
-	_, err := GetSqlite(l, "Testing")
+	_, err := GetSqlite(l, "Testing", "./", "testfile")
 	if err != nil {
 		t.Fatalf("Error Creating SQLite: %s", err)
 	}

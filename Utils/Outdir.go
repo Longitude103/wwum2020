@@ -21,15 +21,17 @@ func (t tm) trimed() string {
 	return "results" + t.Dt[:len(t.Dt)-13]
 }
 
-func MakeOutputDir(fileName string) (string, error) {
+// MakeOutputDir makes the output directory, sends the full path and the subdir value for making files as return values for the function as well as
+// any errors that might have occured since this hits a world time API.
+func MakeOutputDir() (string, string, error) {
 	resp, err := http.Get("http://worldtimeapi.org/api/timezone/America/Denver")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	var responseTime tm
@@ -37,12 +39,13 @@ func MakeOutputDir(fileName string) (string, error) {
 	responseTime.replaceColon()
 
 	wd, _ := os.Getwd()
-	subPath := filepath.Join("OutputFiles", responseTime.trimed())
+	rsT := responseTime.trimed()
+	subPath := filepath.Join("OutputFiles", rsT)
 	path := filepath.Join(wd, subPath)
 
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return path, nil
+	return path, rsT, nil
 }
