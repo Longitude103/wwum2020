@@ -67,6 +67,22 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 		}
 	}
 
+	if v.OldGrid {
+		if err := noteDb.Add(database.Note{Nt: "grid=1"}); err != nil {
+			return err
+		}
+	} else {
+		if err := noteDb.Add(database.Note{Nt: "grid=2"}); err != nil {
+			return err
+		}
+	}
+
+	if eF {
+		if err := noteDb.Add(database.Note{Nt: "Includes Excess Flow Diversions"}); err != nil {
+			return err
+		}
+	}
+
 	spinnerSuccess, _ := pterm.DefaultSpinner.Start("Reading CropSim Results files")
 	csResults, err := fileio.LoadTextFiles(*CSDir, v.Logger)
 	if err != nil {

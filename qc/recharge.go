@@ -2,9 +2,12 @@ package qc
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Longitude103/wwum2020/Utils"
@@ -59,11 +62,16 @@ type resultData struct {
 }
 
 func (q *QC) rechargeGeoJson() error {
+	grid, err := findGrid(q)
+	if err != nil {
+		return err
+	}
+
 	// get a slice of model cells in geojson
 	pterm.DefaultSection.Println("GeoJSON Creation")
 	spin, _ := pterm.DefaultSpinner.Start("Getting Model Cells from DB")
 	var mCells []modelCells
-	qry := "select st_asgeojson(q) geojson, area_ac, node from (select st_transform(geom, 4326), node, st_area(geom)/43560 area_ac from model_cells) q;"
+	qry := fmt.Sprintf("select st_asgeojson(q) geojson, area_ac, node from (select st_transform(geom, 4326), node, st_area(geom)/43560 area_ac from model_cells where cell_type = %d) q;", grid)
 
 	if err := q.v.PgDb.Select(&mCells, qry); err != nil {
 		return err
@@ -170,4 +178,30 @@ func findResult(rData []resultData, node int) float64 {
 	}
 
 	return 0
+}
+
+type Note struct {
+	Nt string `db:"note"`
+}
+
+func findGrid(q *QC) (int, error) {
+	var notes []Note
+	notesQry := "select note from results_notes"
+
+	q.v.SlDb.Select(&notes, notesQry)
+
+	for _, n := range notes {
+		if n.Nt[:4] == "grid" {
+			g := strings.Split(n.Nt, "=")[1]
+
+			grid, err := strconv.Atoi(g)
+			if err != nil {
+				return 0, err
+			}
+
+			return grid, nil
+		}
+	}
+
+	return 0, errors.New("couldn't find grid type")
 }
