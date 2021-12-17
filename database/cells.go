@@ -49,9 +49,9 @@ func (m ModelCell) GetXY() (x float64, y float64) {
 // debug mode to only return a slice of 50 cells.
 func GetCells(v Setup) (cells []ModelCell, err error) {
 
-	const query = `select node, st_x(st_transform(st_centroid(geom), 4326)) pointx, 
+	query := fmt.Sprintf(`select node, st_x(st_transform(st_centroid(geom), 4326)) pointx, 
 				st_y(st_transform(st_centroid(geom), 4326)) pointy,
-				soil_code, coeff_zone, zone, mtg from public.model_cells;`
+				soil_code, coeff_zone, zone, mtg from public.model_cells where cell_type = %d;`, v.CellType())
 
 	if err = v.PgDb.Select(&cells, query); err != nil {
 		return nil, err

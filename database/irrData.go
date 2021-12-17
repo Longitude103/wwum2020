@@ -28,7 +28,7 @@ func GetCellsIrr(v *Setup, yr int) ([]IrrCell, error) {
 
 	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, 
 									parcel_id, nrd from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, geom from np.t%d_irr UNION SELECT parcel_id, 'sp' nrd, geom from sp.t%d_irr) i
-        on st_intersects(c.geom, i.geom);`, yr, yr)
+        on st_intersects(c.geom, i.geom) where c.cell_type = %d;`, yr, yr, v.CellType())
 
 	var irrCells []IrrCell
 	if err := v.PgDb.Select(&irrCells, query); err != nil {
@@ -64,7 +64,7 @@ from public.model_cells c
     UNION
     SELECT parcel_id, 'sp' nrd, geom
     from sp.t%d_irr where (sw = true and gw = false) or (sw = true and gw = true)) i
-    on st_intersects(c.geom, i.geom) order by parcel_id;`, yr, yr)
+    on st_intersects(c.geom, i.geom) where c.cell_type = %d order by parcel_id;`, yr, yr, v.CellType())
 
 	var irrCells []IrrCell
 	if err := v.PgDb.Select(&irrCells, query); err != nil {
@@ -72,7 +72,7 @@ from public.model_cells c
 		return nil, err
 	}
 
-	query97GWO := `SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area,
+	query97GWO := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area,
        parcel_id + 30000 as parcel_id, nrd
 from public.model_cells c
     inner join (SELECT parcel_id, 'np' nrd, geom
@@ -80,7 +80,7 @@ from public.model_cells c
     UNION
     SELECT parcel_id, 'sp' nrd, geom
     from sp.t1997_irr where sw = false and gw = true) i
-    on st_intersects(c.geom, i.geom) order by parcel_id;`
+    on st_intersects(c.geom, i.geom) where c.cell_type = %d order by parcel_id;`, v.CellType())
 
 	var p97irrCells []IrrCell
 	if err := v.PgDb.Select(&p97irrCells, query97GWO); err != nil {

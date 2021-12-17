@@ -2,10 +2,11 @@ package database
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/joho/godotenv"
 )
 
 func TestGetMIWells(t *testing.T) {
@@ -53,7 +54,7 @@ func TestGetMIWells(t *testing.T) {
 
 	// removes log file generated when you run v.NewSetup
 	path, _ := os.Getwd()
-	files, err := ioutil.ReadDir(path)
+	files, _ := ioutil.ReadDir(path)
 
 	for _, file := range files {
 		if file.Name()[len(file.Name())-3:] == "log" {

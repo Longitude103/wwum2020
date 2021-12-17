@@ -3,8 +3,9 @@ package database
 import (
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // WelResult is a struct for the final result to be saved to db that is a value per well, per month
@@ -69,7 +70,7 @@ func (db *WelDB) Add(value interface{}) error {
 					time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), FileType: wr.FileType, Result: v})
 				if len(db.buffer) == cap(db.buffer) {
 					if err := db.Flush(); err != nil {
-						return fmt.Errorf("unable to flush WEL: %w\n", err)
+						return fmt.Errorf("unable to flush WEL: %w", err)
 					}
 				}
 			}
@@ -79,7 +80,7 @@ func (db *WelDB) Add(value interface{}) error {
 		db.buffer = append(db.buffer, wr)
 		if len(db.buffer) == cap(db.buffer) {
 			if err := db.Flush(); err != nil {
-				return fmt.Errorf("unable to flush WEL: %w\n", err)
+				return fmt.Errorf("unable to flush WEL: %w", err)
 			}
 		}
 	default:
