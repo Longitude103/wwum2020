@@ -60,14 +60,13 @@ func (db *WelDB) Add(value interface{}) error {
 		return errors.New("WEL buffer is full")
 	}
 
-	switch value.(type) {
+	switch welRes := value.(type) {
 	case WelAnnualResult:
-		wr := value.(WelAnnualResult)
 		// take in WelAnnualResult and reformat to WelResult and don't save zero result values
-		for i, v := range wr.Result {
+		for i, v := range welRes.Result {
 			if v > 0 {
-				db.buffer = append(db.buffer, WelResult{Wellid: wr.Wellid, Node: wr.Node, Dt: time.Date(wr.Yr,
-					time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), FileType: wr.FileType, Result: v})
+				db.buffer = append(db.buffer, WelResult{Wellid: welRes.Wellid, Node: welRes.Node, Dt: time.Date(welRes.Yr,
+					time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), FileType: welRes.FileType, Result: v})
 				if len(db.buffer) == cap(db.buffer) {
 					if err := db.Flush(); err != nil {
 						return fmt.Errorf("unable to flush WEL: %w", err)
@@ -76,8 +75,7 @@ func (db *WelDB) Add(value interface{}) error {
 			}
 		}
 	case WelResult:
-		wr := value.(WelResult)
-		db.buffer = append(db.buffer, wr)
+		db.buffer = append(db.buffer, welRes)
 		if len(db.buffer) == cap(db.buffer) {
 			if err := db.Flush(); err != nil {
 				return fmt.Errorf("unable to flush WEL: %w", err)
