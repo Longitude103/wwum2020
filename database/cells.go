@@ -18,6 +18,8 @@ type ModelCell struct {
 	Mtg       float64 `db:"mtg"`
 	PointX    float64 `db:"pointx"`
 	PointY    float64 `db:"pointy"`
+	Rw        int     `db:"rw"`
+	Clm       int     `db:"clm"`
 }
 
 type CellIntersect struct {
@@ -45,21 +47,24 @@ func (m ModelCell) GetXY() (x float64, y float64) {
 	return m.PointX, m.PointY
 }
 
+// GetNodeRC is a method of ModelCell to return the node, rw, clm of the model cell.
+func (m ModelCell) GetNodeRC() (node, rw, clm int) {
+	return m.Node, m.Rw, m.Clm
+}
+
 // GetCells is a function to retrieve the model cells from the database and return a struct of ModelCell. It also handles
 // debug mode to only return a slice of 50 cells.
-func GetCells(v Setup) (cells []ModelCell, err error) {
+func GetCells(v *Setup) (cells []ModelCell, err error) {
 
-	query := fmt.Sprintf(`select node, st_x(st_transform(st_centroid(geom), 4326)) pointx, 
-				st_y(st_transform(st_centroid(geom), 4326)) pointy,
-				soil_code, coeff_zone, zone, mtg from public.model_cells where cell_type = %d;`, v.CellType())
+	//query := fmt.Sprintf(`select node, st_x(st_transform(st_centroid(geom), 4326)) pointx,
+	//			st_y(st_transform(st_centroid(geom), 4326)) pointy,
+	//			soil_code, coeff_zone, zone, mtg from public.model_cells where cell_type = %d;`, v.CellType())
+
+	query := "select * from noderc()"
 
 	if err = v.PgDb.Select(&cells, query); err != nil {
 		return nil, err
 	}
-
-	// if v.AppDebug {
-	// 	return cells[:50], nil
-	// }
 
 	return
 }
@@ -168,4 +173,25 @@ func (c CellIntersect) GetLossFactor() float64 {
 	}
 
 	return math.Min(1-math.Exp(-0.02*c.Mtg.Float64), 1)
+}
+
+func AddCellsToOutput(v *Setup) error {
+	c, err := CellRCDB(v.SlDb)
+	if err != nil {
+		return err
+	}
+
+	mc, err := GetCells(v)
+	if err != nil {
+		return err
+	}
+
+	for _, m := range mc {
+		n, r, clm := m.GetNodeRC()
+		if err := c.Add(Cellrc{n, r, clm}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -183,13 +183,35 @@ func InitializeDb(db *sqlx.DB, logger lg, mDesc string) error {
 		create table if not exists results_notes 
 			(
 			    id integer not null
-					constraint results_pk
+					constraint results_notes_pk
 						primary key autoincrement,
 				note text
 			)
     `)
 	if err != nil {
 		logger.Errorf("Error in creating results_notes table statement: %s", err)
+		return err
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		logger.Errorf("Error in creating results_notes table: %s", err)
+		return err
+	}
+
+	stmt, err = db.Prepare(`
+		create table if not exists cellrc 
+			(
+			    node integer not null
+					constraint cellrc_pk
+						primary key,
+				rw integer,
+				clm integer
+			)
+    `)
+
+	if err != nil {
+		logger.Errorf("Error in creating cellrc table statement: %s", err)
 		return err
 	}
 
