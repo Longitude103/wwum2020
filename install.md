@@ -24,4 +24,4 @@ To run a container from an image then use the following command `docker run -it 
 - adds a bind mount to the local system for the CropSimOutput to the location within the container that is required
 - adds another bind mount for the OutputFiles so when they are created those files are already on the host system for futher processes
 
-For mac I use: `docker run -it -v /Users/hkuntz/Documents/OutputFiles:/app/OutputFiles -v /Users/hkuntz/Documents/CropSimOutput:/app/CropSimOutput wwum2020`
+If you are using podman for RHEL, Fedora, or another distro, use teh `--privledged` to allow the container to access the bind mount local system files. For mac I use: `docker run -it -v /Users/hkuntz/Documents/OutputFiles:/app/OutputFiles -v /Users/hkuntz/Documents/CropSimOutput:/app/CropSimOutput wwum2020`
