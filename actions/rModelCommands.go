@@ -16,7 +16,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	timeStart := time.Now()
 
 	pterm.Info.Println("Setting up results database")
-	var opts = []database.Option{database.WithDescription(mDesc)}
+	var opts []database.Option
 	if debug {
 		opts = append(opts, database.WithDebug())
 	}
@@ -54,6 +54,9 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 
 	sYearNote := fmt.Sprintf("Start Year: %d", v.SYear)
 	eYearNote := fmt.Sprintf("End Year: %d", v.EYear)
+	if err := noteDb.Add(database.Note{Nt: "Desc: " + mDesc}); err != nil {
+		return err
+	}
 	if err := noteDb.Add(database.Note{Nt: sYearNote}); err != nil {
 		return err
 	}

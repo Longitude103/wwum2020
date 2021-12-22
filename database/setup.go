@@ -24,7 +24,6 @@ type Setup struct {
 	ExcessFlow bool
 	Post97     bool
 	OldGrid    bool
-	Desc       string
 }
 
 type Option func(*Setup)
@@ -59,7 +58,7 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 	if s.SqliteDB {
 		s.Logger.Info("Setting Up Results database, getting postgres DB Connection.")
 		var err error
-		s.SlDb, err = GetSqlite(s.Logger, s.Desc, path, fn)
+		s.SlDb, err = GetSqlite(s.Logger, path, fn)
 		if err != nil {
 			return s, err
 		}
@@ -103,10 +102,6 @@ func WithExcessFlow() Option {
 
 func WithNoSQLite() Option {
 	return func(s *Setup) { s.SqliteDB = false }
-}
-
-func WithDescription(textDesc string) Option {
-	return func(s *Setup) { s.Desc = textDesc }
 }
 
 func WithPost97() Option {
