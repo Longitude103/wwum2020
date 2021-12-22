@@ -111,4 +111,5 @@ fabric.properties
 
 .env
 OutputFiles/
+testData/
 .DS_Store
