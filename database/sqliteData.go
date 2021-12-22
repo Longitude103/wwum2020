@@ -24,8 +24,8 @@ type MfResults struct {
 	CellSize   sql.NullFloat64 `db:"cell_size"`
 	ResultDate time.Time       `db:"dt"`
 	Rslt       float64         `db:"rslt"`
-	rw         sql.NullInt64   `db:"rw"`
-	clm        sql.NullInt64   `db:"clm"`
+	Rw         sql.NullInt64   `db:"rw"`
+	Clm        sql.NullInt64   `db:"clm"`
 }
 
 type ResultsNote struct {
@@ -46,7 +46,7 @@ func (m MfResults) Value() float64 {
 }
 
 func (m MfResults) RowCol() (int, int) {
-	return int(m.rw.Int64), int(m.clm.Int64)
+	return int(m.Rw.Int64), int(m.Clm.Int64)
 }
 
 func GetFileKeys(db *sqlx.DB, wel bool) ([]string, error) {
