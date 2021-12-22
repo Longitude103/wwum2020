@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -22,8 +24,8 @@ type MfResults struct {
 	CellSize   sql.NullFloat64 `db:"cell_size"`
 	ResultDate time.Time       `db:"dt"`
 	Rslt       float64         `db:"rslt"`
-	rw         int             `db:"rw"`
-	clm        int             `db:"clm"`
+	rw         sql.NullInt64   `db:"rw"`
+	clm        sql.NullInt64   `db:"clm"`
 }
 
 type ResultsNote struct {
@@ -44,7 +46,7 @@ func (m MfResults) Value() float64 {
 }
 
 func (m MfResults) RowCol() (int, int) {
-	return m.rw, m.clm
+	return int(m.rw.Int64), int(m.clm.Int64)
 }
 
 func GetFileKeys(db *sqlx.DB, wel bool) ([]string, error) {
@@ -80,11 +82,16 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 				list += excludeList[i][0:3]
 			}
 
-			qry = fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt "+
-				"FROM wel_results WHERE file_type NOT IN (%s) group by cell_node, dt) where rslt > 0;", list)
+			qry = fmt.Sprintf(`SELECT cell_node, rw, clm, dt, rslt
+									from (SELECT cell_node, rw, clm, dt, sum(result) rslt
+ 								  FROM wel_results LEFT JOIN cellrc on cell_node = node WHERE file_type NOT IN (%s)
+									group by cell_node, dt) where rslt > 0;`, list)
 		} else { // don't exclude anything
-			qry = fmt.Sprint("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt " +
-				"FROM wel_results group by cell_node, dt) where rslt > 0;")
+			qry = fmt.Sprint(`SELECT cell_node, rw, clm, dt, rslt
+									from (SELECT cell_node, rw, clm, dt, sum(result) rslt
+ 								  FROM wel_results
+    								LEFT JOIN cellrc on cell_node = node group by cell_node, dt)
+								  where rslt > 0;`)
 		}
 	} else { // is a recharge file
 		if len(excludeList) > 0 { // has an item in exclude list
@@ -94,11 +101,13 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 				list += excludeList[i][0:3]
 			}
 
-			qry = fmt.Sprintf("SELECT cell_node, cell_size, dt, rslt from (SELECT cell_node, cell_size, dt, sum(result) rslt "+
-				"FROM results WHERE file_type NOT IN (%s) group by cell_node, cell_size, dt) where rslt > 0;", list)
+			qry = fmt.Sprintf(`SELECT cell_node, cell_size, rw, clm, dt, rslt from (SELECT cell_node, cell_size, rw, 
+									clm, dt, sum(result) rslt FROM results LEFT JOIN cellrc on cell_node = node 
+								    WHERE file_type NOT IN (%s) group by cell_node, cell_size, dt) where rslt > 0;`, list)
 		} else { // don't exclude anything
-			qry = fmt.Sprint("SELECT cell_node, cell_size, dt, rslt from (SELECT cell_node, cell_size, dt, sum(result) rslt " +
-				"FROM results group by cell_node, cell_size, dt) where rslt > 0;")
+			qry = fmt.Sprint(`SELECT cell_node, cell_size, rw, clm, dt, rslt from (SELECT cell_node, cell_size, rw, 
+									clm, dt, sum(result) rslt FROM results LEFT JOIN cellrc on cell_node = node 
+								  group by cell_node, cell_size, dt) where rslt > 0;`)
 		}
 	}
 
@@ -114,11 +123,13 @@ func SingleResult(db *sqlx.DB, wel bool, fileKey string) ([]MfResults, error) {
 	var qry string
 
 	if wel {
-		qry = fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt FROM wel_results "+
-			"WHERE file_type = %s group by cell_node, dt) where rslt > 0;", fileKey[0:3])
+		qry = fmt.Sprintf(`SELECT cell_node, rw, clm, dt, rslt from (SELECT cell_node, rw, clm, dt, sum(result) rslt FROM
+    								wel_results LEFT JOIN cellrc on cell_node = node WHERE file_type = %s group by cell_node, dt)
+									where rslt > 0;`, fileKey[0:3])
 	} else {
-		qry = fmt.Sprintf("SELECT cell_node, dt, rslt from (SELECT cell_node, dt, sum(result) rslt FROM results "+
-			"WHERE file_type = %s group by cell_node, dt) where rslt > 0;", fileKey[0:3])
+		qry = fmt.Sprintf(`SELECT cell_node, rw, clm, dt, rslt from (SELECT cell_node, rw, clm, dt, sum(result) 
+									rslt FROM results LEFT JOIN cellrc on cell_node = node
+                                 	WHERE file_type = %s group by cell_node, dt) where rslt > 0;`, fileKey[0:3])
 	}
 
 	if err := db.Select(&results, qry); err != nil {
@@ -130,11 +141,17 @@ func SingleResult(db *sqlx.DB, wel bool, fileKey string) ([]MfResults, error) {
 
 func GetDescription(db *sqlx.DB) (desc string, err error) {
 	var rslt []ResultsNote
-	query := "SELECT * FROM results_notes ORDER BY id ASC LIMIT 1"
+	query := "SELECT * FROM results_notes"
 
 	if err := db.Select(&rslt, query); err != nil {
 		return "", err
 	}
 
-	return rslt[0].Note, nil
+	for _, n := range rslt {
+		if strings.ToLower(n.Note[:4]) == "desc" {
+			return rslt[0].Note, nil
+		}
+	}
+
+	return "", errors.New("could not find description")
 }
