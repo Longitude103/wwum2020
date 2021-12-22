@@ -71,7 +71,7 @@ func MakeModflowFiles() error {
 		}
 	}
 
-	if err := MakeFiles(aggRch, false, true, true, "AggregateRCH", path, mDesc); err != nil {
+	if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc); err != nil {
 		return err
 	}
 
@@ -141,21 +141,21 @@ func questions(sqliteDB *sqlx.DB) (Answers, error) {
 	// the questions to ask
 	var multiQs = []*survey.Question{
 		{
-			Name: "wellFK",
+			Name: "WellFK",
 			Prompt: &survey.MultiSelect{
 				Message: "Choose WEL files to exclude :",
 				Options: wellFk,
 			},
 		},
 		{
-			Name: "rchFK",
+			Name: "RchFK",
 			Prompt: &survey.MultiSelect{
 				Message: "Choose which RCH files to exclude :",
 				Options: rchFK,
 			},
 		},
 		{
-			Name: "rowCol",
+			Name: "RowCol",
 			Prompt: &survey.Confirm{
 				Message: "Do you want to Output Row-Column (node is default)?",
 			},
