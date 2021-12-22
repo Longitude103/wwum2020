@@ -28,17 +28,17 @@ func MakeModflowFiles() error {
 		return err
 	}
 
-	welFK, rchFK, err := questions(db)
+	a, err := questions(db)
 	if err != nil {
 		return err
 	}
 
-	aggWel, err := database.GetAggResults(db, true, welFK)
+	aggWel, err := database.GetAggResults(db, true, a.wellFK)
 	if err != nil {
 		return err
 	}
 
-	aggRch, err := database.GetAggResults(db, false, rchFK)
+	aggRch, err := database.GetAggResults(db, false, a.rchFK)
 	if err != nil {
 		return err
 	}
@@ -46,38 +46,38 @@ func MakeModflowFiles() error {
 	var singleWELResults = make(map[string][]database.MfResults)
 	var singleRCHResults = make(map[string][]database.MfResults)
 
-	for _, w := range welFK {
+	for _, w := range a.wellFK {
 		singleWELResults[w], err = database.SingleResult(db, true, w)
 		if err != nil {
 			return err
 		}
 	}
 
-	for _, r := range rchFK {
+	for _, r := range a.rchFK {
 		singleRCHResults[r], err = database.SingleResult(db, false, r)
 		if err != nil {
 			return err
 		}
 	}
 
-	if err := MakeFiles(aggWel, true, false, "AggregateWEL", path, mDesc); err != nil {
+	if err := MakeFiles(aggWel, true, false, a.rowCol, "AggregateWEL", path, mDesc); err != nil {
 		return err
 	}
 
 	for k := range singleWELResults {
 		fn := fmt.Sprintf("%sWEL", k)
-		if err := MakeFiles(singleWELResults[k], true, false, fn, path, mDesc); err != nil {
+		if err := MakeFiles(singleWELResults[k], true, false, a.rowCol, fn, path, mDesc); err != nil {
 			return err
 		}
 	}
 
-	if err := MakeFiles(aggRch, false, true, "AggregateRCH", path, mDesc); err != nil {
+	if err := MakeFiles(aggRch, false, true, true, "AggregateRCH", path, mDesc); err != nil {
 		return err
 	}
 
 	for k := range singleRCHResults {
 		fn := fmt.Sprintf("%sRCH", k)
-		if err := MakeFiles(singleRCHResults[k], false, true, fn, path, mDesc); err != nil {
+		if err := MakeFiles(singleRCHResults[k], false, true, a.rowCol, fn, path, mDesc); err != nil {
 			return err
 		}
 	}
@@ -121,10 +121,21 @@ func DbQuestion() (string, *sqlx.DB, error) {
 	return answers.File, sqliteDB, nil
 }
 
-func questions(sqliteDB *sqlx.DB) (a2 []string, a3 []string, err error) {
+type answers struct {
+	wellFK []string
+	rchFK  []string
+	rowCol bool
+}
+
+func questions(sqliteDB *sqlx.DB) (answers, error) {
 	wellFk, err := database.GetFileKeys(sqliteDB, true)
 	if err != nil {
-		return nil, nil, err
+		return answers{}, err
+	}
+
+	rchFK, err := database.GetFileKeys(sqliteDB, false)
+	if err != nil {
+		return answers{}, err
 	}
 
 	// the questions to ask
@@ -136,20 +147,6 @@ func questions(sqliteDB *sqlx.DB) (a2 []string, a3 []string, err error) {
 				Options: wellFk,
 			},
 		},
-	}
-
-	var answers2 []string
-	// ask the question
-	if err := survey.Ask(multiQs, &answers2); err != nil {
-		return nil, nil, err
-	}
-
-	rchFK, err := database.GetFileKeys(sqliteDB, false)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	multiQs = []*survey.Question{
 		{
 			Name: "rchFK",
 			Prompt: &survey.MultiSelect{
@@ -157,22 +154,29 @@ func questions(sqliteDB *sqlx.DB) (a2 []string, a3 []string, err error) {
 				Options: rchFK,
 			},
 		},
+		{
+			Name: "rowCol",
+			Prompt: &survey.Confirm{
+				Message: "Do you want to Output Row-Column (node is default)?",
+			},
+		},
 	}
 
-	var answers3 []string
-	// ask the question
-	if err := survey.Ask(multiQs, &answers3); err != nil {
-		return nil, nil, err
+	var a answers
+	// ask the questions
+	if err := survey.Ask(multiQs, &a); err != nil {
+		return answers{}, err
 	}
 
-	return answers2, answers3, nil
+	return a, nil
 }
 
-func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outputPath string, mDesc string) error {
+func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName string, outputPath string, mDesc string) error {
 	rInterface := make([]interface {
 		Date() time.Time
 		Node() int
 		Value() float64
+		RowCol() (int, int)
 	}, len(r))
 	for i, v := range r {
 		if wel {
@@ -187,7 +191,7 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, fileName string, outp
 		rInterface[i] = v
 	}
 
-	if err := Flogo.Input(wel, rch, fileName, rInterface, outputPath, mDesc); err != nil {
+	if err := Flogo.Input(wel, rch, Rc, fileName, rInterface, outputPath, mDesc); err != nil {
 		return err
 	}
 
