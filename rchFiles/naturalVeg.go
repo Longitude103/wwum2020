@@ -70,7 +70,7 @@ func NaturalVeg(v *database.Setup, wStations []database.WeatherStation,
 					deepPerc := calcDp(annData.MonthlyData[m].Dp, diffDp, roToRch, st.Weight, vegArea, aDp)
 
 					if v.AppDebug {
-						if m == 6 && cellResult[m].Node == 51763 {
+						if m == 6 && cellResult[m].Node == 90833 {
 							v.Logger.Debugf("st: %+v, VegArea: %f, CellLossFactor: %f", st, vegArea, cells[i].GetLossFactor())
 							v.Logger.Debugf("MonthET: %f, MonthRO: %f, MonthDP: %f", annData.MonthlyData[m].Et, annData.MonthlyData[m].Ro, annData.MonthlyData[m].Dp)
 							v.Logger.Debugf("diffRo: %f, diffDp: %f", diffRo, diffDp)
