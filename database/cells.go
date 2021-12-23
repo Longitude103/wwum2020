@@ -184,5 +184,9 @@ func AddCellsToOutput(v *Setup) error {
 		}
 	}
 
+	if err := c.Flush(); err != nil {
+		return err
+	}
+
 	return nil
 }
