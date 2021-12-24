@@ -6,6 +6,8 @@ github.com/Longitude103/Flogo v0.1.14 h1:dfvFuNRWvbm1AT6JsOvuWOtcBbr3kD8ksOLG0rQ
 github.com/Longitude103/Flogo v0.1.14/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
 github.com/Longitude103/Flogo v0.1.15 h1:P4JcAMft0mEthSHyrPGZiGKz1Cw0IF7LhcGXumslsO4=
 github.com/Longitude103/Flogo v0.1.15/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
+github.com/Longitude103/Flogo v0.1.16 h1:oxVEFxCpNneo/NFqRR0rpJzHko8Tf8Q2c5glyaNQKGI=
+github.com/Longitude103/Flogo v0.1.16/go.mod h1:lpWxADkRKy6oWDCPW9hfhgxdpNv4g9GkeCXtdXJ92i0=
 github.com/Longitude103/gisUtils v1.0.3 h1:NbRFPm71n90Px8FOTaXQOg6Y22UdMEXM57hAfSnFSs8=
 github.com/Longitude103/gisUtils v1.0.3/go.mod h1:VgX5gEAe1yfL8TUMSxnoFPeSm/1iKBjGmrwwiRop7bQ=
 github.com/Longitude103/gisUtils v1.1.0 h1:QBbwcA5pekIH+6UhqHd0vjuyDV2g57LAAQl7xg6FKQc=
