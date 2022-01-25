@@ -1,10 +1,11 @@
 package wells
 
 import (
+	"time"
+
 	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/pterm/pterm"
-	"time"
 )
 
 // MunicipalIndWells is a function that adds the municipal and industrial wells from postgresql to the results database
@@ -25,22 +26,21 @@ func MunicipalIndWells(v *database.Setup) error {
 	}
 
 	// start97 == false then use the "rate" to create the monthly pumping
-	var wlResult []database.WelResult
 	spin.UpdateText("Saving Municipal and Industrial Data")
-
 	for yr := v.SYear; yr < v.EYear+1; yr++ {
+		var wlResult []database.WelResult
 		if yr < 1997 {
 			for _, well := range wells {
-				if well.Start97 == false {
+				if !well.Start97 {
 					wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
 				}
 			}
 		}
 
-		if yr > 1997 {
+		if yr >= 1997 {
 			if v.Post97 {
 				for _, well := range wells {
-					if well.Stop97 == false && well.Start97 == false {
+					if !well.Stop97 && !well.Start97 {
 						wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: 1997})...)
 					}
 
@@ -50,7 +50,7 @@ func MunicipalIndWells(v *database.Setup) error {
 				}
 			} else {
 				for _, well := range wells {
-					if well.Stop97 == false && well.Start97 == false {
+					if !well.Stop97 && !well.Start97 {
 						wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
 					}
 
