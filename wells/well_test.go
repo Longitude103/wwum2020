@@ -2,9 +2,10 @@ package wells
 
 import (
 	"database/sql"
+	"testing"
+
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels"
-	"testing"
 )
 
 var (
@@ -100,7 +101,7 @@ func Test_filterWells(t *testing.T) {
 		t.Errorf("well count or id was not correct, should be count 2, got %d, well id should be 123, got %d", c, w[0])
 	}
 
-	w, c, err = filterWells(wpSlice, 987, "NP", 2020)
+	_, c, err = filterWells(wpSlice, 987, "NP", 2020)
 	if err != nil {
 		t.Errorf("function errored: %s\n", err)
 	}

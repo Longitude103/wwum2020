@@ -1,8 +1,8 @@
 package wells
 
 import (
-	"errors"
 	"fmt"
+
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/pterm/pterm"
@@ -96,7 +96,7 @@ func getNode(wellNodes []database.WellNode, well int, nrd string) (int, error) {
 		}
 	}
 
-	return 0, errors.New(fmt.Sprintf("no well found in getNode, well: %d, nrd: %s", well, nrd))
+	return 0, fmt.Errorf("no well found in getNode, well: %d, nrd: %s", well, nrd)
 }
 
 // addToResults is the function that creates another result from the parcel and adds to the result slice.

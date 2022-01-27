@@ -77,7 +77,7 @@ func constMIWell(well database.MIWell, yr Utils.TimeExt) []database.WelResult {
 	annVolume := -1.0 * float64(well.Rate) * float64(yr.DaysInYear()) / 43560
 	for i := 0; i < 12; i++ {
 		dInMon := Utils.TimeExt{T: time.Date(yr.Y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)}
-		monthVol := annVolume / float64(dInMon.DaysInMonth())
+		monthVol := annVolume / (float64(dInMon.DaysInMonth()) / float64(yr.DaysInYear()))
 		wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: well.MIFileType(),
 			Dt: time.Date(yr.Y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), Result: monthVol}
 		wrList = append(wrList, wl)
