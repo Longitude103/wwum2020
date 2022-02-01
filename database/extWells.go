@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/Longitude103/wwum2020/Utils"
 )
 
 type ExtWell struct {
@@ -37,5 +39,6 @@ func (w *ExtWell) Date() time.Time {
 }
 
 func (w *ExtWell) Pmp() float64 {
-	return w.Pumping * -1
+	pumpMonth := Utils.TimeExt{T: w.Date()}
+	return (w.Pumping * -1) * float64(pumpMonth.DaysInMonth()) / 43560
 }

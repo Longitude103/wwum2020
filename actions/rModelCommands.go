@@ -173,6 +173,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	}
 	pterm.Success.Println("Successfully Completed WEL Results")
 
+	resultsDB, _ := database.ResultsWelDB(v.SlDb)
 	// run steady State Wells
 	if err := wells.SteadyStateWells(v); err != nil {
 		return err
@@ -180,7 +181,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	pterm.Success.Println("Successfully Completed SS Results")
 
 	// run external wells
-	if err := wells.CreateExternalWells(v); err != nil {
+	if err := wells.CreateExternalWells(v, resultsDB); err != nil {
 		return err
 	}
 	pterm.Success.Println("Successfully Completed External Wells")
@@ -191,7 +192,6 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	}
 	pterm.Success.Println("Successfully Completed External RCH")
 
-	resultsDB, _ := database.ResultsWelDB(v.SlDb)
 	if err := wells.MunicipalIndWells(v, resultsDB); err != nil {
 		return err
 	}

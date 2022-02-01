@@ -5,7 +5,7 @@ import (
 	"github.com/pterm/pterm"
 )
 
-func CreateExternalWells(v *database.Setup) error {
+func CreateExternalWells(v *database.Setup, welDb resultDatabase) error {
 	v.Logger.Info("Starting External Wells Process")
 
 	spin, _ := pterm.DefaultSpinner.Start("Getting External Wells and results DB")
@@ -16,11 +16,11 @@ func CreateExternalWells(v *database.Setup) error {
 		return err
 	}
 
-	v.Logger.Info("Setting up results DB")
-	welDb, err := database.ResultsWelDB(v.SlDb)
-	if err != nil {
-		return err
-	}
+	// v.Logger.Info("Setting up results DB")
+	// welDb, err := database.ResultsWelDB(v.SlDb)
+	// if err != nil {
+	// 	return err
+	// }
 
 	spin.UpdateText("Saving External Well Results")
 	v.Logger.Info("Saving Data to results DB")

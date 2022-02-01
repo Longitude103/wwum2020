@@ -165,11 +165,10 @@ func GetSSWells(v *Setup) (ssWells []SSWell, err error) {
 // monthlyVolume is a method of SSWell that calculates the monthly volume of pumping from the rate that is included in the
 // database records. It turns the value positive to make it uniform with the other results.
 func (s *SSWell) monthlyVolume() (err error) {
-	const daysInMonth = 30.436875
 	annVolume := -1.0 * float64(s.Rate) * 365.25 / 43560
 
 	for i := 0; i < 12; i++ {
-		s.MVolume[i] = (annVolume / daysInMonth)
+		s.MVolume[i] = (annVolume / 12)
 	}
 
 	return nil
