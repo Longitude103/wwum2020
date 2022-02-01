@@ -191,7 +191,8 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	}
 	pterm.Success.Println("Successfully Completed External RCH")
 
-	if err := wells.MunicipalIndWells(v); err != nil {
+	resultsDB, _ := database.ResultsWelDB(v.SlDb)
+	if err := wells.MunicipalIndWells(v, resultsDB); err != nil {
 		return err
 	}
 	pterm.Success.Println("Successfully Completed MI Well Ops")

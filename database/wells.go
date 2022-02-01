@@ -169,7 +169,7 @@ func (s *SSWell) monthlyVolume() (err error) {
 	annVolume := -1.0 * float64(s.Rate) * 365.25 / 43560
 
 	for i := 0; i < 12; i++ {
-		s.MVolume[i] = (annVolume / daysInMonth) * -1
+		s.MVolume[i] = (annVolume / daysInMonth)
 	}
 
 	return nil

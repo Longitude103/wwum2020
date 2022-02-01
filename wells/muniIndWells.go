@@ -8,9 +8,13 @@ import (
 	"github.com/pterm/pterm"
 )
 
+type resultDatabase interface {
+	Add(value interface{}) error
+}
+
 // MunicipalIndWells is a function that adds the municipal and industrial wells from postgresql to the results database
 // and uses either assumed pumping rates or actual pumping numbers.
-func MunicipalIndWells(v *database.Setup) error {
+func MunicipalIndWells(v *database.Setup, welDB resultDatabase) error {
 
 	spin, _ := pterm.DefaultSpinner.Start("Getting MI Wells Data and results DB")
 	// go get the wells data
@@ -20,7 +24,7 @@ func MunicipalIndWells(v *database.Setup) error {
 	}
 
 	// process the data for the monthly amounts for average data
-	welDB, err := database.ResultsWelDB(v.SlDb)
+	// welDB, err := database.ResultsWelDB(v.SlDb)
 	if err != nil {
 		return err
 	}
@@ -77,7 +81,7 @@ func constMIWell(well database.MIWell, yr Utils.TimeExt) []database.WelResult {
 	annVolume := -1.0 * float64(well.Rate) * float64(yr.DaysInYear()) / 43560
 	for i := 0; i < 12; i++ {
 		dInMon := Utils.TimeExt{T: time.Date(yr.Y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)}
-		monthVol := annVolume / (float64(dInMon.DaysInMonth()) / float64(yr.DaysInYear()))
+		monthVol := annVolume * (float64(dInMon.DaysInMonth()) / float64(yr.DaysInYear()))
 		wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: well.MIFileType(),
 			Dt: time.Date(yr.Y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC), Result: monthVol}
 		wrList = append(wrList, wl)
