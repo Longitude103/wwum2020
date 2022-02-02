@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/Longitude103/wwum2020/Utils"
@@ -38,7 +39,14 @@ func (w *ExtWell) Date() time.Time {
 	return time.Date(w.Yr, time.Month(w.Mnth), 1, 0, 0, 0, 0, time.UTC)
 }
 
+// Pmp is a method that returns the correct pumping values for each value
 func (w *ExtWell) Pmp() float64 {
-	pumpMonth := Utils.TimeExt{T: w.Date()}
-	return (w.Pumping * -1) * float64(pumpMonth.DaysInMonth()) / 43560
+	// these two are rate amounts
+	if w.FileType == 214 || w.FileType == 215 {
+		pumpMonth := Utils.TimeExt{T: w.Date()}
+		return math.Abs(w.Pumping) * float64(pumpMonth.DaysInMonth()) / 43560
+	}
+
+	// the remaining are acre-feet but need to be positive
+	return math.Abs(w.Pumping)
 }

@@ -3,6 +3,7 @@ package parcels
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Longitude103/wwum2020/database"
 )
 
@@ -74,7 +75,7 @@ func (p *Parcel) shouldEstimate(p97 bool) (bool, error) {
 			return false, nil
 		} else {
 			if len(p.Subarea.String) > 0 {
-				if p.Yr > 2006 && (p.Subarea.String[2:] != "FA" || p.Subarea.String[3:] != "SPV") {
+				if p.Yr > 2008 && (p.Subarea.String[2:] != "FA" || p.Subarea.String[3:] != "SPV") {
 					return false, nil
 				} else {
 					return true, nil
