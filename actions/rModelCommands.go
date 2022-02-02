@@ -175,7 +175,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 
 	resultsDB, _ := database.ResultsWelDB(v.SlDb)
 	// run steady State Wells
-	if err := wells.SteadyStateWells(v); err != nil {
+	if err := wells.SteadyStateWells(v, resultsDB); err != nil {
 		return err
 	}
 	pterm.Success.Println("Successfully Completed SS Results")

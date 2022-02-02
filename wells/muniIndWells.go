@@ -23,12 +23,6 @@ func MunicipalIndWells(v *database.Setup, welDB resultDatabase) error {
 		return err
 	}
 
-	// process the data for the monthly amounts for average data
-	// welDB, err := database.ResultsWelDB(v.SlDb)
-	if err != nil {
-		return err
-	}
-
 	// start97 == false then use the "rate" to create the monthly pumping
 	spin.UpdateText("Saving Municipal and Industrial Data")
 	for yr := v.SYear; yr < v.EYear+1; yr++ {

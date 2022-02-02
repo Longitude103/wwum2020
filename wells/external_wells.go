@@ -8,19 +8,13 @@ import (
 func CreateExternalWells(v *database.Setup, welDb resultDatabase) error {
 	v.Logger.Info("Starting External Wells Process")
 
-	spin, _ := pterm.DefaultSpinner.Start("Getting External Wells and results DB")
+	spin, _ := pterm.DefaultSpinner.Start("Getting External Wells")
 	// get the external wells from "ext_pumping"
 	v.Logger.Info("Getting External Wells Data.")
 	extPump, err := database.GetExternalWells(v)
 	if err != nil {
 		return err
 	}
-
-	// v.Logger.Info("Setting up results DB")
-	// welDb, err := database.ResultsWelDB(v.SlDb)
-	// if err != nil {
-	// 	return err
-	// }
 
 	spin.UpdateText("Saving External Well Results")
 	v.Logger.Info("Saving Data to results DB")
@@ -30,8 +24,8 @@ func CreateExternalWells(v *database.Setup, welDb resultDatabase) error {
 			return err
 		}
 	}
-	spin.Success()
 
+	spin.Success()
 	v.Logger.Info("Finished adding External Wells to the results dataset")
 	return nil
 }
