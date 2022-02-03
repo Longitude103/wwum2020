@@ -11,7 +11,7 @@ import (
 // the amount of pumping that was done at the parcel since a well is present, but not metered. It fills the Pump field of the Parcel struct
 func (p *Parcel) estimatePumping(v *database.Setup, cCrops []database.CoeffCrop) error {
 	if se, err := p.shouldEstimate(v.Post97); err != nil || se {
-		nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
+		// nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
 		if err != nil {
 			v.Logger.Errorf("Error in Parcel: %d Adjustment Factor: %s", p.ParcelNo, err)
 		}
@@ -19,7 +19,7 @@ func (p *Parcel) estimatePumping(v *database.Setup, cCrops []database.CoeffCrop)
 		var swAvailableCU, nirRemaining [12]float64
 		if p.Sw.Bool {
 			for i := 0; i < 12; i++ {
-				swAvailableCU[i] = p.SWDel[i] * nirAdj * p.AppEff
+				swAvailableCU[i] = p.SWDel[i] * p.AppEff
 			}
 		}
 
@@ -28,6 +28,7 @@ func (p *Parcel) estimatePumping(v *database.Setup, cCrops []database.CoeffCrop)
 			nirRemaining[m] = p.Nir[m] - swAvailableCU[m]
 			if nirRemaining[m] > 0 {
 				p.Pump[m] = nirRemaining[m] / p.AppEff
+				// p.Pump[m] = nirRemaining[m]
 			}
 		}
 

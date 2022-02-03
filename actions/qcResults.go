@@ -52,6 +52,24 @@ func QcResults(myEnv map[string]string) error {
 
 	}
 
+	wGJ, err := WellGJQuestion()
+	if err != nil {
+		return err
+	}
+
+	if wGJ {
+		mOrA, err := mOrYQuestion()
+		if err != nil {
+			return err
+		}
+
+		if mOrA == "Monthly" {
+			opts = append(opts, qc.WithWellGJson(), qc.WithMonthly())
+		} else {
+			opts = append(opts, qc.WithWellGJson())
+		}
+	}
+
 	v, err := database.NewSetup(myEnv, database.WithNoSQLite())
 	if err != nil {
 		return err
@@ -102,8 +120,24 @@ func graphQuestion() (bool, error) {
 
 func GJQuestion() (bool, error) {
 	var q = &survey.Confirm{
-		Message: "Want to Output a GeoJson file of the results?",
-		Help:    "This will produce a GeoJson file of the results and saved to 'Output' Directory",
+		Message: "Want to Output a GeoJson file of the RECHARGE results?",
+		Help:    "This will produce a GeoJson file of the recharge results and saved to 'Output' Directory",
+	}
+
+	gj := false
+
+	// ask the question
+	if err := survey.AskOne(q, &gj); err != nil {
+		return false, err
+	}
+
+	return gj, nil
+}
+
+func WellGJQuestion() (bool, error) {
+	var q = &survey.Confirm{
+		Message: "Want to Output a GeoJson file of the WELL PUMPING results?",
+		Help:    "This will produce a GeoJson file of the Well Pumping results and saved to 'Output' Directory",
 	}
 
 	gj := false

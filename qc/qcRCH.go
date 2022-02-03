@@ -5,12 +5,14 @@ import (
 )
 
 type QC struct {
-	v        *database.Setup
-	fileName string
-	Graph    bool
-	Year     int
-	GJson    bool
-	Monthly  bool
+	v         *database.Setup
+	fileName  string
+	Graph     bool
+	Year      int
+	GJson     bool
+	Monthly   bool
+	WellGJson bool
+	grid      int
 }
 
 type Option func(*QC)
@@ -31,11 +33,17 @@ func WithMonthly() Option {
 	return func(q *QC) { q.Monthly = true }
 }
 
+func WithWellGJson() Option {
+	return func(q *QC) { q.WellGJson = true }
+}
+
 func NewQC(v *database.Setup, fileName string, options ...Option) *QC {
 	q := &QC{v: v, fileName: fileName, Year: 1997}
 	for _, option := range options {
 		option(q)
 	}
+
+	q.grid, _ = database.GetGrid(q.v.SlDb)
 
 	return q
 }
@@ -48,6 +56,12 @@ func StartQcRMain(q *QC) error {
 
 	if q.GJson {
 		if err := q.rechargeGeoJson(); err != nil {
+			return err
+		}
+	}
+
+	if q.WellGJson {
+		if err := q.WellPumpingGJson(); err != nil {
 			return err
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -87,11 +88,11 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
  								  FROM wel_results LEFT JOIN cellrc on cell_node = node WHERE file_type NOT IN (%s)
 									group by cell_node, dt) where rslt > 0;`, list)
 		} else { // don't exclude anything
-			qry = fmt.Sprint(`SELECT cell_node, rw, clm, dt, rslt
+			qry = `SELECT cell_node, rw, clm, dt, rslt
 									from (SELECT cell_node, rw, clm, dt, sum(result) rslt
  								  FROM wel_results
     								LEFT JOIN cellrc on cell_node = node group by cell_node, dt)
-								  where rslt > 0;`)
+								  where rslt > 0;`
 		}
 	} else { // is a recharge file
 		if len(excludeList) > 0 { // has an item in exclude list
@@ -105,9 +106,9 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 									clm, dt, sum(result) rslt FROM results LEFT JOIN cellrc on cell_node = node 
 								    WHERE file_type NOT IN (%s) group by cell_node, cell_size, dt) where rslt > 0;`, list)
 		} else { // don't exclude anything
-			qry = fmt.Sprint(`SELECT cell_node, cell_size, rw, clm, dt, rslt from (SELECT cell_node, cell_size, rw, 
+			qry = `SELECT cell_node, cell_size, rw, clm, dt, rslt from (SELECT cell_node, cell_size, rw, 
 									clm, dt, sum(result) rslt FROM results LEFT JOIN cellrc on cell_node = node 
-								  group by cell_node, cell_size, dt) where rslt > 0;`)
+								  group by cell_node, cell_size, dt) where rslt > 0;`
 		}
 	}
 
@@ -149,9 +150,27 @@ func GetDescription(db *sqlx.DB) (desc string, err error) {
 
 	for _, n := range rslt {
 		if strings.ToLower(n.Note[:4]) == "desc" {
-			return rslt[0].Note, nil
+			return n.Note, nil
 		}
 	}
 
 	return "", errors.New("could not find description")
+}
+
+func GetGrid(db *sqlx.DB) (grid int, err error) {
+	var rslt []ResultsNote
+	query := "SELECT * FROM results_notes"
+
+	if err := db.Select(&rslt, query); err != nil {
+		return 0, err
+	}
+
+	for _, n := range rslt {
+		if strings.ToLower(n.Note[:4]) == "grid" {
+			i, _ := strconv.Atoi(n.Note[len(n.Note)-1:])
+			return i, nil
+		}
+	}
+
+	return 0, errors.New("could not find grid number")
 }
