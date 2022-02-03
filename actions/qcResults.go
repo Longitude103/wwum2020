@@ -19,17 +19,29 @@ func QcResults(myEnv map[string]string) error {
 	}
 
 	var opts []qc.Option
-	yr, err := yearQuestion()
+
+	aGJ, err := WellAnnGJQuestion()
 	if err != nil {
 		return err
 	}
-	opts = append(opts, qc.WithYear(yr))
+
+	if aGJ {
+		opts = append(opts, qc.WithWellAnnGJson())
+	}
+
+	rechBalance, err := RechBalanceQuestion()
+	if err != nil {
+		return err
+	}
+
+	if rechBalance {
+		opts = append(opts, qc.WithRechargeBalance())
+	}
 
 	graph, err := graphQuestion()
 	if err != nil {
 		return err
 	}
-
 	if graph {
 		opts = append(opts, qc.WithGraph())
 	}
@@ -68,6 +80,14 @@ func QcResults(myEnv map[string]string) error {
 		} else {
 			opts = append(opts, qc.WithWellGJson())
 		}
+	}
+
+	if gj || wGJ || rechBalance {
+		yr, err := yearQuestion()
+		if err != nil {
+			return err
+		}
+		opts = append(opts, qc.WithYear(yr))
 	}
 
 	v, err := database.NewSetup(myEnv, database.WithNoSQLite())
@@ -120,7 +140,7 @@ func graphQuestion() (bool, error) {
 
 func GJQuestion() (bool, error) {
 	var q = &survey.Confirm{
-		Message: "Want to Output a GeoJson file of the RECHARGE results?",
+		Message: "Want to Output a GeoJson file of one Year of RECHARGE results?",
 		Help:    "This will produce a GeoJson file of the recharge results and saved to 'Output' Directory",
 	}
 
@@ -136,7 +156,39 @@ func GJQuestion() (bool, error) {
 
 func WellGJQuestion() (bool, error) {
 	var q = &survey.Confirm{
-		Message: "Want to Output a GeoJson file of the WELL PUMPING results?",
+		Message: "Want to Output a GeoJson file of one Year of WELL PUMPING results?",
+		Help:    "This will produce a GeoJson file of the Well Pumping results and saved to 'Output' Directory",
+	}
+
+	gj := false
+
+	// ask the question
+	if err := survey.AskOne(q, &gj); err != nil {
+		return false, err
+	}
+
+	return gj, nil
+}
+
+func RechBalanceQuestion() (bool, error) {
+	var q = &survey.Confirm{
+		Message: "Want to Output a Recharge Balance for a Given Year?",
+		Help:    "This will produce a table in the CLI of the recharge totals for a single year",
+	}
+
+	rb := false
+
+	// ask the question
+	if err := survey.AskOne(q, &rb); err != nil {
+		return false, err
+	}
+
+	return rb, nil
+}
+
+func WellAnnGJQuestion() (bool, error) {
+	var q = &survey.Confirm{
+		Message: "Want to Output a GeoJson file of the Annual WELL PUMPING of all results?",
 		Help:    "This will produce a GeoJson file of the Well Pumping results and saved to 'Output' Directory",
 	}
 

@@ -174,3 +174,26 @@ func GetGrid(db *sqlx.DB) (grid int, err error) {
 
 	return 0, errors.New("could not find grid number")
 }
+
+func GetStartEndYrs(db *sqlx.DB) (SYr, EYr int, err error) {
+	var rslt []ResultsNote
+	query := "SELECT * FROM results_notes"
+
+	if err := db.Select(&rslt, query); err != nil {
+		return 0, 0, err
+	}
+
+	for _, n := range rslt {
+		if strings.ToLower(n.Note[:3]) == "sta" {
+			i, _ := strconv.Atoi(n.Note[len(n.Note)-4:])
+			SYr = i
+		}
+
+		if strings.ToLower(n.Note[:3]) == "end" {
+			i, _ := strconv.Atoi(n.Note[len(n.Note)-4:])
+			EYr = i
+		}
+	}
+
+	return SYr, EYr, errors.New("could not find Start and End Years")
+}

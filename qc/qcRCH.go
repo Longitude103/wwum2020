@@ -5,14 +5,18 @@ import (
 )
 
 type QC struct {
-	v         *database.Setup
-	fileName  string
-	Graph     bool
-	Year      int
-	GJson     bool
-	Monthly   bool
-	WellGJson bool
-	grid      int
+	v            *database.Setup
+	fileName     string
+	Graph        bool
+	Year         int
+	GJson        bool
+	rechargeBal  bool
+	Monthly      bool
+	WellGJson    bool
+	WellAnnGJson bool
+	grid         int
+	SYear        int
+	EYear        int
 }
 
 type Option func(*QC)
@@ -37,6 +41,14 @@ func WithWellGJson() Option {
 	return func(q *QC) { q.WellGJson = true }
 }
 
+func WithWellAnnGJson() Option {
+	return func(q *QC) { q.WellAnnGJson = true }
+}
+
+func WithRechargeBalance() Option {
+	return func(q *QC) { q.rechargeBal = true }
+}
+
 func NewQC(v *database.Setup, fileName string, options ...Option) *QC {
 	q := &QC{v: v, fileName: fileName, Year: 1997}
 	for _, option := range options {
@@ -44,14 +56,17 @@ func NewQC(v *database.Setup, fileName string, options ...Option) *QC {
 	}
 
 	q.grid, _ = database.GetGrid(q.v.SlDb)
+	q.SYear, q.EYear, _ = database.GetStartEndYrs(q.v.SlDb)
 
 	return q
 }
 
 func StartQcRMain(q *QC) error {
 	//fmt.Printf("q: %+v\n", q)
-	if err := q.rechargeBalance(); err != nil {
-		return err
+	if q.rechargeBal {
+		if err := q.rechargeBalance(); err != nil {
+			return err
+		}
 	}
 
 	if q.GJson {
@@ -62,6 +77,12 @@ func StartQcRMain(q *QC) error {
 
 	if q.WellGJson {
 		if err := q.WellPumpingGJson(); err != nil {
+			return err
+		}
+	}
+
+	if q.WellAnnGJson {
+		if err := q.WellsAnnPumping(); err != nil {
 			return err
 		}
 	}
