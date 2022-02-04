@@ -24,6 +24,7 @@ type Setup struct {
 	ExcessFlow bool
 	Post97     bool
 	OldGrid    bool
+	MF640Grid  bool
 }
 
 type Option func(*Setup)
@@ -112,6 +113,10 @@ func WithOldGrid() Option {
 	return func(s *Setup) { s.OldGrid = true }
 }
 
+func WithMF640Grid() Option {
+	return func(s *Setup) { s.MF640Grid = true }
+}
+
 // SetYears is an initializer method for the Setup struct to set the start and end years of the application run.
 func (s *Setup) SetYears(sYear, eYear int) error {
 	if sYear > 1953 || sYear < time.Now().Year() {
@@ -131,8 +136,13 @@ func (s *Setup) SetYears(sYear, eYear int) error {
 
 func (s *Setup) CellType() int {
 	ct := 2
+
 	if s.OldGrid {
 		ct = 1
+	}
+
+	if s.MF640Grid {
+		ct = 3
 	}
 
 	return ct

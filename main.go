@@ -24,8 +24,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/joho/godotenv"
 	"os"
+
+	"github.com/joho/godotenv"
 
 	"github.com/Longitude103/wwum2020/actions"
 )
@@ -62,6 +63,7 @@ For help with those functions type: runModel -h or mfFiles -h`
 	rModelDesc := runModelCmd.String("Desc", "", "REQUIRED! - Model Description")
 	rModelP97 := runModelCmd.Bool("post97", false, "If flag set, a post 97 run will be made")
 	rModelGrid := runModelCmd.Bool("oldGrid", false, "If flag set, the model will use the 40 acre grid, not USG as default")
+	rModelMF6Grid40 := runModelCmd.Bool("mf6Grid40", false, "If flag set, the model will use the 40 acre grid but in MF6 Node Numbers")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -83,7 +85,12 @@ For help with those functions type: runModel -h or mfFiles -h`
 			os.Exit(0)
 		}
 
-		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelDesc, *rModelStartY, *rModelEndY, *rModelEF, *rModelP97, *rModelGrid, myEnv); err != nil {
+		if *rModelGrid && *rModelMF6Grid40 {
+			fmt.Println("Error in Flags: Cannot have both --oldGrid and --mf6Grid40 flags present at the same time")
+			os.Exit(1)
+		}
+
+		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelDesc, *rModelStartY, *rModelEndY, *rModelEF, *rModelP97, *rModelGrid, *rModelMF6Grid40, myEnv); err != nil {
 			fmt.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}
