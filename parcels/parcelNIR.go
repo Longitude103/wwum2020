@@ -56,11 +56,11 @@ func (p *Parcel) ParcelNIR(v *database.Setup, Year int, wStations []database.Wea
 		}
 
 		// weight the crops based on crop_cov and weather station weight
-		parcelNIR = pValues(parcelNIR, cropsNir, cropCov, st.Weight, p.Area)
-		parcelEt = pValues(parcelEt, cropsEt, cropCov, st.Weight, p.Area)
-		parcelDryEt = pValues(parcelDryEt, cropsDryEt, cropCov, st.Weight, p.Area)
-		parcelRo = pValues(parcelRo, cropsRo, cropCov, st.Weight, p.Area)
-		parcelDp = pValues(parcelDp, cropsDp, cropCov, st.Weight, p.Area)
+		parcelNIR = pValues(parcelNIR, cropsNir, cropCov, st.Weight, p.SoilArea)
+		parcelEt = pValues(parcelEt, cropsEt, cropCov, st.Weight, p.SoilArea)
+		parcelDryEt = pValues(parcelDryEt, cropsDryEt, cropCov, st.Weight, p.SoilArea)
+		parcelRo = pValues(parcelRo, cropsRo, cropCov, st.Weight, p.SoilArea)
+		parcelDp = pValues(parcelDp, cropsDp, cropCov, st.Weight, p.SoilArea)
 	}
 	//fmt.Printf("Weighted Parcel ID: %d, NIR is: %v\n", p.ParcelNo, parcelNIR)
 
