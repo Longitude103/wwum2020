@@ -11,11 +11,11 @@ import (
 	"github.com/pterm/pterm"
 )
 
-// ParcelPump is the main function for the parcels, it gets the usage, efficiencies, operates the surface water convayance
-// loss and then calls the surface water delivery. I also creates the parcels then calls the ParcelPumpDB method to set
+// ParcelPump is the main function for the parcels, it gets the usage, efficiencies, operates the surface water conveyance
+// loss and then calls the surface water delivery. It also creates the parcels then calls the ParcelPumpDB method to set
 // the parcel pumping, it then loops through the years for each parcel and sends the diversions, calls parcel NIR, sets the
-// efficiency for the parcel, adds SW delivery, adds the known pumping, and then calls the simulate pumping for all other
-// parcels. Finally it writes out the pumping per parcel and then operates the WSPP routine to finish the RO and DP.
+// efficiency for the parcel, adds SW delivery, adds the known pumping, and then simulates pumping for all other
+// parcels. Finally, it writes out the pumping per parcel and then operates the WSPP routine to finish the RO and DP.
 func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, cCrops []database.CoeffCrop) (AllParcels []Parcel, err error) {
 

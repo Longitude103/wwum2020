@@ -21,3 +21,16 @@ func Test_distributeUsage(t *testing.T) {
 	}
 
 }
+
+func Test_getUsage(t *testing.T) {
+	v := dbConnection()
+	v.SetYears(1997, 2020)
+
+	usage := getUsage(v)
+
+	records2018 := len(usage[2018])
+
+	if records2018 != 2935 {
+		t.Errorf("should have returned 2935 records but got %d records", records2018)
+	}
+}

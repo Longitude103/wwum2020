@@ -61,8 +61,9 @@ func Test_distUsage(t *testing.T) {
 
 func Test_ParcelPump(t *testing.T) {
 	v := dbConnection()
+	v.SetYears(2009, 2009)
 
-	csResults, _ := fileio.LoadTextFiles("/run/media/heath/T7 Touch/WWUMM2020/CropSim/Run005_WWUM2020/Output", v.Logger)
+	csResults, _ := fileio.LoadTextFiles("../testData/CropSimOutput", v.Logger)
 	wStations, _ := database.GetWeatherStations(v.PgDb)
 	cCoefficients, _ := database.GetCoeffCrops(v)
 
@@ -73,7 +74,8 @@ func Test_ParcelPump(t *testing.T) {
 
 	i := 0
 	for _, parcel := range irrParcels {
-		if parcel.ParcelNo == 310 {
+		// was 310
+		if parcel.ParcelNo == 4274 {
 			i += 1
 			v.Logger.Debug(parcel.String())
 			v.Logger.Debug(parcel.NIRString())

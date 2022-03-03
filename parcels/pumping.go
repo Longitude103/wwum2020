@@ -12,9 +12,9 @@ import (
 func (p *Parcel) estimatePumping(v *database.Setup, cCrops []database.CoeffCrop) error {
 	if se, err := p.shouldEstimate(v.Post97); err != nil || se {
 		// nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
-		if err != nil {
-			v.Logger.Errorf("Error in Parcel: %d Adjustment Factor: %s", p.ParcelNo, err)
-		}
+		// if err != nil {
+		// 	v.Logger.Errorf("Error in Parcel: %d Adjustment Factor: %s", p.ParcelNo, err)
+		// }
 
 		var swAvailableCU, nirRemaining [12]float64
 		if p.Sw.Bool {
@@ -55,10 +55,12 @@ func (p *Parcel) shouldEstimate(p97 bool) (bool, error) {
 
 		if p.Yr > 2008 {
 			// have reads for OA areas
-			if p.Subarea.Valid {
-				if p.Subarea.String == "North Platte" || p.Subarea.String == "Pumpkin Creek" {
-					// areas not FA
-					return false, nil
+			if p.Oa.Valid {
+				if p.Subarea.Valid {
+					if p.Subarea.String == "North Platte" || p.Subarea.String == "Pumpkin Creek" {
+						// areas not FA
+						return false, nil
+					}
 				}
 			}
 

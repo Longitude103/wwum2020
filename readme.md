@@ -27,6 +27,7 @@ of flags in the CLI. This is a core go package.
     - --StartYr: start year of the distribution, defaults to: 1997
     - --EndYr: end year of the distribution, defaults to: 2020
     - --oldGrid: runs the model with the original 40-acre grid pattern from previous models
+    - --mf6Grid40: runs the model with the 40 acre grids using MODFLOW 6 node numbers
 
 
 - mfFiles => is the CLI function to use the results from the `runModel` function and results database to create
