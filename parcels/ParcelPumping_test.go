@@ -61,7 +61,7 @@ func Test_distUsage(t *testing.T) {
 
 func Test_ParcelPump(t *testing.T) {
 	v := dbConnection()
-	v.SetYears(2009, 2009)
+	v.SetYears(2010, 2010)
 
 	csResults, _ := fileio.LoadTextFiles("../testData/CropSimOutput", v.Logger)
 	wStations, _ := database.GetWeatherStations(v.PgDb)

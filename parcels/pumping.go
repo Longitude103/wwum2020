@@ -56,10 +56,12 @@ func (p *Parcel) shouldEstimate(p97 bool) (bool, error) {
 		if p.Yr > 2008 {
 			// have reads for OA areas
 			if p.Oa.Valid {
-				if p.Subarea.Valid {
-					if p.Subarea.String == "North Platte" || p.Subarea.String == "Pumpkin Creek" {
-						// areas not FA
-						return false, nil
+				if p.Oa.Int64 == 1 {
+					if p.Subarea.Valid {
+						if p.Subarea.String == "North Platte" || p.Subarea.String == "Pumpkin Creek" {
+							// areas not FA
+							return false, nil
+						}
 					}
 				}
 			}
