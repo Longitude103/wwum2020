@@ -3,6 +3,7 @@ package conveyLoss
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/Longitude103/wwum2020/database"
 )
 
@@ -81,6 +82,13 @@ func getCanals(v *database.Setup) (canals []Canal, err error) {
 		if err := v.PgDb.Select(&canals, query); err != nil {
 			v.Logger.Errorf("Error getting canals: %s", err)
 			return nil, err
+		}
+	}
+
+	// fix western canal to max acres since the acres contained are only the SP Irrigated Acres
+	for i := 0; i < len(canals); i++ {
+		if canals[i].Id == 54 {
+			canals[i].Area.Float64 = 10312.0
 		}
 	}
 
