@@ -20,8 +20,13 @@ type ExtWell struct {
 // GetExternalWells is a function to query the external pumping from the database and returns a slice of ExtWell as well
 // as includes handling the debug mode.
 func GetExternalWells(v *Setup) (extWells []ExtWell, err error) {
+	endYr := v.EYear
+	if v.EYear > 2014 {
+		endYr = 2014
+	}
+
 	extQuery := fmt.Sprintf("select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on "+
-		"st_contains(mc.geom, ext_pumping.geom) where yr >= %d and yr <= %d and mc.cell_type = %d;", v.SYear, v.EYear, v.CellType())
+		"st_contains(mc.geom, ext_pumping.geom) where yr >= %d and yr <= %d and mc.cell_type = %d;", v.SYear, endYr, v.CellType())
 
 	if err := v.PgDb.Select(&extWells, extQuery); err != nil {
 		return extWells, errors.New("error getting data from ext_pumping table from DB")
@@ -29,6 +34,26 @@ func GetExternalWells(v *Setup) (extWells []ExtWell, err error) {
 
 	if v.AppDebug {
 		return extWells[:50], nil
+	}
+
+	// actual data is only through 2014, might remove this if the data is updated.
+	if v.EYear > 2014 {
+		var extraWells []ExtWell
+		additionalYrs := v.EYear - 2014
+		extraQuery := fmt.Sprintf("select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on "+
+			"st_contains(mc.geom, ext_pumping.geom) where yr = 2014 and mc.cell_type = %d;", v.CellType())
+
+		if err := v.PgDb.Select(&extraWells, extraQuery); err != nil {
+			return extWells, errors.New("error getting data from ext_pumping table from DB")
+		}
+
+		for i := 0; i < additionalYrs; i++ {
+			for j := 0; j < len(extraWells); j++ {
+				extraWells[j].Yr = extraWells[j].Yr + i + 1
+			}
+
+			extWells = append(extWells, extraWells...)
+		}
 	}
 
 	return extWells, nil
