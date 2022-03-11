@@ -95,6 +95,17 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 			wg.Wait()
 		}
 
+		// get all parcels simulate pumping if GW == true
+		p.UpdateTitle(fmt.Sprintf("Simulating %d Parcel Pumping", y))
+		v.Logger.Infof("Simulating Pumping for year %d", y)
+		for p := 0; p < len(parcels); p++ {
+			if (&parcels[p]).isGW() {
+				if err := (&parcels[p]).estimatePumping(v, cCrops); err != nil {
+					return []Parcel{}, err
+				}
+			}
+		}
+
 		// add usage to parcel
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
 		v.Logger.Info("Setting Annual Usage")
@@ -102,22 +113,11 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 			return []Parcel{}, err
 		}
 
-		// get all parcels simulate pumping if GW == true
-		p.UpdateTitle(fmt.Sprintf("Simulating %d Parcel Pumping", y))
-		v.Logger.Infof("Simulating Pumping for year %d", y)
-		for p := 0; p < len(parcels); p++ {
-			if (&parcels[p]).Gw.Bool {
-				if err := (&parcels[p]).estimatePumping(v, cCrops); err != nil {
-					return []Parcel{}, err
-				}
-			}
-		}
-
 		if !v.AppDebug {
 			// write out parcel pumping for each parcel in sqlite results
 			p.UpdateTitle(fmt.Sprintf("Saving %d Parcel Pumping Results", y))
 			for p := 0; p < len(parcels); p++ {
-				if parcels[p].Gw.Bool {
+				if parcels[p].isGW() {
 					// Add data to pumpingStruct and then append
 					for m := 1; m < 13; m++ {
 						if parcels[p].Pump[m-1] > 0 {

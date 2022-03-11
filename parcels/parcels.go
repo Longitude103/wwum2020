@@ -402,3 +402,12 @@ func (p Parcel) isGWO() bool {
 
 	return false
 }
+
+// isGW is a method that returns a bool if the parcel recieves supply from groundwater
+func (p Parcel) isGW() bool {
+	if p.Gw.Valid && p.Gw.Bool {
+		return true
+	}
+
+	return false
+}
