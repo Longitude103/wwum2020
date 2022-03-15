@@ -49,7 +49,7 @@ func GetExternalWells(v *Setup) (extWells []ExtWell, err error) {
 
 		for i := 0; i < additionalYrs; i++ {
 			for j := 0; j < len(extraWells); j++ {
-				extraWells[j].Yr = extraWells[j].Yr + i + 1
+				extraWells[j].Yr = extraWells[j].Yr + 1
 			}
 
 			extWells = append(extWells, extraWells...)

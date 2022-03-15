@@ -106,11 +106,13 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 			}
 		}
 
-		// add usage to parcel
-		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
-		v.Logger.Info("Setting Annual Usage")
-		if err := distUsage(usage[y], &parcels); err != nil {
-			return []Parcel{}, err
+		if !v.Post97 {
+			// add usage to parcel
+			p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
+			v.Logger.Info("Setting Annual Usage")
+			if err := distUsage(usage[y], &parcels); err != nil {
+				return []Parcel{}, err
+			}
 		}
 
 		if !v.AppDebug {
