@@ -44,7 +44,7 @@ func GetExtRecharge(v *Setup) (eRch []ExtRch, err error) {
 
 		for i := 0; i < additionalYrs; i++ {
 			for j := 0; j < len(extraRch); j++ {
-				extraRch[j].Yr = extraRch[j].Yr + i + 1
+				extraRch[j].Yr = extraRch[j].Yr + 1
 			}
 
 			eRch = append(eRch, extraRch...)
