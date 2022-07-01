@@ -1,6 +1,7 @@
 package rchFiles
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -23,7 +24,8 @@ func NaturalVeg(v *database.Setup, wStations []database.WeatherStation,
 		p.UpdateTitle(fmt.Sprintf("Getting %d cell areas", yr))
 		cells, err := database.GetCellAreas(v, yr)
 		if err != nil {
-			return err
+			e := fmt.Sprintf("error in getting cell areas for yr %d, error is: %s", yr, err)
+			return errors.New(e)
 		}
 
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Natural Veg Recharge", yr))
