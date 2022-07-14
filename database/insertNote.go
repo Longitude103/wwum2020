@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,6 +17,8 @@ type NoteDB struct {
 	buffer []Note
 }
 
+// ResultsNoteDB is a function that returns a db struct that includes a sql connection, a insert statement, and
+// buffer to add notes to the output database.
 func ResultsNoteDB(sqlDB *sqlx.DB) (*NoteDB, error) {
 	insertSQL := `INSERT INTO results_notes (note) VALUES (?)`
 
@@ -33,6 +36,7 @@ func ResultsNoteDB(sqlDB *sqlx.DB) (*NoteDB, error) {
 	return &db, nil
 }
 
+// Add is a method on NoteDB that will add a text message to the output db results_notes table
 func (db *NoteDB) Add(n Note) error {
 	if len(db.buffer) == cap(db.buffer) {
 		return errors.New("notes buffer is full")

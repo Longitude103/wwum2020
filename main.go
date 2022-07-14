@@ -27,6 +27,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/pterm/pterm"
 
 	"github.com/Longitude103/wwum2020/actions"
 )
@@ -36,14 +37,22 @@ import (
 func main() {
 	const help = `WWUM 2020 CLI for various tasks. At this point there are two main functions implemented.
 1. runModel -> Run Full WWUMM 2020 Model
-2. mfFiles -> Write ModFlow files from a results DB
-3. qcResults -> Runs QC analysis on the results DB chosen, can output many things
+2. runSteadyState -> Run the Steady State Model Version
+3. mfFiles -> Write ModFlow files from a results DB
+4. qcResults -> Runs QC analysis on the results DB chosen, can output many things
 -------------------------------------------------------------------------------------------------
 Use this command: runModel
     Required Flags: --Desc: A description of the model being run
 					--CSDir: The directory path to the CropSim Results text files
+					
+Use this command: runSteadyState
+    Required Flags: --Desc: A description of the model being run
+					--CSDir: The directory path to the CropSim Results text files
 
 Use this command: mfFiles
+	Required Flags: None, but will prompt for selection responses based on data
+	
+Use this command: qcResults
 	Required Flags: None, but will prompt for selection responses based on data
 -------------------------------------------------------------------------------------------------
 For help with those functions type: runModel -h or mfFiles -h`
@@ -64,6 +73,13 @@ For help with those functions type: runModel -h or mfFiles -h`
 	rModelP97 := runModelCmd.Bool("post97", false, "If flag set, a post 97 run will be made")
 	rModelGrid := runModelCmd.Bool("oldGrid", false, "If flag set, the model will use the 40 acre grid, not USG as default")
 	rModelMF6Grid40 := runModelCmd.Bool("mf6Grid40", false, "If flag set, the model will use the 40 acre grid but in MF6 Node Numbers")
+	runSSCmd := flag.NewFlagSet("runSteadyState", flag.ExitOnError)
+	runSSAvgStart := runSSCmd.Int("AvgStartYr", 1953, "Sets the start year of Averaging, default = 1953")
+	runSSAvgEnd := runSSCmd.Int("AvgEndYr", 2020, "Sets the end year of Averaging, default = 2020")
+	runSSModelGrid := runSSCmd.Bool("oldGrid", false, "If flag set, the model will use the 40 acre grid, not USG as default")
+	runSSModelMF6Grid40 := runSSCmd.Bool("mf6Grid40", false, "If flag set, the model will use the 40 acre grid but in MF6 Node Numbers")
+	runSSModelCSDir := runSSCmd.String("CSDir", "", "REQUIRED! - CropSim Directory path")
+	runSSModelDesc := runSSCmd.String("Desc", "", "REQUIRED! - Model Description")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -74,24 +90,58 @@ For help with those functions type: runModel -h or mfFiles -h`
 	case "runModel":
 		err := runModelCmd.Parse(os.Args[2:])
 		if err != nil {
-			fmt.Println("Error", err)
+			pterm.Error.Printf("Error in parsing arguments: %s", err)
 			fmt.Println(help)
 			os.Exit(1)
 		}
 
 		if *rModelDesc == "" {
-			fmt.Println("Must include a model description before executing model run")
+			pterm.Error.Println("Must include a model description before executing model run")
+			fmt.Println(help)
+			os.Exit(0)
+		}
+
+		if *rModelCSDir == "" {
+			pterm.Error.Println("Must include path to CropSim Files")
 			fmt.Println(help)
 			os.Exit(0)
 		}
 
 		if *rModelGrid && *rModelMF6Grid40 {
-			fmt.Println("Error in Flags: Cannot have both --oldGrid and --mf6Grid40 flags present at the same time")
+			pterm.Error.Println("Error in Flags: Cannot have both --oldGrid and --mf6Grid40 flags present at the same time")
 			os.Exit(1)
 		}
 
 		if err := actions.RunModel(*rModelDebug, rModelCSDir, *rModelDesc, *rModelStartY, *rModelEndY, *rModelEF, *rModelP97, *rModelGrid, *rModelMF6Grid40, myEnv); err != nil {
-			fmt.Printf("Error in Application: %s\n", err)
+			pterm.Error.Printf("Error in Application: %s\n", err)
+			os.Exit(1)
+		}
+	case "runSteadyState":
+		err := runSSCmd.Parse(os.Args[2:])
+		if err != nil {
+			pterm.Error.Printf("Error Parsing Args for Steady State: %s", err)
+			os.Exit(1)
+		}
+
+		if *runSSModelDesc == "" {
+			pterm.Error.Println("Must include a model description before executing model run")
+			fmt.Println(help)
+			os.Exit(0)
+		}
+
+		if *runSSModelCSDir == "" {
+			pterm.Error.Println("Must include path to CropSim Files")
+			fmt.Println(help)
+			os.Exit(0)
+		}
+
+		if *runSSModelGrid && *runSSModelMF6Grid40 {
+			pterm.Error.Println("Error in Flags: Cannot have both --oldGrid and --mf6Grid40 flags present at the same time")
+			os.Exit(1)
+		}
+
+		if err := actions.RunSteadyState(*runSSModelDesc, *runSSModelCSDir, *runSSAvgStart, *runSSAvgEnd, *runSSModelGrid, *runSSModelMF6Grid40, myEnv); err != nil {
+			pterm.Error.Printf("Error in Steady State Run: %s", err)
 			os.Exit(1)
 		}
 	case "mfFiles":

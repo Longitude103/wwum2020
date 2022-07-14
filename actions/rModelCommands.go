@@ -47,7 +47,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	pterm.Info.Printf("Model Description: %s\n", mDesc)
 	v.Logger.Infof("Model Description: %s", mDesc)
 	if err := v.SetYears(sY, eY); err != nil {
-		v.Logger.Errorf("Error Setting Years Error: %s", err)
+		v.Logger.Errorf("Error Setting Years: %s", err)
 		return err
 	}
 
