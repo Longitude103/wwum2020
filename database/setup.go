@@ -12,19 +12,20 @@ import (
 )
 
 type Setup struct {
-	PgDb       *sqlx.DB
-	SqliteDB   bool
-	SlDb       *sqlx.DB
-	SYear      int
-	EYear      int
-	Logger     *logging.TheLogger
-	PNirDB     *DB
-	RchDb      *RchDB
-	AppDebug   bool
-	ExcessFlow bool
-	Post97     bool
-	OldGrid    bool
-	MF640Grid  bool
+	PgDb        *sqlx.DB
+	SqliteDB    bool
+	SlDb        *sqlx.DB
+	SYear       int
+	EYear       int
+	Logger      *logging.TheLogger
+	PNirDB      *DB
+	RchDb       *RchDB
+	AppDebug    bool
+	ExcessFlow  bool
+	Post97      bool
+	OldGrid     bool
+	MF640Grid   bool
+	SteadyState bool
 }
 
 type Option func(*Setup)
@@ -115,6 +116,10 @@ func WithOldGrid() Option {
 
 func WithMF640Grid() Option {
 	return func(s *Setup) { s.MF640Grid = true }
+}
+
+func WithSteadyState() Option {
+	return func(s *Setup) { s.SteadyState = true }
 }
 
 // SetYears is an initializer method for the Setup struct to set the start and end years of the application run.

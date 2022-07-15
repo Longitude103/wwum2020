@@ -19,6 +19,8 @@ func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bo
 
 	pterm.Info.Println("Setting up results database")
 	var opts []database.Option
+	opts = append(opts, database.WithSteadyState())
+
 	if oldGrid {
 		opts = append(opts, database.WithOldGrid())
 	}

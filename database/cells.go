@@ -73,8 +73,16 @@ func GetCells(v *Setup) (cells []ModelCell, err error) {
 // dryland. It also returns the area, soil code, and zone of the cell in a slice of CellIntersect Struct. It implements the
 // debug mode to only return 200 cells which were selected as having good data.
 func GetCellAreas(v *Setup, y int) (cells []CellIntersect, err error) {
-	query := fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy, nip_area, ndp_area, 
-									sip_area, sdp_area from getCellAcres(%d, %d);`, y, v.CellType())
+	var query string
+	if v.SteadyState {
+		// steadystate needs a different query
+		// use getcellSS1acres to get all model cells without any parcels
+		// use getcellSS2acres to get model cells with Dryland parcels only --- TODO: not going to work, need to have surface water parcels too.
+
+	} else {
+		query = fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy, nip_area, ndp_area, 
+		sip_area, sdp_area from getCellAcres(%d, %d);`, y, v.CellType())
+	}
 
 	if err = v.PgDb.Select(&cells, query); err != nil {
 		return nil, err
