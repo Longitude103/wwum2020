@@ -36,7 +36,7 @@ func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bo
 
 	pterm.Info.Printf("Model Description: %s\n", mDesc)
 	v.Logger.Infof("Model Description: %s", mDesc)
-	if err := v.SetYears(AvgStart, AvgEnd); err != nil {
+	if err := v.SetYears(1952, 1952); err != nil {
 		v.Logger.Errorf("Error Setting Average Years: %s", err)
 		return err
 	}
@@ -75,20 +75,34 @@ func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bo
 	spinnerSuccess, _ := pterm.DefaultSpinner.Start("Reading CropSim Results files")
 	csResults, err := fileio.LoadTextFiles(CSDir, v.Logger)
 	if err != nil {
-		fmt.Println("Error in Loading Text Files, check log file")
+		spinnerSuccess.Fail("Error in Loading Text Files")
 		return err
 	}
+
+	v.Logger.Info("Averaging CS Results")
+	avgCSResults, err := fileio.AverageStationResults(csResults, AvgStart, AvgEnd)
+	if err != nil {
+		spinnerSuccess.Fail("Error in Averaging CS Results")
+		return err
+	}
+
 	spinnerSuccess.Success()
 
+	// get Weather Stations
 	spinnerSuccess, _ = pterm.DefaultSpinner.Start("Getting Weather Stations")
 	v.Logger.Info("Getting Weather Stations")
 	wStations, err := database.GetWeatherStations(v.PgDb)
 	if err != nil {
-		v.Logger.Errorf("Error Getting Weather stations: %s", err)
+		spinnerSuccess.Fail("Error Getting Weather Stations")
+		return err
 	}
 	spinnerSuccess.Success()
 
-	_ = csResults
+	// for _, v := range avgCSResults {
+	// 	fmt.Println(v)
+	// }
+
+	_ = avgCSResults
 	_ = wStations
 
 	// create average natural vegetation values for each month

@@ -29,7 +29,7 @@ type MonthlyValues struct {
 }
 
 // LoadTextFiles loads cropsim text files from a location and returns a map of the results to use in further processing.
-// This should include all the files and results for each station and each year.
+// This should include all the files and results for each station and each year. The map key is the station id that is also stored in the StationResults struct as Station
 func LoadTextFiles(filePath string, logger *logging.TheLogger) (map[string][]StationResults, error) {
 	logger.Infof("File Path: %s", filePath)
 	//fmt.Println("File Path:", filePath)
