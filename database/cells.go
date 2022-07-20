@@ -73,16 +73,8 @@ func GetCells(v *Setup) (cells []ModelCell, err error) {
 // dryland. It also returns the area, soil code, and zone of the cell in a slice of CellIntersect Struct. It implements the
 // debug mode to only return 200 cells which were selected as having good data.
 func GetCellAreas(v *Setup, y int) (cells []CellIntersect, err error) {
-	var query string
-	if v.SteadyState {
-		// steadystate needs a different query
-		// use getcellSS1acres to get all model cells without any parcels
-		// use getcellSS2acres to get model cells with Dryland parcels only --- TODO: not going to work, need to have surface water parcels too.
-
-	} else {
-		query = fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy, nip_area, ndp_area, 
-		sip_area, sdp_area from getCellAcres(%d, %d);`, y, v.CellType())
-	}
+	query := fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy, nip_area, ndp_area, 
+							sip_area, sdp_area from getCellAcres(%d, %d);`, y, v.CellType())
 
 	if err = v.PgDb.Select(&cells, query); err != nil {
 		return nil, err
@@ -197,4 +189,29 @@ func AddCellsToOutput(v *Setup) error {
 	}
 
 	return nil
+}
+
+// GetCellAreas1 is a function for the Steady State Run to return the amount of area within each model cell for the first two stress periods. NO parcels are included.
+// It returns the area, soil code, and zone of the cell in a slice of CellIntersect Struct.
+func GetSSCellAreas1(v *Setup) (cells []CellIntersect, err error) {
+	query := fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy from getcellss1acres(%d);`, v.CellType())
+
+	if err = v.PgDb.Select(&cells, query); err != nil {
+		return nil, err
+	}
+
+	return cells, nil
+}
+
+// GetCellAreas2 is a function to return the amount of area within each model cell that is covered by parcels of surface water irrigated and
+// dryland parcels. It returns the area, soil code, and zone of the cell in a slice of CellIntersect Struct.
+func GetSSCellAreas2(v *Setup) (cells []CellIntersect, err error) {
+	query := fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy, nip_area, ndp_area, 
+							sip_area, sdp_area from getcellss2acres(%d);`, v.CellType())
+
+	if err = v.PgDb.Select(&cells, query); err != nil {
+		return nil, err
+	}
+
+	return cells, nil
 }
