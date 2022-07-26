@@ -1,6 +1,8 @@
 package fileio
 
-import "errors"
+import (
+	"errors"
+)
 
 func (sr StationResults) AverageAnnual() MonthlyValues {
 	var mv MonthlyValues
@@ -33,52 +35,64 @@ func AverageStationResults(stationData map[string][]StationResults, AvgStart, Av
 	result := make(map[string][]StationResults)
 
 	if len(stationData) == 0 {
-		return result, errors.New("No station data provided")
+		return result, errors.New("no station data provided")
 	}
 
 	for k, v := range stationData {
+		// fmt.Printf("Station: %s - Data: %+v\n", k, v)
+		// fmt.Printf("Station: %s", k)
+		// fmt.Println()
 		for _, s := range stationSoils(v) {
+			// fmt.Printf("Soils: %v\n", s)
 			stationsBySoil := filterSoils(s, v)
 			for _, c := range stationCrops(stationsBySoil) {
+				// fmt.Printf("Crop: %v\n", c)
 				stationsByCrop := filterCrops(c, stationsBySoil)
 				for _, t := range stationTillage(stationsByCrop) {
+					// fmt.Printf("Tillage: %v\n", t)
 					stationsByTillage := filterTillage(t, stationsByCrop)
 					for _, i := range stationIrr(stationsByTillage) {
+						// fmt.Printf("Irrigation: %v\n", i)
 						stationsByIrr := filterIrr(i, stationsByTillage)
 
-						totalVals := float64(len(stationsByIrr))
-						if totalVals == 0 {
+						stationCount := float64(len(stationsByIrr))
+						if stationCount == 0 {
 							break
 						}
 
-						var etSum, effSum, nirSum, dpSum, roSum, precSum float64
-
+						var etSum, effSum, nirSum, dpSum, roSum, precSum [12]float64
 						for _, sr := range stationsByIrr {
 							if sr.Yr >= AvgStart && sr.Yr <= AvgEnd {
-								avg := sr.AverageAnnual()
 
-								etSum += avg.Et
-								effSum += avg.Eff_precip
-								nirSum += avg.Nir
-								dpSum += avg.Dp
-								roSum += avg.Ro
-								precSum += avg.Precip
+								for m := 0; m < 12; m++ {
+									etSum[m] += sr.MonthlyData[m].Et
+									effSum[m] += sr.MonthlyData[m].Eff_precip
+									nirSum[m] += sr.MonthlyData[m].Nir
+									dpSum[m] += sr.MonthlyData[m].Dp
+									roSum[m] += sr.MonthlyData[m].Ro
+									precSum[m] += sr.MonthlyData[m].Precip
+								}
 							}
 						}
 
-						mv := MonthlyValues{
-							Et:         etSum / totalVals,
-							Eff_precip: effSum / totalVals,
-							Nir:        nirSum / totalVals,
-							Dp:         dpSum / totalVals,
-							Ro:         roSum / totalVals,
-							Precip:     precSum / totalVals,
+						var avgMV []MonthlyValues
+						for m := 0; m < 12; m++ {
+							mv := MonthlyValues{
+								Et:         etSum[m] / stationCount,
+								Eff_precip: effSum[m] / stationCount,
+								Nir:        nirSum[m] / stationCount,
+								Dp:         dpSum[m] / stationCount,
+								Ro:         roSum[m] / stationCount,
+								Precip:     precSum[m] / stationCount,
+							}
+
+							avgMV = append(avgMV, mv)
 						}
 
 						newSR := StationResults{
 							Station:     k,
 							Soil:        s,
-							MonthlyData: []MonthlyValues{mv},
+							MonthlyData: avgMV,
 							Yr:          1952,
 							Crop:        c,
 							Tillage:     t,
@@ -87,11 +101,11 @@ func AverageStationResults(stationData map[string][]StationResults, AvgStart, Av
 
 						result[k] = append(result[k], newSR)
 					}
+
 				}
 			}
 		}
 	}
-
 	return result, nil
 }
 
