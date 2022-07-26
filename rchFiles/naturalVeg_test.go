@@ -1,4 +1,4 @@
-package rchFiles
+package rchFiles_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
+	"github.com/Longitude103/wwum2020/rchFiles"
 	"github.com/joho/godotenv"
 )
 
@@ -50,7 +51,7 @@ func Test_NaturalVeg(t *testing.T) {
 		t.Error("Error getting Crop Coefficients")
 	}
 
-	err = NaturalVeg(v, wStations, csResults, cCoeff)
+	err = rchFiles.NaturalVeg(v, wStations, csResults, cCoeff)
 	if err != nil {
 		t.Error("Error in Natural Veg")
 	}
