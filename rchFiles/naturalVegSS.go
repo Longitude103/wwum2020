@@ -16,7 +16,7 @@ func NaturalVegSS(v *database.Setup, wStations []database.WeatherStation, csResu
 	// this needs to cycle for two years, then monthly from 1895 -> 1952
 	// 2 stress periods for the first ones and then 696 months = 698 periods
 
-	p, _ := pterm.DefaultProgressbar.WithTotal(1953 - 1895).WithTitle("Steady State Natural Vegetation Operations").WithRemoveWhenDone(true).Start()
+	p, _ := pterm.DefaultProgressbar.WithTotal(1954 - 1893).WithTitle("Steady State Natural Vegetation Operations").WithRemoveWhenDone(true).Start()
 
 	p.UpdateTitle("Getting 1st cell areas")
 	cells1, err := database.GetSSCellAreas1(v)
@@ -70,10 +70,6 @@ func NaturalVegSS(v *database.Setup, wStations []database.WeatherStation, csResu
 					}
 				}
 
-				if v.AppDebug {
-					v.Logger.Infof("AnnData: %+v", annData)
-				}
-
 				if annData.Station == "" {
 					v.Logger.Debugf("AnnData: %+v", annData)
 					v.Logger.Debugf("cell[i]: %+v", cells[i])
@@ -99,7 +95,7 @@ func NaturalVegSS(v *database.Setup, wStations []database.WeatherStation, csResu
 				}
 			}
 
-			p.UpdateTitle(fmt.Sprintf("Saving %d Natural Veg Save Results", yr))
+			// p.UpdateTitle(fmt.Sprintf("Saving %d Natural Veg Save Results", yr))
 			for m := 0; m < 12; m++ {
 				if cellResult[m].Result > 0 {
 					if v.AppDebug {

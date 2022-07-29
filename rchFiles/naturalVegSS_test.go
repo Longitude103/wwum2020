@@ -11,7 +11,6 @@ import (
 func TestNaturalVegSS(t *testing.T) {
 	v := dbConnection()
 	v.SteadyState = true
-
 	wStations, err := database.GetWeatherStations(v.PgDb)
 	if err != nil {
 		t.Error("Error getting weather stations")
