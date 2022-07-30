@@ -1,8 +1,9 @@
-package parcels
+package parcels_test
 
 import (
 	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/fileio"
+	"github.com/Longitude103/wwum2020/parcels"
 	"testing"
 )
 
@@ -15,14 +16,14 @@ func TestParcel_pValues(t *testing.T) {
 
 	cCoverage := [4]float64{0.35, 0.35, 0.3, 0.0}
 
-	v := pValues(p1.Nir, crops, cCoverage, 0.5, 10)
+	v := parcels.PValues(p1.Nir, crops, cCoverage, 0.5, 10)
 
 	v1 := Utils.RoundTo(v[4], 2)
 	v2 := Utils.RoundTo(v[5], 2)
 	v3 := Utils.RoundTo(v[6], 2)
 
 	if v1 != 1.02 || v2 != 2.06 || v3 != 4.33 {
-		t.Errorf("Error with pValues: got %f, expected 1.02; got %f, expected 2.06; got %f, expected 4.33", v1, v2, v3)
+		t.Errorf("Error with PValues: got %f, expected 1.02; got %f, expected 2.06; got %f, expected 4.33", v1, v2, v3)
 	}
 }
 
@@ -41,7 +42,7 @@ func TestParcel_crop(t *testing.T) {
 	aData = append(aData, fileio.StationResults{Station: "SCTB", Soil: 622, Yr: 2014, Crop: 1, Tillage: 1, Irrigation: 1, MonthlyData: mValues})
 	aData = append(aData, fileio.StationResults{Station: "SCTB", Soil: 622, Yr: 2014, Crop: 2, Tillage: 1, Irrigation: 1, MonthlyData: mValues2})
 
-	nir, _, _, et := crop(1, aData)
+	nir, _, _, et := parcels.Crop(1, aData)
 
 	if nir[1] != 0.2 {
 		t.Errorf("Nir Values not being calclated correctly; got %f, expected 0.2", nir[1])

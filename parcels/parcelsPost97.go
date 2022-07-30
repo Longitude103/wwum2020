@@ -1,8 +1,8 @@
 package parcels
 
-func parcelsPost97(allParcels []Parcel, p97GWOParcels []Parcel) (p97Parcels []Parcel) {
+func ParcelsPost97(allParcels []Parcel, p97GWOParcels []Parcel) (p97Parcels []Parcel) {
 	// delete GW Only parcels passed in
-	parcelsWithOutGW := removeGWO(allParcels)
+	parcelsWithOutGW := RemoveGWO(allParcels)
 
 	// add GW Only parcels from 1997
 	p97Parcels = append(parcelsWithOutGW, p97GWOParcels...)
@@ -10,9 +10,9 @@ func parcelsPost97(allParcels []Parcel, p97GWOParcels []Parcel) (p97Parcels []Pa
 	return p97Parcels
 }
 
-func removeGWO(allParcels []Parcel) (gwoRemoved []Parcel) {
+func RemoveGWO(allParcels []Parcel) (gwoRemoved []Parcel) {
 	for _, parcel := range allParcels {
-		if !parcel.isGWO() {
+		if !parcel.IsGWO() {
 			gwoRemoved = append(gwoRemoved, parcel)
 		}
 	}

@@ -1,11 +1,12 @@
-package parcels
+package parcels_test
 
 import (
 	"database/sql"
+	"github.com/Longitude103/wwum2020/parcels"
 	"testing"
 )
 
-var p1 = Parcel{ParcelNo: 1234, AppEff: 0.85,
+var p1 = parcels.Parcel{ParcelNo: 1234, AppEff: 0.85,
 	Nir:       [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
 	DryEt:     [12]float64{0, 0, 0, 1.1, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0},
 	Et:        [12]float64{0, 0, 0, 1.2, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
@@ -22,7 +23,7 @@ var p1 = Parcel{ParcelNo: 1234, AppEff: 0.85,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 103.0,
 	Sw: sql.NullBool{Bool: true, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
-var p2 = Parcel{ParcelNo: 1236, AppEff: 0.85,
+var p2 = parcels.Parcel{ParcelNo: 1236, AppEff: 0.85,
 	Nir:       [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
 	DryEt:     [12]float64{0, 0, 0, 0, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0},
 	Et:        [12]float64{0, 0, 0, 0, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
@@ -38,7 +39,7 @@ var p2 = Parcel{ParcelNo: 1236, AppEff: 0.85,
 	Sw: sql.NullBool{Bool: true, Valid: true}, Gw: sql.NullBool{Bool: false, Valid: true}}
 
 // p3 is the groundwater only cell made into a parcel from the TFG Example document
-var p3 = Parcel{ParcelNo: 159988, AppEff: 0.65,
+var p3 = parcels.Parcel{ParcelNo: 159988, AppEff: 0.65,
 	Nir:       [12]float64{0, 0, 0, 0, 0, 0, 4.98, 4.31, 1.65, 0, 0, 0},
 	DryEt:     [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.70, 0.66, 0.19},
 	Et:        [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23},
@@ -55,7 +56,7 @@ var p3 = Parcel{ParcelNo: 159988, AppEff: 0.65,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
 // p4 is a parcel with fallow
-var p4 = Parcel{ParcelNo: 1235, AppEff: 0.65,
+var p4 = parcels.Parcel{ParcelNo: 1235, AppEff: 0.65,
 	Nir:       [12]float64{0, 0, 0, 0, 0, 0, 4.98, 4.31, 1.65, 0, 0, 0},
 	DryEt:     [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.70, 0.66, 0.19},
 	Et:        [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23},
@@ -71,7 +72,7 @@ var p4 = Parcel{ParcelNo: 1235, AppEff: 0.65,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 102.5,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
-var testParcelSlice = []Parcel{p1, p2, p3, p4}
+var testParcelSlice = []parcels.Parcel{p1, p2, p3, p4}
 
 func TestParcel_String(t *testing.T) {
 	if p1.String() != "Parcel No: 1234, NRD: np, Year: 2014" {
@@ -80,8 +81,8 @@ func TestParcel_String(t *testing.T) {
 }
 
 func TestFilterParcelByCert(t *testing.T) {
-	sliceP := []Parcel{p1}
-	fp := FilterParcelByCert(&sliceP, "3456")
+	sliceP := []parcels.Parcel{p1}
+	fp := parcels.FilterParcelByCert(&sliceP, "3456")
 
 	if sliceP[fp[0]].ParcelNo != 1234 {
 		t.Errorf("Didn't return correct parcel go parcel %d instead", sliceP[fp[0]].ParcelNo)
@@ -89,8 +90,8 @@ func TestFilterParcelByCert(t *testing.T) {
 }
 
 func TestFilterParcelByCertNoneFound(t *testing.T) {
-	sliceP := []Parcel{p1}
-	fp := FilterParcelByCert(&sliceP, "6789")
+	sliceP := []parcels.Parcel{p1}
+	fp := parcels.FilterParcelByCert(&sliceP, "6789")
 
 	if fp != nil {
 		t.Error("parcel returned when none should be")
@@ -106,7 +107,7 @@ func TestParcel_GetXY(t *testing.T) {
 }
 
 func TestParcel_changeFallow(t *testing.T) {
-	p4.changeFallow()
+	p4.ChangeFallow()
 
 	if p4.Crop1.Int64 != 12 {
 		t.Errorf("changeFallow should have changed the crop from fallow (15) to Grass Pasture (12) but got: %d", p4.Crop1.Int64)
@@ -117,7 +118,7 @@ func TestParcel_noCropCheck(t *testing.T) {
 	p3.Crop1.Int64 = 0
 	p3.Crop1Cov.Float64 = 0.0
 
-	p3.noCropCheck()
+	p3.NoCropCheck()
 
 	if p3.Crop1.Int64 != 8 || p3.Crop1Cov.Float64 != 1.0 {
 		t.Errorf("noCropCheck failed, crop should be 8 but got %d, crop coverage should be 1.0 but got %f", p3.Crop1.Int64, p3.Crop1Cov.Float64)
@@ -125,11 +126,11 @@ func TestParcel_noCropCheck(t *testing.T) {
 }
 
 func Test_isGWO(t *testing.T) {
-	if p1.isGWO() {
+	if p1.IsGWO() {
 		t.Error("Parcel 1 is Not Ground water only and returned as it is Groundwater only")
 	}
 
-	if !p3.isGWO() {
+	if !p3.IsGWO() {
 		t.Error("Parcel 3 is Ground Water only but returned that is wasn't Groundwater only")
 	}
 }

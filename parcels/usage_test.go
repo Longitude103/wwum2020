@@ -1,6 +1,7 @@
-package parcels
+package parcels_test
 
 import (
+	"github.com/Longitude103/wwum2020/parcels"
 	"testing"
 )
 
@@ -9,7 +10,7 @@ func Test_distributeUsage(t *testing.T) {
 	tMonthlyNir := [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0}
 	tUsage := 100.0
 
-	p1.distributeUsage(tNir, tMonthlyNir, tUsage)
+	p1.DistributeUsage(tNir, tMonthlyNir, tUsage)
 
 	tPump := 0.0
 	for _, v := range p1.Pump {
@@ -26,7 +27,7 @@ func Test_getUsage(t *testing.T) {
 	v := dbConnection()
 	v.SetYears(1997, 2020)
 
-	usage := getUsage(v)
+	usage := parcels.GetUsage(v)
 
 	records2018 := len(usage[2018])
 

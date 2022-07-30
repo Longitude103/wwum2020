@@ -7,9 +7,9 @@ import (
 	"github.com/Longitude103/wwum2020/database"
 )
 
-// estimatePumping is a method that is called on parcels that shouldEstimate == true so that we can estimate
+// EstimatePumping is a method that is called on parcels that shouldEstimate == true so that we can estimate
 // the amount of pumping that was done at the parcel since a well is present, but not metered. It fills the Pump field of the Parcel struct
-func (p *Parcel) estimatePumping(v *database.Setup, cCrops []database.CoeffCrop) error {
+func (p *Parcel) EstimatePumping(v *database.Setup, cCrops []database.CoeffCrop) error {
 	if se, err := p.shouldEstimate(v.Post97); err != nil || se {
 		// nirAdj, err := adjustmentFactor(p, cCrops, database.NirEt)
 		// if err != nil {
@@ -43,7 +43,7 @@ func (p *Parcel) estimatePumping(v *database.Setup, cCrops []database.CoeffCrop)
 // as it will have a pumping value assigned from the data.
 func (p *Parcel) shouldEstimate(p97 bool) (bool, error) {
 	if p97 {
-		if p.isGWO() {
+		if p.IsGWO() {
 			return true, nil
 		}
 	}
@@ -92,23 +92,23 @@ func (p *Parcel) shouldEstimate(p97 bool) (bool, error) {
 	return true, errors.New("couldn't find if it should estimate pumping, will estimate")
 }
 
-// adjustmentFactor function calculates the Parcel adjustment factor by weighting the crops and distribution of the
+// AdjustmentFactor function calculates the Parcel adjustment factor by weighting the crops and distribution of the
 // crops in a Parcel by calling the nirFactor and then weighting it based on crop distribution
-func adjustmentFactor(p *Parcel, cCrops []database.CoeffCrop, adj database.Adjustment) (float64, error) {
+func AdjustmentFactor(p *Parcel, cCrops []database.CoeffCrop, adj database.Adjustment) (float64, error) {
 	var (
 		c2, c3, c4 float64
 	)
-	c1, err := adjFactor(cCrops, p.CoeffZone, int(p.Crop1.Int64), adj)
+	c1, err := AdjFactor(cCrops, p.CoeffZone, int(p.Crop1.Int64), adj)
 
 	if p.Crop2.Valid {
-		c2, err = adjFactor(cCrops, p.CoeffZone, int(p.Crop2.Int64), adj)
+		c2, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop2.Int64), adj)
 	}
 	if p.Crop3.Valid {
-		c3, err = adjFactor(cCrops, p.CoeffZone, int(p.Crop3.Int64), adj)
+		c3, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop3.Int64), adj)
 	}
 
 	if p.Crop4.Valid {
-		c4, err = adjFactor(cCrops, p.CoeffZone, int(p.Crop4.Int64), adj)
+		c4, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop4.Int64), adj)
 	}
 	if err != nil {
 		return 0, err
@@ -119,7 +119,7 @@ func adjustmentFactor(p *Parcel, cCrops []database.CoeffCrop, adj database.Adjus
 
 // nirFactor is a filter function that returns the NirAdjFactor from the CoeffCrop slice and limits it to the zone of the
 // Parcel and the crop type.
-func adjFactor(cCrops []database.CoeffCrop, zone int, crop int, adj database.Adjustment) (nf float64, err error) {
+func AdjFactor(cCrops []database.CoeffCrop, zone int, crop int, adj database.Adjustment) (nf float64, err error) {
 	for _, v := range cCrops {
 		if v.Zone == zone && v.Crop == crop {
 			switch adj {

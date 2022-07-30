@@ -1,14 +1,15 @@
-package parcels
+package parcels_test
 
 import (
 	"database/sql"
 	"fmt"
 	"github.com/Longitude103/wwum2020/Utils"
+	"github.com/Longitude103/wwum2020/parcels"
 	"strings"
 	"testing"
 )
 
-var p10 = Parcel{ParcelNo: 1234, AppEff: 0.85,
+var p10 = parcels.Parcel{ParcelNo: 1234, AppEff: 0.85,
 	Nir:       [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
 	DryEt:     [12]float64{0, 0, 0, 1.1, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0},
 	Et:        [12]float64{0, 0, 0, 1.2, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
@@ -25,7 +26,7 @@ var p10 = Parcel{ParcelNo: 1234, AppEff: 0.85,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 103.0,
 	Sw: sql.NullBool{Bool: true, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
-var p11 = Parcel{ParcelNo: 1234, AppEff: 0.85,
+var p11 = parcels.Parcel{ParcelNo: 1234, AppEff: 0.85,
 	Nir:       [12]float64{0, 0, 0, 0, 0.2, 0.4, 0.8, 0.8, 0.5, 0, 0, 0},
 	DryEt:     [12]float64{0, 0, 0, 0, 0.05, 0.1, 0.2, 0.2, 0.1, 0, 0, 0},
 	Et:        [12]float64{0, 0, 0, 0, 1.2, 2.5, 4.5, 4.5, 3, 0, 0, 0},
@@ -41,7 +42,7 @@ var p11 = Parcel{ParcelNo: 1234, AppEff: 0.85,
 	Sw: sql.NullBool{Bool: true, Valid: true}, Gw: sql.NullBool{Bool: false, Valid: true}}
 
 // p12 is the groundwater only cell made into a parcel from the TFG Example document
-var p12 = Parcel{ParcelNo: 159988, AppEff: 0.65,
+var p12 = parcels.Parcel{ParcelNo: 159988, AppEff: 0.65,
 	Nir:       [12]float64{0, 0, 0, 0, 0, 0, 4.98, 4.31, 1.65, 0, 0, 0},
 	DryEt:     [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.70, 0.66, 0.19},
 	Et:        [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23},
@@ -64,7 +65,7 @@ func TestParcel_WaterBalanceWWSP(t *testing.T) {
 	fmt.Println("RO is:", p10.Ro)
 	fmt.Println("Dp is:", p10.Dp)
 
-	err := p10.waterBalanceWSPP(v)
+	err := p10.WaterBalanceWSPP(v)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
@@ -81,7 +82,7 @@ func TestParcel_WaterBalanceWWSP_SWOnly(t *testing.T) {
 	fmt.Println("RO is:", p11.Ro)
 	fmt.Println("Dp is:", p11.Dp)
 
-	err := p11.waterBalanceWSPP(v)
+	err := p11.WaterBalanceWSPP(v)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
@@ -97,7 +98,7 @@ func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
 	fmt.Println("RO is:", p12.Ro)
 	fmt.Println("Dp is:", p12.Dp)
 
-	err := p12.waterBalanceWSPP(v)
+	err := p12.WaterBalanceWSPP(v)
 	if err != nil {
 		t.Errorf("Error in WSPP Method of %s", err)
 	}
@@ -121,13 +122,13 @@ func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
 func TestParcel_setGirFact(t *testing.T) {
 	eff := 0.85
 
-	gir, fsl := setGirFact(eff)
+	gir, fsl := parcels.SetGirFact(eff)
 	if gir != 1/0.95 || fsl != 0.02 {
 		t.Errorf("Error in setGirFact eff of %g, gir got: %g, should be 1.05263..; fsl got: %g, should be 0.02", eff, gir, fsl)
 	}
 
 	eff = 0.65
-	gir, fsl = setGirFact(eff)
+	gir, fsl = parcels.SetGirFact(eff)
 
 	if gir != 1/0.75 || fsl != 0.05 {
 		t.Errorf("Error in setGirFact with eff of %g, gir got: %g, should be 1.3333..; fsl got: %g, should be 0.05", eff, gir, fsl)
@@ -137,7 +138,7 @@ func TestParcel_setGirFact(t *testing.T) {
 func TestParcel_sumAnnual(t *testing.T) {
 	data := [12]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
 
-	result := sumAnnual(data)
+	result := parcels.SumAnnual(data)
 
 	if result != 78 {
 		t.Errorf("should have gotten 78 but got %g instead", result)
@@ -149,7 +150,7 @@ func TestParcel_setAppWat(t *testing.T) {
 	gw := [12]float64{50, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0}
 	fsl := 0.02
 
-	appWat, sL, pslIrr := setAppWat(sw, gw, fsl)
+	appWat, sL, pslIrr := parcels.SetAppWat(sw, gw, fsl)
 
 	if appWat[0] != 100 || appWat[4] != 100 || appWat[5] != 100 {
 		t.Errorf("All appWat values should be 100 but got 0: %g, 4:%g, 5:%g", appWat[0], appWat[4], appWat[5])
@@ -168,7 +169,7 @@ func TestParcel_setRoDpWt(t *testing.T) {
 	ro := [12]float64{10, 75, 5, 100, 0, 0, 0, 0, 0, 0, 0, 0}
 	dp := [12]float64{30, 25, 100, 5, 0, 0, 0, 0, 0, 0, 0, 0}
 
-	result, err := setRoDpWt(ro, dp)
+	result, err := parcels.SetRoDpWt(ro, dp)
 
 	if err != nil {
 		t.Error(err)
@@ -180,7 +181,7 @@ func TestParcel_setRoDpWt(t *testing.T) {
 }
 
 func TestParcel_setInitialRoDp(t *testing.T) {
-	ro, dp := setInitialRoDp(p12.Ro, p12.Dp, 1, 1)
+	ro, dp := parcels.SetInitialRoDp(p12.Ro, p12.Dp, 1, 1)
 
 	if Utils.RoundTo(ro[0], 3) != 0.0 || Utils.RoundTo(ro[1], 3) != 0.0 || Utils.RoundTo(ro[2], 3) != 0.0 || Utils.RoundTo(ro[3], 3) != 1.040 {
 		t.Errorf("incorrect initial values for RO, should be 0.0, 0.0, 0.0, 1.040... and got %v", ro)
@@ -197,7 +198,7 @@ func TestParcel_setPreGain(t *testing.T) {
 	appWat := [12]float64{3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0}
 	psl := [12]float64{2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0}
 
-	gainApWat, gainPsl, gainIrrEt, gainDryEt := setPreGain(et, dryEt, appWat, psl)
+	gainApWat, gainPsl, gainIrrEt, gainDryEt := parcels.SetPreGain(et, dryEt, appWat, psl)
 
 	if gainApWat != 3 || gainPsl != 2 || gainIrrEt != 12 || gainDryEt != 6 {
 		t.Errorf("error in setPreGain, gainApWat: %g, expecting 3; gainPsl: %g, expecting 2; gainIrrEt: %g, "+
@@ -214,7 +215,7 @@ func TestParcel_setEtGain(t *testing.T) {
 	irrEt := 19.00
 	dryEt := 8.78
 
-	gain, err := setEtGain(cir, psl, gir, appWat, eff, irrEt, dryEt)
+	gain, err := parcels.SetEtGain(cir, psl, gir, appWat, eff, irrEt, dryEt)
 	if err != nil {
 		t.Error(err)
 	}
@@ -230,7 +231,7 @@ func TestParcel_distEtGain(t *testing.T) {
 	psl := [12]float64{0, 0, 0, 0, 0, 0, 2.22, 2.21, 1.33, 0, 0, 0}
 	gain := 3.94
 
-	dist, err := distEtGain(gain, psl, etIrr, etDry)
+	dist, err := parcels.DistEtGain(gain, psl, etIrr, etDry)
 	if err != nil {
 		t.Error(err)
 	}
@@ -242,7 +243,7 @@ func TestParcel_distEtGain(t *testing.T) {
 	psl = [12]float64{0, 0, 0, 0, 0.98, 24.794, 35.672, 32.242, 4.9, 0, 0, 0}
 	gain = 15.05
 
-	dist, err = distEtGain(gain, psl, p10.Et, p10.DryEt)
+	dist, err = parcels.DistEtGain(gain, psl, p10.Et, p10.DryEt)
 	if err != nil {
 		t.Error(err)
 	}
@@ -257,7 +258,7 @@ func TestParcel_setEtBase(t *testing.T) {
 	etIrr := [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23}
 	psl := [12]float64{0, 0, 0, 0, 0, 0, 2.22, 2.21, 1.33, 0, 0, 0}
 
-	base := setEtBase(psl, etIrr, etDry)
+	base := parcels.SetEtBase(psl, etIrr, etDry)
 
 	if base[5] != 5.13 || base[6] != 4.55 {
 		t.Errorf("base calculated incorrect: June base: %g, expecting 5.13; July base: %g, expecting 4.55", base[5], base[6])
@@ -268,7 +269,7 @@ func TestParcel_setET(t *testing.T) {
 	etBase := [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.44, 0.51, 0.23}
 	etGain := [12]float64{0, 0, 0, 0, 0, 0, 1.19, 1.69, 1.06, 0, 0, 0}
 
-	et := setET(etBase, etGain)
+	et := parcels.SetET(etBase, etGain)
 
 	if et[5] != 5.13 || et[6] != 5.74 {
 		t.Errorf("et calculated incorrect: June ET: %g, expecting 5.13; July ET: %g, expecting 5.74", et[5], et[6])
@@ -279,7 +280,7 @@ func TestParcel_setDeltaET(t *testing.T) {
 	etIrr := [12]float64{0.26, 0.31, 0.78, 1.29, 1.73, 4.87, 5.46, 4.13, 2.11, 0.42, 0.48, 0.22}
 	factor := 0.95
 
-	delta := setDeltaET(etIrr, factor)
+	delta := parcels.SetDeltaET(etIrr, factor)
 
 	if Utils.RoundTo(delta[0], 3) != 0.013 || Utils.RoundTo(delta[5], 3) != 0.244 {
 		t.Errorf("setDeltaET calculated incorrect: Jan delta: %g, expected 0.013; June delat: %g, expected 0.244", Utils.RoundTo(delta[0], 3), Utils.RoundTo(delta[5], 3))
@@ -290,7 +291,7 @@ func TestParcel_distDeltaET(t *testing.T) {
 	deltaET := [12]float64{0.01, 0.02, 0.04, 0.07, 0.09, 0.26, 0.29, 0.22, 0.11, 0.02, 0.03, 0.01}
 	roDpWt := [12]float64{0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 0.5, 0.8, 0.5, 0.8, 0.5, 0.5}
 
-	ro, dp := distDeltaET(deltaET, roDpWt)
+	ro, dp := parcels.DistDeltaET(deltaET, roDpWt)
 
 	if Utils.RoundTo(ro[3], 3) != 0.056 || Utils.RoundTo(ro[5], 3) != 0.208 {
 		t.Errorf("distDeltaET calculated RO incorrect: April: %g, expected 0.056; Jun: %g, expected 0.208", Utils.RoundTo(ro[3], 3), Utils.RoundTo(ro[5], 3))
@@ -306,7 +307,7 @@ func TestParcel_excessIrrReturnFlow(t *testing.T) {
 	etGain := [12]float64{0, 0, 0, 0, 0, 0, 1.19, 1.69, 1.06, 0, 0, 0}
 	psl := [12]float64{0, 0, 0, 0, 0, 0, 2.22, 2.21, 1.33, 0, 0, 0}
 
-	ro, dp := excessIrrReturnFlow(psl, etGain, roDpWt)
+	ro, dp := parcels.ExcessIrrReturnFlow(psl, etGain, roDpWt)
 
 	if Utils.RoundTo(ro[6], 3) != 0.515 || Utils.RoundTo(ro[7], 3) != 0.416 {
 		t.Errorf("excessIrrReturnFlow RO calculated incorrect: July %g, expected 0.515; Aug %g, expected 0.416", Utils.RoundTo(ro[6], 3), Utils.RoundTo(ro[7], 3))
@@ -323,7 +324,7 @@ func TestParcel_sumReturnFlows(t *testing.T) {
 	v2 := [12]float64{1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	v3 := [12]float64{1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
-	v4 := sumReturnFlows(v1, v2, v3)
+	v4 := parcels.SumReturnFlows(v1, v2, v3)
 
 	if v4[0] != 3 || v4[1] != 6 || v4[2] != 9 || v4[3] != 0 {
 		t.Errorf("sumReturnFlows not correct: got %v, expected 3, 6, 9, 0, 0, ...", v4)

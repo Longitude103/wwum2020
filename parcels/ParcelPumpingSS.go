@@ -3,7 +3,6 @@ package parcels
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
@@ -11,21 +10,18 @@ import (
 	"github.com/pterm/pterm"
 )
 
-// ParcelPump is the main function for the parcels, it gets the usage, efficiencies, operates the surface water conveyance
+// ParcelPumpSS is the main function for the parcels, it gets the usage, efficiencies, operates the surface water conveyance
 // loss and then calls the surface water delivery. It also creates the parcels then calls the ParcelPumpDB method to set
 // the parcel pumping, it then loops through the years for each parcel and sends the diversions, calls parcel NIR, sets the
 // efficiency for the parcel, adds SW delivery, adds the known pumping, and then simulates pumping for all other
 // parcels. Finally, it writes out the pumping per parcel and then operates the WSPP routine to finish the RO and DP.
-func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
+func ParcelPumpSS(v *database.Setup, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, cCrops []database.CoeffCrop) (AllParcels []Parcel, err error) {
 
-	spinner, _ := pterm.DefaultSpinner.Start("Getting Cert Usage and Efficiencies")
-	// cert usage
-	v.Logger.Info("Getting Cert Usage")
-	usage := GetUsage(v)
+	spinner, _ := pterm.DefaultSpinner.Start("Getting Efficiencies")
 
 	v.Logger.Info("Getting Efficiencies")
-	efficiencies := database.GetAppEfficiency(v.PgDb)
+	efficiencies := database.GetSSAppEfficiency()
 	spinner.Success()
 
 	v.Logger.Info("Running Conveyance Loss")
@@ -106,32 +102,6 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 			}
 		}
 
-		if !v.Post97 {
-			// add usage to parcel
-			p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
-			v.Logger.Info("Setting Annual Usage")
-			if err := DistUsage(usage[y], &parcels); err != nil {
-				return []Parcel{}, err
-			}
-		}
-
-		if !v.AppDebug {
-			// write out parcel pumping for each parcel in sqlite results
-			p.UpdateTitle(fmt.Sprintf("Saving %d Parcel Pumping Results", y))
-			for p := 0; p < len(parcels); p++ {
-				if parcels[p].isGW() {
-					// Add data to pumpingStruct and then append
-					for m := 1; m < 13; m++ {
-						if parcels[p].Pump[m-1] > 0 {
-							dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
-							_ = pPumpDB.Add(database.Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt,
-								Pump: parcels[p].Pump[m-1]})
-						}
-					}
-				}
-			}
-		}
-
 		v.Logger.Infof("Simulating parcel WSPP for year %d", y)
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel WSPP", y))
 		for p := 0; p < len(parcels); p++ {
@@ -159,25 +129,25 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 	return AllParcels, nil
 }
 
-func DistUsage(annUsage []Usage, parcels *[]Parcel) error {
-	for _, u := range annUsage {
-		// filter parcels to this usage cert
-		filteredParcels := FilterParcelByCert(parcels, u.CertNum)
+// func distUsage(annUsage []Usage, parcels *[]Parcel) error {
+// 	for _, u := range annUsage {
+// 		// filter parcels to this usage cert
+// 		filteredParcels := FilterParcelByCert(parcels, u.CertNum)
 
-		totalNIR := 0.0
-		totalMonthlyNIR := [12]float64{}
+// 		totalNIR := 0.0
+// 		totalMonthlyNIR := [12]float64{}
 
-		for _, pIndex := range filteredParcels {
-			for m := 0; m < 12; m++ {
-				totalMonthlyNIR[m] += (*parcels)[pIndex].Nir[m]
-				totalNIR += (*parcels)[pIndex].Nir[m]
-			}
-		}
+// 		for _, pIndex := range filteredParcels {
+// 			for m := 0; m < 12; m++ {
+// 				totalMonthlyNIR[m] += (*parcels)[pIndex].Nir[m]
+// 				totalNIR += (*parcels)[pIndex].Nir[m]
+// 			}
+// 		}
 
-		for _, pIndex := range filteredParcels {
-			(*parcels)[pIndex].DistributeUsage(totalNIR, totalMonthlyNIR, u.UseAF)
-		}
-	}
+// 		for _, pIndex := range filteredParcels {
+// 			(*parcels)[pIndex].distributeUsage(totalNIR, totalMonthlyNIR, u.UseAF)
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

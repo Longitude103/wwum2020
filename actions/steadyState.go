@@ -2,10 +2,12 @@ package actions
 
 import (
 	"fmt"
+	"github.com/Longitude103/wwum2020/parcels"
 	"time"
 
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
+	"github.com/Longitude103/wwum2020/rchFiles"
 	"github.com/pterm/pterm"
 )
 
@@ -100,14 +102,30 @@ func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bo
 	}
 	spinnerSuccess.Success()
 
-	// for _, v := range avgCSResults {
-	// 	fmt.Println(v)
-	// }
-
-	_ = avgCSResults
-	_ = wStations
+	spinnerSuccess, _ = pterm.DefaultSpinner.Start("Getting Coefficients of Crops")
+	v.Logger.Info("Getting Coefficients of Crops")
+	cCoefficients, err := database.GetCoeffCrops(v)
+	if err != nil {
+		return err
+	}
+	spinnerSuccess.Success()
 
 	// create average natural vegetation values for each month
+	v.Logger.Info("Preforming Natural Vegetation Calculations")
+	if err := rchFiles.NaturalVegSS(v, wStations, avgCSResults, cCoefficients); err != nil {
+		v.Logger.Errorf("Error in Natural Vegetation: %s", err)
+		return err
+	}
+
+	// parcel pumping
+	v.Logger.Info("Preforming Parcel Pumping")
+	irrParcels, err := parcels.ParcelPumpSS(v, avgCSResults, wStations, cCoefficients)
+	if err != nil {
+		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
+	}
+	pterm.Success.Println("Successfully Completed Parcel Pumping")
+
+	_ = irrParcels
 
 	return nil
 }

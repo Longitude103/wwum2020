@@ -97,13 +97,13 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = Year
-		parcels[i].changeFallow()
-		parcels[i].noCropCheck()
+		parcels[i].ChangeFallow()
+		parcels[i].NoCropCheck()
 	}
 
 	if Year > 1997 && v.Post97 {
 		p97GWO := get97GWOParcels(v, Year)
-		parcels = parcelsPost97(parcels, p97GWO)
+		parcels = ParcelsPost97(parcels, p97GWO)
 	}
 
 	return parcels
@@ -141,8 +141,8 @@ func get97GWOParcels(v *database.Setup, Year int) []Parcel {
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = Year
 		parcels[i].ParcelNo = parcels[i].ParcelNo + 30000 // was having duplicates, now will be unique
-		parcels[i].changeFallow()
-		parcels[i].noCropCheck()
+		parcels[i].ChangeFallow()
+		parcels[i].NoCropCheck()
 	}
 
 	return parcels
@@ -284,8 +284,8 @@ func (p *Parcel) DpString() string {
 	return fmt.Sprintf("Parcel No: %d, DeepPerc (acre-feet): %s", p.ParcelNo, dpString)
 }
 
-// pumpString is a method to return a string of data of the pumping
-func (p *Parcel) pumpString() string {
+// PumpString is a method to return a string of data of the pumping
+func (p *Parcel) PumpString() string {
 	var pString string
 	for i, n := range p.Pump {
 		pString += strconv.FormatFloat(n, 'f', 2, 64)
@@ -359,9 +359,9 @@ func (p *Parcel) SetWelFileType() (fileType int, err error) {
 	return 0, errors.New("could not determine file type")
 }
 
-// changeFallow is a method that changes any parcel with fallow to winter wheat as fallow is already built into winter wheat
+// ChangeFallow is a method that changes any parcel with fallow to winter wheat as fallow is already built into winter wheat
 // and rotates in that data.
-func (p *Parcel) changeFallow() {
+func (p *Parcel) ChangeFallow() {
 	if p.Crop1.Int64 == 15 {
 		p.Crop1.Int64 = 12
 	}
@@ -379,9 +379,9 @@ func (p *Parcel) changeFallow() {
 	}
 }
 
-// noCropCheck is a method to ensure that the parcel includes a crop to prevent errors in subsequent processes. It defaults
+// NoCropCheck is a method to ensure that the parcel includes a crop to prevent errors in subsequent processes. It defaults
 // a parcel to all corn if there is no crop present
-func (p *Parcel) noCropCheck() {
+func (p *Parcel) NoCropCheck() {
 	cropT := p.Crop1.Int64 + p.Crop2.Int64 + p.Crop3.Int64 + p.Crop4.Int64
 
 	if cropT == 0 {
@@ -392,8 +392,8 @@ func (p *Parcel) noCropCheck() {
 	}
 }
 
-// isGWO is a method that returns a bool if the parcel is groundwater only
-func (p Parcel) isGWO() bool {
+// IsGWO is a method that returns a bool if the parcel is groundwater only
+func (p Parcel) IsGWO() bool {
 	if p.Gw.Valid && p.Gw.Bool {
 		if !p.Sw.Valid || !p.Sw.Bool {
 			return true

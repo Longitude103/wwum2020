@@ -1,7 +1,8 @@
-package parcels
+package parcels_test
 
 import (
 	"fmt"
+	"github.com/Longitude103/wwum2020/parcels"
 	"os"
 	"strings"
 	"testing"
@@ -11,12 +12,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var u1 = Usage{Yr: 2014, Nrd: "np", CertNum: "3456", UseAF: 100.0}
-var u2 = Usage{Yr: 2014, Nrd: "np", CertNum: "3459", UseAF: 240.0}
-var u3 = Usage{Yr: 2014, Nrd: "np", CertNum: "3457", UseAF: 100.0}
-var u4 = Usage{Yr: 2014, Nrd: "np", CertNum: "3458", UseAF: 200.0}
+var u1 = parcels.Usage{Yr: 2014, Nrd: "np", CertNum: "3456", UseAF: 100.0}
+var u2 = parcels.Usage{Yr: 2014, Nrd: "np", CertNum: "3459", UseAF: 240.0}
+var u3 = parcels.Usage{Yr: 2014, Nrd: "np", CertNum: "3457", UseAF: 100.0}
+var u4 = parcels.Usage{Yr: 2014, Nrd: "np", CertNum: "3458", UseAF: 200.0}
 
-var testUsageSlice = []Usage{u1, u2, u3, u4}
+var testUsageSlice = []parcels.Usage{u1, u2, u3, u4}
 
 func dbConnection() *database.Setup {
 	var myEnv map[string]string
@@ -44,7 +45,7 @@ func Test_distUsage(t *testing.T) {
 		testParcelSlice[0].Pump[i] = 0
 	}
 
-	err := distUsage(testUsageSlice, &testParcelSlice)
+	err := parcels.DistUsage(testUsageSlice, &testParcelSlice)
 	if err != nil {
 		t.Error("Function returned an error:", err)
 	}
@@ -67,7 +68,7 @@ func Test_ParcelPump(t *testing.T) {
 	wStations, _ := database.GetWeatherStations(v.PgDb)
 	cCoefficients, _ := database.GetCoeffCrops(v)
 
-	irrParcels, err := ParcelPump(v, csResults, wStations, cCoefficients)
+	irrParcels, err := parcels.ParcelPump(v, csResults, wStations, cCoefficients)
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
 	}
@@ -81,7 +82,7 @@ func Test_ParcelPump(t *testing.T) {
 			v.Logger.Debug(parcel.NIRString())
 			v.Logger.Debug(strings.Repeat("-", 100))
 			v.Logger.Debug(parcel.SWString())
-			v.Logger.Debug(parcel.pumpString())
+			v.Logger.Debug(parcel.PumpString())
 			v.Logger.Debug(strings.Repeat("-", 100))
 			v.Logger.Debug(parcel.RoString())
 			v.Logger.Debug(parcel.DpString())

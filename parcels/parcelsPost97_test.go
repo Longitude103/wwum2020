@@ -1,12 +1,13 @@
-package parcels
+package parcels_test
 
 import (
 	"database/sql"
+	"github.com/Longitude103/wwum2020/parcels"
 	"testing"
 )
 
 // p5 is the groundwater only cell made into a parcel from the TFG Example document
-var p5 = Parcel{ParcelNo: 1237, AppEff: 0.85,
+var p5 = parcels.Parcel{ParcelNo: 1237, AppEff: 0.85,
 	Nir:       [12]float64{0, 0, 0, 0, 0, 0, 4.98, 4.31, 1.65, 0, 0, 0},
 	DryEt:     [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.70, 0.66, 0.19},
 	Et:        [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23},
@@ -22,10 +23,10 @@ var p5 = Parcel{ParcelNo: 1237, AppEff: 0.85,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 102.5,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
-var p97ParcelSlice = []Parcel{p5}
+var p97ParcelSlice = []parcels.Parcel{p5}
 
 func Test_parcelPost97(t *testing.T) {
-	p97Parcels := parcelsPost97(testParcelSlice, p97ParcelSlice)
+	p97Parcels := parcels.ParcelsPost97(testParcelSlice, p97ParcelSlice)
 
 	// make sure parcel 159988 isn't in the new slice and that 1237 is in the new slice
 	found1237 := false
@@ -45,10 +46,10 @@ func Test_parcelPost97(t *testing.T) {
 }
 
 func Test_removeGWO(t *testing.T) {
-	parcels := removeGWO(testParcelSlice)
+	pcls := parcels.RemoveGWO(testParcelSlice)
 
 	// want no GWO parcels
-	for _, parcel := range parcels {
+	for _, parcel := range pcls {
 		if parcel.Gw.Bool == true && parcel.Sw.Bool == false {
 			t.Error("Found a groundwater only parcel and there shouldn't be one")
 		}

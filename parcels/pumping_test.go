@@ -1,9 +1,10 @@
-package parcels
+package parcels_test
 
 import (
 	"database/sql"
 	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
+	"github.com/Longitude103/wwum2020/parcels"
 	"testing"
 )
 
@@ -52,25 +53,25 @@ var (
 )
 
 func TestPumping_adjFactor(t *testing.T) {
-	result, err := adjFactor(cCrops, 1, 1, database.DryET)
+	result, err := parcels.AdjFactor(cCrops, 1, 1, database.DryET)
 	if result != 0.1 {
 		t.Errorf("adjFactor error: got DryETAdj %f, expected 0.1, error: %s", result, err)
 	}
 
-	result, err = adjFactor(cCrops, 2, 2, database.NirEt)
+	result, err = parcels.AdjFactor(cCrops, 2, 2, database.NirEt)
 	if result != 1.3 {
 		t.Errorf("adjFactor error: got NirETAdj %f, expected 1.3, error: %s", result, err)
 	}
 }
 
 func TestPumping_adjustmentFactor(t *testing.T) {
-	result, err := adjustmentFactor(&p3, cCrops, database.NirEt)
+	result, err := parcels.AdjustmentFactor(&p3, cCrops, database.NirEt)
 
 	if result != 0.95 {
 		t.Errorf("adjustmentFactor error: got %f, expected 0.95; error: %s", result, err)
 	}
 
-	result, err = adjustmentFactor(&p2, cCrops, database.NirEt)
+	result, err = parcels.AdjustmentFactor(&p2, cCrops, database.NirEt)
 
 	if result != 0 || err == nil {
 		t.Errorf("adjustmentFactor should return a zero with error")
@@ -86,7 +87,7 @@ func TestPumping_estimatePumping(t *testing.T) {
 	p1.Nir = [12]float64{0, 0, 0, 0, 3, 25, 40, 45, 20, 0, 0, 0}
 	p1.Subarea = sql.NullString{String: "FA", Valid: true}
 
-	err := p1.estimatePumping(v, cCrops)
+	err := p1.EstimatePumping(v, cCrops)
 	if err != nil {
 		t.Errorf("Should not return error")
 	}
@@ -99,7 +100,7 @@ func TestPumping_estimatePumping(t *testing.T) {
 
 	// testing that it doesn't estimate for parcels after 2016
 	p3.Yr = 2017
-	_ = p3.estimatePumping(v, cCrops)
+	_ = p3.EstimatePumping(v, cCrops)
 	want := 2.34
 	got := Utils.RoundTo(p3.Pump[6], 2)
 
@@ -109,7 +110,7 @@ func TestPumping_estimatePumping(t *testing.T) {
 
 	// testing post97 settings
 	v.Post97 = true
-	_ = p3.estimatePumping(v, cCrops)
+	_ = p3.EstimatePumping(v, cCrops)
 	want = 7.66
 	got = Utils.RoundTo(p3.Pump[6], 2)
 

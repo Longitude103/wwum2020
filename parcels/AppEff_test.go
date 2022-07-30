@@ -1,7 +1,8 @@
-package parcels
+package parcels_test
 
 import (
 	"github.com/Longitude103/wwum2020/database"
+	"github.com/Longitude103/wwum2020/parcels"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ var (
 )
 
 func Test_filterEff(t *testing.T) {
-	f, s := filterEff(efficiencies, 2014)
+	f, s := parcels.FilterEff(efficiencies, 2014)
 
 	if f != 0.65 || s != 0.85 {
 		t.Errorf("filter Efficiencies not correct for 2014: got %f, expected 0.65; got %f, expected 0.85", f, s)
@@ -20,8 +21,8 @@ func Test_filterEff(t *testing.T) {
 }
 
 func TestParcel_setAppEfficiency(t *testing.T) {
-	p1.setAppEfficiency(efficiencies, 2013)
-	p3.setAppEfficiency(efficiencies, 2013)
+	p1.SetAppEfficiency(efficiencies, 2013)
+	p3.SetAppEfficiency(efficiencies, 2013)
 
 	if p1.AppEff != 0.8 {
 		t.Errorf("AppEff not set correctly: got %f, expected 0.8", p1.AppEff)
