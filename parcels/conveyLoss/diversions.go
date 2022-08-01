@@ -25,6 +25,22 @@ type Diversion struct {
 	DivAmount sql.NullFloat64 `db:"div_amnt_cfs"`
 }
 
+// SSDiversion is a struct to hold the dailydiversions table data and also the results are this struct which is a monthly
+// total using the first day of each month.
+type SSDiversion struct {
+	CanalId   int             `db:"canal_id"`
+	DivMnth   int             `db:"mnth"`
+	DivAmount sql.NullFloat64 `db:"div_avg"`
+}
+
+func (sd SSDiversion) makeDiv(yr int) Diversion {
+	return Diversion{
+		CanalId:   sd.CanalId,
+		DivDate:   sql.NullTime{Valid: true, Time: time.Date(yr, time.Month(sd.DivMnth), 1, 0, 0, 0, 0, time.UTC)},
+		DivAmount: sd.DivAmount,
+	}
+}
+
 // applyEffAcres is a method that multiplies the Diversion by the efficiency and acres passed in and converts the day cfs
 // to acre-feet to yield a application in inches per acre from that surface water structure.
 func (d *Diversion) applyEffAcres(eff float64, acres float64) {
@@ -53,6 +69,23 @@ extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;
 			v.Logger.Errorf("Error in getting diversion records with Excess Flow: %s", err)
 			return nil, err
 		}
+	} else if v.SteadyState {
+		// steady state will need to generate diversions for 1895 through 1952 from the averages of the range
+		divQry := `select canal_id, cast(extract(MONTH from div_dt) as int) as mnth, avg(div_amnt_cfs) as div_avg from (select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), cast(extract(MONTH from div_dt) as int), 1, 0, 0, 0) as div_dt, sum(div_amnt_cfs) as div_amnt_cfs
+from (select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs
+      from sw.dailydiversions
+          inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
+      WHERE div_dt >= '1953-01-01' AND div_dt <= '2020-12-31' group by cdj.canal_id, div_dt) as daily_query
+group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt) as mnth_query
+group by canal_id, extract(MONTH from div_dt);`
+
+		var SSDivs []SSDiversion
+		if err := v.PgDb.Select(&SSDivs, divQry); err != nil {
+			v.Logger.Errorf("Error in getting diversion records with Excess Flow: %s", err)
+			return nil, err
+		}
+
+		diversions = makeSSDivs(SSDivs)
 
 	} else {
 		// get all Diversion data
@@ -152,7 +185,17 @@ group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order b
 	return amendedDivs, nil
 }
 
-// Find is a filter function for slice of int in a int
+func makeSSDivs(ssDivs []SSDiversion) (divs []Diversion) {
+	for yr := 1895; yr < 1953; yr++ {
+		for _, d := range ssDivs {
+			divs = append(divs, d.makeDiv(yr))
+		}
+	}
+
+	return divs
+}
+
+// find is a filter function for slice of int in an int
 func find(slice []int, val int) bool {
 	for _, item := range slice {
 		if item == val {
@@ -162,7 +205,7 @@ func find(slice []int, val int) bool {
 	return false
 }
 
-// FindDiversion is a function to filter if a Diversion is within a period
+// findDiversion is a function to filter if a Diversion is within a period
 func findDiversion(div Diversion, period []efPeriod) bool {
 	for _, p := range period {
 		if div.DivDate.Time.Before(p.StartDate.Time) || div.DivDate.Time.After(p.EndDate.Time) {

@@ -28,8 +28,9 @@ type MonthlyValues struct {
 	Precip     float64
 }
 
-// LoadTextFiles loads cropsim text files from a location and returns a map of the results to use in further processing.
-// This should include all the files and results for each station and each year. The map key is the station id that is also stored in the StationResults struct as Station
+// LoadTextFiles loads CropSim text files from a location and returns a map of the results to use in further processing.
+// This should include all the files and results for each station and each year. The map key is the station id that is
+// also stored in the StationResults struct as Station
 func LoadTextFiles(filePath string, logger *logging.TheLogger) (map[string][]StationResults, error) {
 	logger.Infof("File Path: %s", filePath)
 	//fmt.Println("File Path:", filePath)
@@ -55,7 +56,7 @@ func LoadTextFiles(filePath string, logger *logging.TheLogger) (map[string][]Sta
 	return dataMap, nil
 }
 
-// getFileData is an function that breaks down the station data and puts it into a struct to work with.
+// getFileData is a function that breaks down the station data and puts it into a struct to work with.
 func getFileData(filePath string, logger *logging.TheLogger) ([]StationResults, error) {
 	file, err := os.Open(filePath)
 	if err != nil {

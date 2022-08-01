@@ -46,3 +46,24 @@ func Test_getDiversions(t *testing.T) {
 	// }
 
 }
+
+func Test_getDiversionsSS(t *testing.T) {
+	v := dbConnection()
+	v.SetYears(1953, 2020)
+	v.SteadyState = true
+
+	divs, err := getDiversions(v)
+	if err != nil {
+		t.Error("Get Diversions errored")
+	}
+
+	for _, d := range divs {
+		if d.DivDate.Time.Year() > 1952 || d.DivDate.Time.Year() < 1895 {
+			t.Errorf("Div Dates are wrong: %+v", d)
+		}
+
+		if d.CanalId == 0 {
+			t.Errorf("Bad Canal Id: %+v", d)
+		}
+	}
+}

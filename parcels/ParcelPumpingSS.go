@@ -30,6 +30,7 @@ func ParcelPumpSS(v *database.Setup, csResults map[string][]fileio.StationResult
 		v.Logger.Errorf("Error in Conveyance Losses %s", err)
 	}
 
+	// TODO: needs updated for average delivery
 	spinner, _ = pterm.DefaultSpinner.Start("Getting Surface Water Delivery")
 	// parcel delivery
 	v.Logger.Info("Getting Surface Water Delivery")
@@ -42,6 +43,7 @@ func ParcelPumpSS(v *database.Setup, csResults map[string][]fileio.StationResult
 
 	var parcels []Parcel
 
+	// TODO: Don't need pumping
 	var pPumpDB *database.PPDB
 	if !v.AppDebug {
 		spinner, _ = pterm.DefaultSpinner.Start("Setting Parcel Pumping")
