@@ -2,7 +2,6 @@ package parcels
 
 import (
 	"errors"
-	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"math"
 )
@@ -11,11 +10,9 @@ import (
 // determine the amount of Runoff and Deep Percolation that occurs off of each parcel and sets those values within the
 // parcel struct. This uses the methodology that is within the WSPP program.
 func (p *Parcel) WaterBalanceWSPP(v *database.Setup) error {
-	// TODO: Change v.AppDebug to v.AppDebug
-
 	girFactor, fsl := SetGirFact(p.AppEff)
 	if v.AppDebug {
-		fmt.Printf("GIR: %g, fsl: %g\n", girFactor, fsl)
+		v.Logger.Infof("GIR: %g, fsl: %g\n", girFactor, fsl)
 	}
 
 	totalNir := SumAnnual(p.Nir)
@@ -30,23 +27,20 @@ func (p *Parcel) WaterBalanceWSPP(v *database.Setup) error {
 	}
 
 	if v.AppDebug {
-		fmt.Println("AppWat:", appWAT)
-		fmt.Println("pslIrr:", pslIrr)
-		fmt.Println("RoDpWt:", roDpWt)
+		v.Logger.Infof("AppWat: %g; pslIrr: %g; RoDpWt: %g\n", appWAT, pslIrr, roDpWt)
 	}
 
 	ro1, dp1 := SetInitialRoDp(p.Ro, p.Dp, 1, 1)
 	if v.AppDebug {
-		fmt.Println("RO1:", ro1)
-		fmt.Println("DP1:", dp1)
+		v.Logger.Infof("RO1: %g; DP1: %g\n", ro1, dp1)
 	}
 
 	gainApWat, gainPsl, gainIrrEt, gainDryEt := SetPreGain(p.Et, p.DryEt, appWAT, pslIrr)
 	cIR := math.Max(gainIrrEt-gainDryEt, 0.0001)
 	gIR := totalNir * girFactor
 	if v.AppDebug {
-		fmt.Printf("gainApWat: %g, gainPsl: %g, gainIrrEt: %g, gainDryEt: %g\n", gainApWat, gainPsl, gainIrrEt, gainDryEt)
-		fmt.Printf("cIR: %g, gIR: %g\n", cIR, gIR)
+		v.Logger.Infof("gainApWat: %g, gainPsl: %g, gainIrrEt: %g, gainDryEt: %g\n", gainApWat, gainPsl, gainIrrEt, gainDryEt)
+		v.Logger.Infof("cIR: %g, gIR: %g\n", cIR, gIR)
 	}
 
 	eTGain, err := SetEtGain(cIR, gainPsl, gIR, gainApWat, p.AppEff, gainIrrEt, gainDryEt)
@@ -63,23 +57,17 @@ func (p *Parcel) WaterBalanceWSPP(v *database.Setup) error {
 	deltaET := SetDeltaET(et, 0.95)
 
 	if v.AppDebug {
-		fmt.Println("etGain:", eTGain)
-		fmt.Println("distGain:", distGain)
-		fmt.Println("EtBase:", etBase)
-		fmt.Println("ET:", et)
-		fmt.Println("deltaET:", deltaET)
+		v.Logger.Infof("etGain: %g; distGain: %g; EtBase: %g; ET: %g; deltaET: %g\n", eTGain, distGain, etBase, et, deltaET)
 	}
 
 	ro3, dp3 := DistDeltaET(deltaET, roDpWt)
 	if v.AppDebug {
-		fmt.Println("RO3:", ro3)
-		fmt.Println("DP3:", dp3)
+		v.Logger.Infof("RO3: %g; DP3: %g\n", ro3, dp3)
 	}
 
 	ro2, dp2 := ExcessIrrReturnFlow(pslIrr, distGain, roDpWt)
 	if v.AppDebug {
-		fmt.Println("RO2:", ro2)
-		fmt.Println("DP2:", dp2)
+		v.Logger.Infof("RO2: %g; DP2: %g", ro2, dp2)
 	}
 
 	p.Ro = SumReturnFlows(ro1, ro2, ro3)
