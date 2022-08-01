@@ -40,10 +40,8 @@ func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bo
 
 	pterm.Info.Printf("Model Description: %s\n", mDesc)
 	v.Logger.Infof("Model Description: %s", mDesc)
-	if err := v.SetYears(AvgStart, AvgEnd); err != nil {
-		v.Logger.Errorf("Error Setting Average Years: %s", err)
-		return err
-	}
+	v.SYear = AvgStart
+	v.EYear = AvgEnd
 
 	noteDb, err := database.ResultsNoteDB(v.SlDb)
 	if err != nil {

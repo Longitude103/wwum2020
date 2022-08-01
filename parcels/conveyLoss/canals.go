@@ -74,10 +74,19 @@ func (c *CanalCell) sprint() string {
 // are listed.
 func getCanals(v *database.Setup) (canals []Canal, err error) {
 	for i := v.SYear; i < v.EYear+1; i++ {
-		query := fmt.Sprintf(`select id, name, eff, area, %d yr from sw.canals left join (select sw_id, sum(st_area(geom) / 43560) area
+		var query string
+
+		if v.SteadyState {
+			query = fmt.Sprintf(`select id, name, eff, area, %d yr from sw.canals left join (select sw_id, sum(st_area(geom) / 43560) area
+				from np.t1953_irr where sw = true and sw_id is not null group by sw_id UNION ALL select sw_id,
+					sum(st_area(geom) / 43560) area from sp.t1953_irr where sw = true and sw_id is not null
+					group by sw_id) a on id = a.sw_id where type_2 = 'Canal' and eff is not null;`, i)
+		} else {
+			query = fmt.Sprintf(`select id, name, eff, area, %d yr from sw.canals left join (select sw_id, sum(st_area(geom) / 43560) area
 				from np.t%d_irr where sw = true and sw_id is not null group by sw_id UNION ALL select sw_id, 
 				sum(st_area(geom) / 43560) area from sp.t%d_irr where sw = true and sw_id is not null 
 				group by sw_id) a on id = a.sw_id where type_2 = 'Canal' and eff is not null;`, i, i, i)
+		}
 
 		if err := v.PgDb.Select(&canals, query); err != nil {
 			v.Logger.Errorf("Error getting canals: %s", err)

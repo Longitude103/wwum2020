@@ -50,6 +50,29 @@ func Test_getCanals(t *testing.T) {
 
 }
 
+func Test_getCanalsSS(t *testing.T) {
+	v := dbConnection()
+	v.SYear = 1895
+	v.EYear = 1905
+	v.SteadyState = true
+
+	v.Logger.Infof("Start Year %d", v.SYear)
+	v.Logger.Infof("End Year %d", v.EYear)
+
+	c, err := getCanals(v)
+	if err != nil {
+		t.Errorf("Error getting canals: %s", err)
+	}
+
+	for _, canal := range c {
+		v.Logger.Debugf("Canal: %+v\n", canal)
+	}
+
+	if len(c) == 0 {
+		t.Error("Didn't return any canals")
+	}
+}
+
 func Test_getCanalCells(t *testing.T) {
 	v := dbConnection()
 
