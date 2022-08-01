@@ -134,3 +134,22 @@ func Test_isGWO(t *testing.T) {
 		t.Error("Parcel 3 is Ground Water only but returned that is wasn't Groundwater only")
 	}
 }
+
+func Test_SSParcels(t *testing.T) {
+	v := dbConnection()
+	v.SYear = 1895
+	v.EYear = 1905
+	v.SteadyState = true
+
+	pcls := parcels.GetParcels(v, 1895)
+
+	if len(pcls) == 0 {
+		t.Error("No parcels returned")
+	}
+
+	for _, p := range pcls {
+		if p.Sw.Bool == false {
+			t.Errorf("Parcel has no surface water: %+v\n", p)
+		}
+	}
+}

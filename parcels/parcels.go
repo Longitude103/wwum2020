@@ -60,6 +60,10 @@ const (
 // GetParcels returns a list of all parcels with crops irrigation types and areas. Returns data for both nrds. There
 // can be multiples of the same parcels listed with different soil types. It sets the year into a field in the struct.
 func GetParcels(v *database.Setup, Year int) []Parcel {
+	if v.SteadyState {
+		return getSSParcels(v, Year)
+	}
+
 	query := fmt.Sprintf(`SELECT parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov, sw, gw, subarea, oa,
 	irrig_type, sw_fac, first_irr, cert_num::varchar, model_id, sw_id, st_area(i.geom)/43560 area, 'np' nrd,
 	st_x(st_transform(st_centroid(i.geom), 4326)) pointx, st_y(st_transform(st_centroid(i.geom), 4326)) pointy,
