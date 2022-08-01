@@ -23,6 +23,22 @@ func Test_GetSurfaceWaterDelivery(t *testing.T) {
 	}
 }
 
+func Test_GetSurfaceWaterDeliverySS(t *testing.T) {
+	v := dbConnection()
+	v.SYear = 1895
+	v.EYear = 1905
+	v.SteadyState = true
+
+	div, err := GetSurfaceWaterDelivery(v)
+	if err != nil {
+		t.Errorf("Error Getting SW Delivery: %s", err)
+	}
+
+	for _, d := range div[v.SYear] {
+		v.Logger.Debug(d.printString())
+	}
+}
+
 func Test_filterCnl(t *testing.T) {
 	var c1 = Canal{Id: 1, Name: "Canal", Eff: 0.5, Area: sql.NullFloat64{Float64: 100.25, Valid: true}, Yr: 1997}
 	var c2 = Canal{Id: 2, Name: "Canal", Eff: 0.6, Area: sql.NullFloat64{Float64: 125.35, Valid: true}, Yr: 1997}
