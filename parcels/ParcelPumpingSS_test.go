@@ -9,6 +9,8 @@ import (
 
 func TestParcelPumpSS(t *testing.T) {
 	v := dbConnection()
+	v.SYear = 1895
+	v.EYear = 1895
 	v.SteadyState = true
 
 	csResults, err := fileio.LoadTextFiles("../testData/CropSimOutput/", v.Logger)
@@ -37,5 +39,6 @@ func TestParcelPumpSS(t *testing.T) {
 		t.Errorf("Error in parcel pumping SS process: %s", err)
 	}
 
+	// TODO: FIX: Error where parcels appear to not have any NIR
 	_ = ap
 }
