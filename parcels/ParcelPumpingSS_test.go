@@ -39,5 +39,13 @@ func TestParcelPumpSS(t *testing.T) {
 		t.Errorf("Error in parcel pumping SS process: %s", err)
 	}
 
-	_ = ap
+	for _, a := range ap {
+		if a.Sw.Bool == false {
+			t.Errorf("parcel does not have SW: %+v\n", a)
+		}
+
+		if a.Yr > 1952 || a.Yr < 1895 {
+			t.Error("parcels in the wrong year range for Steady State")
+		}
+	}
 }

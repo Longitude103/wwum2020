@@ -182,6 +182,10 @@ func (p *Parcel) parcelSWDelivery(diversions []conveyLoss.Diversion) {
 
 // GetDryParcels is a function that returns a slice of Parcel for a year of the dryland only parcels in the model.
 func GetDryParcels(v *database.Setup, Year int) []Parcel {
+	if v.SteadyState {
+		return getDrySSParcels(v, Year)
+	}
+
 	query := fmt.Sprintf(`SELECT i.parcel_id, a.crop_int crop1, crop1_cov, b.crop_int crop2, crop2_cov, c.crop_int crop3, crop3_cov, d.crop_int crop4, crop4_cov,
        st_area(i.geom)/43560 area, 'np' nrd, st_x(st_transform(st_centroid(i.geom), 4326)) pointx,
        st_y(st_transform(st_centroid(i.geom), 4326)) pointy, sum(st_area(st_intersection(m.geom, i.geom))/43560) s_area,

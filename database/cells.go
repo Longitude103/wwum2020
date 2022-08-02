@@ -191,7 +191,7 @@ func AddCellsToOutput(v *Setup) error {
 	return nil
 }
 
-// GetCellAreas1 is a function for the Steady State Run to return the amount of area within each model cell for the first two stress periods. NO parcels are included.
+// GetSSCellAreas1 is a function for the Steady State Run to return the amount of area within each model cell for the first two stress periods. NO parcels are included.
 // It returns the area, soil code, and zone of the cell in a slice of CellIntersect Struct.
 func GetSSCellAreas1(v *Setup) (cells []CellIntersect, err error) {
 	query := fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy from getcellss1acres(%d);`, v.CellType())
@@ -203,7 +203,7 @@ func GetSSCellAreas1(v *Setup) (cells []CellIntersect, err error) {
 	return cells, nil
 }
 
-// GetCellAreas2 is a function to return the amount of area within each model cell that is covered by parcels of surface water irrigated and
+// GetSSCellAreas2 is a function to return the amount of area within each model cell that is covered by parcels of surface water irrigated and
 // dryland parcels. It returns the area, soil code, and zone of the cell in a slice of CellIntersect Struct.
 func GetSSCellAreas2(v *Setup) (cells []CellIntersect, err error) {
 	query := fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy, nip_area, ndp_area, 

@@ -118,8 +118,14 @@ func WithMF640Grid() Option {
 	return func(s *Setup) { s.MF640Grid = true }
 }
 
+// WithSteadyState sets the Steady State Bool to true and also sets the years to SYear to 1893 and EYear to 1952
 func WithSteadyState() Option {
-	return func(s *Setup) { s.SteadyState = true }
+	return func(s *Setup) {
+		s.SteadyState = true
+		s.SYear = 1893
+		s.EYear = 1952
+	}
+
 }
 
 // SetYears is an initializer method for the Setup struct to set the start and end years of the application run.
