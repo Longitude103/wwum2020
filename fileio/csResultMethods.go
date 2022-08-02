@@ -89,17 +89,20 @@ func AverageStationResults(stationData map[string][]StationResults, AvgStart, Av
 							avgMV = append(avgMV, mv)
 						}
 
-						newSR := StationResults{
-							Station:     k,
-							Soil:        s,
-							MonthlyData: avgMV,
-							Yr:          1952,
-							Crop:        c,
-							Tillage:     t,
-							Irrigation:  i,
+						for yr := 1893; yr < 1953; yr++ {
+							newSR := StationResults{
+								Station:     k,
+								Soil:        s,
+								MonthlyData: avgMV,
+								Yr:          yr,
+								Crop:        c,
+								Tillage:     t,
+								Irrigation:  i,
+							}
+
+							result[k] = append(result[k], newSR)
 						}
 
-						result[k] = append(result[k], newSR)
 					}
 
 				}

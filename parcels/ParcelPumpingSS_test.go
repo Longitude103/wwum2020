@@ -39,6 +39,5 @@ func TestParcelPumpSS(t *testing.T) {
 		t.Errorf("Error in parcel pumping SS process: %s", err)
 	}
 
-	// TODO: FIX: Error where parcels appear to not have any NIR
 	_ = ap
 }

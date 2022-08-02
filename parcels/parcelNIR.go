@@ -17,6 +17,10 @@ func (p *Parcel) ParcelNIR(v *database.Setup, Year int, wStations []database.Wea
 		return err
 	}
 
+	if v.AppDebug {
+		v.Logger.Infof("Parcel %d; Distances: %+v\n", p.ParcelNo, dist)
+	}
+
 	for _, st := range dist {
 		var annData, dryData []fileio.StationResults
 		for _, data := range csResults[st.Station] {
@@ -72,6 +76,8 @@ func (p *Parcel) ParcelNIR(v *database.Setup, Year int, wStations []database.Wea
 				return err
 			}
 		}
+	} else {
+		v.Logger.Infof("Weighted Parcel ID: %d, NIR is: %v\n", p.ParcelNo, parcelNIR)
 	}
 
 	p.Nir = parcelNIR
