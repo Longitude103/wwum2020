@@ -45,15 +45,24 @@ func RunSteadyState(mDesc, CSDir string, StartYr, EndYr, AvgStart, AvgEnd int, o
 		return err
 	}
 
-	sYearNote := fmt.Sprintf("Average Start Year: %d", v.SYear)
-	eYearNote := fmt.Sprintf("Average End Year: %d", v.EYear)
-	if err := noteDb.Add(database.Note{Nt: "Desc: " + mDesc}); err != nil {
-		return err
-	}
+	avgStartYearNote := fmt.Sprintf("Average Start Year: %d", AvgStart)
+	avgEndYearNote := fmt.Sprintf("Average End Year: %d", AvgEnd)
+	sYearNote := fmt.Sprintf("Start Year: %d", v.SYear)
+	eYearNote := fmt.Sprintf("End Year: %d", v.EYear)
+
 	if err := noteDb.Add(database.Note{Nt: sYearNote}); err != nil {
 		return err
 	}
 	if err := noteDb.Add(database.Note{Nt: eYearNote}); err != nil {
+		return err
+	}
+	if err := noteDb.Add(database.Note{Nt: "Desc: " + mDesc}); err != nil {
+		return err
+	}
+	if err := noteDb.Add(database.Note{Nt: avgStartYearNote}); err != nil {
+		return err
+	}
+	if err := noteDb.Add(database.Note{Nt: avgEndYearNote}); err != nil {
 		return err
 	}
 
