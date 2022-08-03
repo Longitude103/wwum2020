@@ -37,11 +37,8 @@ func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bo
 	}
 
 	v.Logger.Infof("Model Run Started at: %s", timeStart.Format(time.UnixDate))
-
 	pterm.Info.Printf("Model Description: %s\n", mDesc)
 	v.Logger.Infof("Model Description: %s", mDesc)
-	v.SYear = AvgStart
-	v.EYear = AvgEnd
 
 	noteDb, err := database.ResultsNoteDB(v.SlDb)
 	if err != nil {
@@ -123,7 +120,44 @@ func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bo
 	}
 	pterm.Success.Println("Successfully Completed Parcel Pumping")
 
-	_ = irrParcels
+	if err := v.PNirDB.Flush(); err != nil {
+		v.Logger.Errorf("Error in flush: %s", err)
+	}
 
+	// Irr Cells
+	v.Logger.Info("Preforming Irrigation RCH Operations")
+	if err := rchFiles.IrrigationRCH(v, irrParcels, cCoefficients); err != nil {
+		v.Logger.Errorf("Error in Creating Irrigation RCH %s", err)
+		return err
+	}
+	pterm.Success.Println("Successfully Completed Irrigated Results")
+	if err := v.RchDb.Close(); err != nil {
+		return err
+	}
+
+	v.Logger.Info("Preforming Dryland Parcel Operations")
+	dryParcels, err := parcels.DryLandParcels(v, avgCSResults, wStations, cCoefficients)
+	if err != nil {
+		v.Logger.Errorf("Error in Dry Land Parcels: %s", err)
+	}
+	pterm.Success.Println("Successfully Completed Dryland Parcel Ops")
+
+	// Dryland 101
+	if err := rchFiles.Dryland(v, dryParcels, cCoefficients); err != nil {
+		v.Logger.Errorf("Error in Dryland: %s", err)
+		return err
+	}
+	pterm.Success.Println("Successfully Completed Dryland Results")
+
+	if err := v.RchDb.Flush(); err != nil {
+		return err
+	}
+
+	_ = noteDb.Close()
+	_ = v.SlDb.Close() // close the db before ending the program
+	v.Logger.Infof("Model Runtime: %s", time.Since(timeStart))
+	v.Logger.Info("Steady State Model Completed Normally")
+	pterm.Info.Println("Steady State Model Completed Normally, check logs for details of run")
+	v.Logger.Close()
 	return nil
 }
