@@ -80,6 +80,8 @@ For help with those functions type: runModel -h or mfFiles -h`
 	runSSModelMF6Grid40 := runSSCmd.Bool("mf6Grid40", false, "If flag set, the model will use the 40 acre grid but in MF6 Node Numbers")
 	runSSModelCSDir := runSSCmd.String("CSDir", "", "REQUIRED! - CropSim Directory path")
 	runSSModelDesc := runSSCmd.String("Desc", "", "REQUIRED! - Model Description")
+	runSSStartY := runSSCmd.Int("StartYr", 1893, "Sets the start year of Command, default = 1893")
+	runSSEndY := runSSCmd.Int("EndYr", 1952, "Sets the End year of Command, default = 1952")
 
 	if len(os.Args) < 2 {
 		fmt.Println(help)
@@ -140,7 +142,7 @@ For help with those functions type: runModel -h or mfFiles -h`
 			os.Exit(1)
 		}
 
-		if err := actions.RunSteadyState(*runSSModelDesc, *runSSModelCSDir, *runSSAvgStart, *runSSAvgEnd, *runSSModelGrid, *runSSModelMF6Grid40, myEnv); err != nil {
+		if err := actions.RunSteadyState(*runSSModelDesc, *runSSModelCSDir, *runSSStartY, *runSSEndY, *runSSAvgStart, *runSSAvgEnd, *runSSModelGrid, *runSSModelMF6Grid40, myEnv); err != nil {
 			pterm.Error.Printf("Error in Steady State Run: %s", err)
 			os.Exit(1)
 		}

@@ -13,7 +13,7 @@ import (
 
 // RunSteadyState is a function that runs the model in Steady State Mode. This produces the following recharge file, but no
 // well file is produced.
-func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bool, myEnv map[string]string) error {
+func RunSteadyState(mDesc, CSDir string, StartYr, EndYr, AvgStart, AvgEnd int, oldGrid, mf640 bool, myEnv map[string]string) error {
 	// first stress period is all Natural Veg for whole grid
 	// Second stress period is all natural veg and a repeat of the 1st period
 	// Third -> end is a monthly stress periods using surface water data starting January 1895 to December 1952
@@ -21,7 +21,7 @@ func RunSteadyState(mDesc, CSDir string, AvgStart, AvgEnd int, oldGrid, mf640 bo
 
 	pterm.Info.Println("Setting up results database")
 	var opts []database.Option
-	opts = append(opts, database.WithSteadyState())
+	opts = append(opts, database.WithSteadyState(StartYr, EndYr))
 
 	if oldGrid {
 		opts = append(opts, database.WithOldGrid())

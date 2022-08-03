@@ -20,6 +20,10 @@ type IrrCell struct {
 // GetCellsIrr gets the cells that have irrigation within them and splits them by parcel. If a cell has multiple parcels
 // there will be multiples of the same cell listed. This includes both nrd irrigated acres.
 func GetCellsIrr(v *Setup, yr int) ([]IrrCell, error) {
+	if v.SteadyState {
+		return GetSSCellsIrr(v)
+	}
+
 	if yr > 1997 {
 		if v.Post97 {
 			return GetCellsIrrPost97(v, yr)
@@ -89,6 +93,23 @@ from public.model_cells c
 	}
 
 	irrCells = append(irrCells, p97irrCells...)
+
+	return irrCells, nil
+}
+
+// GetSSCellsIrr is a function to return the irrigated cells for 1953 only where there are surface water parcels. Any GW only parcels
+// are not included in this function.
+func GetSSCellsIrr(v *Setup) ([]IrrCell, error) {
+	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, 
+									parcel_id, nrd from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, 
+									geom from np.t1953_irr where sw = true UNION SELECT parcel_id, 'sp' nrd, geom from sp.t1953_irr where sw = true) i
+        on st_intersects(c.geom, i.geom) where c.cell_type = %d;`, v.CellType())
+
+	var irrCells []IrrCell
+	if err := v.PgDb.Select(&irrCells, query); err != nil {
+		v.Logger.Errorf("Cannot Get Cells Parcel Split data in Steady State query: %s", err)
+		return nil, err
+	}
 
 	return irrCells, nil
 }

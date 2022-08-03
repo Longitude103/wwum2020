@@ -16,7 +16,7 @@ func NaturalVegSS(v *database.Setup, wStations []database.WeatherStation, csResu
 	// this needs to cycle for two years, then monthly from 1895 -> 1952
 	// 2 stress periods for the first ones and then 696 months = 698 periods
 
-	p, _ := pterm.DefaultProgressbar.WithTotal(1954 - 1893).WithTitle("Steady State Natural Vegetation Operations").WithRemoveWhenDone(true).Start()
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear + 1 - v.SYear).WithTitle("Steady State Natural Vegetation Operations").WithRemoveWhenDone(true).Start()
 
 	p.UpdateTitle("Getting 1st cell areas")
 	cells1, err := database.GetSSCellAreas1(v)
@@ -30,7 +30,7 @@ func NaturalVegSS(v *database.Setup, wStations []database.WeatherStation, csResu
 		return err
 	}
 
-	for yr := 1893; yr < 1953; yr++ {
+	for yr := v.SYear; yr < v.EYear+1; yr++ {
 		p.UpdateTitle(fmt.Sprintf("Calculating %d SS Natural Veg Recharge", yr))
 		// if the period is 0 or 1, no other parcels, just the model cells
 		var cells []database.CellIntersect

@@ -119,11 +119,11 @@ func WithMF640Grid() Option {
 }
 
 // WithSteadyState sets the Steady State Bool to true and also sets the years to SYear to 1893 and EYear to 1952
-func WithSteadyState() Option {
+func WithSteadyState(startYr, endYr int) Option {
 	return func(s *Setup) {
 		s.SteadyState = true
-		s.SYear = 1893
-		s.EYear = 1952
+		s.SYear = startYr
+		s.EYear = endYr
 	}
 
 }
