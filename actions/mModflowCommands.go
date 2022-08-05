@@ -23,61 +23,84 @@ func MakeModflowFiles() error {
 		return err
 	}
 
+	steadyState, err := database.GetSteadyState(db)
+	if err != nil {
+		return err
+	}
+
 	mDesc, err := database.GetDescription(db)
 	if err != nil {
 		return err
 	}
 
-	a, err := questions(db)
+	a, err := questions(db, steadyState)
 	if err != nil {
 		return err
 	}
 
-	aggWel, err := database.GetAggResults(db, true, a.WellFK)
-	if err != nil {
-		return err
-	}
+	var aggWel, aggRch []database.MfResults
 
-	aggRch, err := database.GetAggResults(db, false, a.RchFK)
-	if err != nil {
-		return err
-	}
-
-	var singleWELResults = make(map[string][]database.MfResults)
-	var singleRCHResults = make(map[string][]database.MfResults)
-
-	for _, w := range a.WellFK {
-		singleWELResults[w], err = database.SingleResult(db, true, w)
+	if steadyState {
+		aggRch, err = database.GetAggResults(db, false, a.RchFK)
 		if err != nil {
 			return err
 		}
+
+		// process here before you make the file
+		if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	for _, r := range a.RchFK {
-		singleRCHResults[r], err = database.SingleResult(db, false, r)
+	if !steadyState {
+		aggWel, err = database.GetAggResults(db, true, a.WellFK)
 		if err != nil {
 			return err
 		}
-	}
 
-	if err := MakeFiles(aggWel, true, false, a.RowCol, "AggregateWEL", path, mDesc); err != nil {
-		return err
-	}
+		var singleWELResults = make(map[string][]database.MfResults)
+		var singleRCHResults = make(map[string][]database.MfResults)
 
-	for k := range singleWELResults {
-		fn := fmt.Sprintf("%sWEL", k)
-		if err := MakeFiles(singleWELResults[k], true, false, a.RowCol, fn, path, mDesc); err != nil {
+		for _, w := range a.WellFK {
+			singleWELResults[w], err = database.SingleResult(db, true, w)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, r := range a.RchFK {
+			singleRCHResults[r], err = database.SingleResult(db, false, r)
+			if err != nil {
+				return err
+			}
+		}
+
+		if err := MakeFiles(aggWel, true, false, a.RowCol, "AggregateWEL", path, mDesc); err != nil {
 			return err
 		}
-	}
 
-	if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc); err != nil {
-		return err
-	}
+		for k := range singleWELResults {
+			fn := fmt.Sprintf("%sWEL", k)
+			if err := MakeFiles(singleWELResults[k], true, false, a.RowCol, fn, path, mDesc); err != nil {
+				return err
+			}
+		}
 
-	for k := range singleRCHResults {
-		fn := fmt.Sprintf("%sRCH", k)
-		if err := MakeFiles(singleRCHResults[k], false, true, a.RowCol, fn, path, mDesc); err != nil {
+		for k := range singleRCHResults {
+			fn := fmt.Sprintf("%sRCH", k)
+			if err := MakeFiles(singleRCHResults[k], false, true, a.RowCol, fn, path, mDesc); err != nil {
+				return err
+			}
+		}
+
+		aggRch, err = database.GetAggResults(db, false, a.RchFK)
+		if err != nil {
+			return err
+		}
+
+		if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc); err != nil {
 			return err
 		}
 	}
@@ -127,39 +150,51 @@ type Answers struct {
 	RowCol bool
 }
 
-func questions(sqliteDB *sqlx.DB) (Answers, error) {
-	wellFk, err := database.GetFileKeys(sqliteDB, true)
-	if err != nil {
-		return Answers{}, err
-	}
+func questions(sqliteDB *sqlx.DB, steadyState bool) (Answers, error) {
+	var multiQs []*survey.Question
+	if steadyState {
+		multiQs = []*survey.Question{
+			{
+				Name: "RowCol",
+				Prompt: &survey.Confirm{
+					Message: "Do you want to Output Row-Column (node is default)?",
+				},
+			},
+		}
+	} else {
+		wellFk, err := database.GetFileKeys(sqliteDB, true)
+		if err != nil {
+			return Answers{}, err
+		}
 
-	rchFK, err := database.GetFileKeys(sqliteDB, false)
-	if err != nil {
-		return Answers{}, err
-	}
+		rchFK, err := database.GetFileKeys(sqliteDB, false)
+		if err != nil {
+			return Answers{}, err
+		}
 
-	// the questions to ask
-	var multiQs = []*survey.Question{
-		{
-			Name: "WellFK",
-			Prompt: &survey.MultiSelect{
-				Message: "Choose WEL files to exclude :",
-				Options: wellFk,
+		// the questions to ask
+		multiQs = []*survey.Question{
+			{
+				Name: "WellFK",
+				Prompt: &survey.MultiSelect{
+					Message: "Choose WEL files to exclude :",
+					Options: wellFk,
+				},
 			},
-		},
-		{
-			Name: "RchFK",
-			Prompt: &survey.MultiSelect{
-				Message: "Choose which RCH files to exclude :",
-				Options: rchFK,
+			{
+				Name: "RchFK",
+				Prompt: &survey.MultiSelect{
+					Message: "Choose which RCH files to exclude :",
+					Options: rchFK,
+				},
 			},
-		},
-		{
-			Name: "RowCol",
-			Prompt: &survey.Confirm{
-				Message: "Do you want to Output Row-Column (node is default)?",
+			{
+				Name: "RowCol",
+				Prompt: &survey.Confirm{
+					Message: "Do you want to Output Row-Column (node is default)?",
+				},
 			},
-		},
+		}
 	}
 
 	var a Answers
@@ -196,4 +231,41 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName str
 	}
 
 	return nil
+}
+
+func processSSAggRCH(results []database.MfResults, fileName, outputPath, mDesc string) error {
+	Rc := true
+	if results[0].IsNodeResult() {
+		Rc = false
+	}
+
+	var processResults []database.MfResults
+	// needs to do a few things
+	for _, r := range []int{1893, 1894} {
+		// find 1893 and 1894 and process those into annual results
+		// TODO: finish the first to years and make them annual values
+		// TODO: convert into ft / day
+		_ = r
+	}
+
+	// TODO: convert monthly values to ft / day
+
+	rInterface := make([]interface {
+		Date() time.Time
+		Node() int
+		Value() float64
+		RowCol() (int, int)
+	}, len(processResults))
+
+	if err := Flogo.Input(false, true, Rc, fileName, rInterface, outputPath, mDesc); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func filterResultsByYear(results []database.MfResults, yr int) []database.MfResults {
+	// TODO: filter the results to each year to add them together by node
+
+	return results
 }

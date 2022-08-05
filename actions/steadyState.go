@@ -65,6 +65,9 @@ func RunSteadyState(mDesc, CSDir string, StartYr, EndYr, AvgStart, AvgEnd int, o
 	if err := noteDb.Add(database.Note{Nt: avgEndYearNote}); err != nil {
 		return err
 	}
+	if err := noteDb.Add(database.Note{Nt: "SteadyState Model Run"}); err != nil {
+		return err
+	}
 
 	if v.OldGrid {
 		if err := noteDb.Add(database.Note{Nt: "grid=1"}); err != nil {

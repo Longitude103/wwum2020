@@ -50,6 +50,22 @@ func (m MfResults) RowCol() (int, int) {
 	return int(m.Rw.Int64), int(m.Clm.Int64)
 }
 
+func (m MfResults) IsNodeResult() bool {
+	if m.Rw.Valid && m.Clm.Valid {
+		return false
+	}
+
+	return true
+}
+
+func (m MfResults) Year() int {
+	return m.ResultDate.Year()
+}
+
+func (m MfResults) Month() int {
+	return int(m.ResultDate.Month())
+}
+
 func GetFileKeys(db *sqlx.DB, wel bool) ([]string, error) {
 	var fKeys []FileKeys
 	var resultFileKeys []string
@@ -141,10 +157,8 @@ func SingleResult(db *sqlx.DB, wel bool, fileKey string) ([]MfResults, error) {
 }
 
 func GetDescription(db *sqlx.DB) (desc string, err error) {
-	var rslt []ResultsNote
-	query := "SELECT * FROM results_notes"
-
-	if err := db.Select(&rslt, query); err != nil {
+	rslt, err := getAllDBResults(db)
+	if err != nil {
 		return "", err
 	}
 
@@ -158,10 +172,8 @@ func GetDescription(db *sqlx.DB) (desc string, err error) {
 }
 
 func GetGrid(db *sqlx.DB) (grid int, err error) {
-	var rslt []ResultsNote
-	query := "SELECT * FROM results_notes"
-
-	if err := db.Select(&rslt, query); err != nil {
+	rslt, err := getAllDBResults(db)
+	if err != nil {
 		return 0, err
 	}
 
@@ -176,10 +188,8 @@ func GetGrid(db *sqlx.DB) (grid int, err error) {
 }
 
 func GetStartEndYrs(db *sqlx.DB) (SYr, EYr int, err error) {
-	var rslt []ResultsNote
-	query := "SELECT * FROM results_notes"
-
-	if err := db.Select(&rslt, query); err != nil {
+	rslt, err := getAllDBResults(db)
+	if err != nil {
 		return 0, 0, err
 	}
 
@@ -196,4 +206,30 @@ func GetStartEndYrs(db *sqlx.DB) (SYr, EYr int, err error) {
 	}
 
 	return SYr, EYr, errors.New("could not find Start and End Years")
+}
+
+func GetSteadyState(db *sqlx.DB) (bool, error) {
+	rslt, err := getAllDBResults(db)
+	if err != nil {
+		return false, err
+	}
+
+	for _, n := range rslt {
+		if strings.ToLower(n.Note[:6]) == "steady" {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func getAllDBResults(db *sqlx.DB) ([]ResultsNote, error) {
+	var rslt []ResultsNote
+	query := "SELECT * FROM results_notes"
+
+	if err := db.Select(&rslt, query); err != nil {
+		return rslt, err
+	}
+
+	return rslt, nil
 }
