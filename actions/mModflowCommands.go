@@ -46,11 +46,9 @@ func MakeModflowFiles() error {
 			return err
 		}
 
-		// process here before you make the file
-		if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc); err != nil {
+		if err := processSSAggRCH(aggRch, "AggregateRCH", path, mDesc); err != nil {
 			return err
 		}
-
 		return nil
 	}
 
@@ -211,17 +209,22 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName str
 		Date() time.Time
 		Node() int
 		Value() float64
+		UseValue() bool
 		RowCol() (int, int)
+		ConvertToFtPDay() float64
+		ConvertToFt3PDay() float64
 	}, len(r))
 	for i, v := range r {
 		if wel {
 			// acre-feet / month -> (ft^3 / day) * -1
 			v.Rslt = (v.Rslt * 43560) / float64(Utils.TimeExt{T: v.ResultDate}.DaysInMonth()) * -1
+			v.SetConvertedValue()
 		}
 
 		if rch {
 			// acre-feet / month -> ft / day
 			v.Rslt = (v.Rslt / v.CellSize.Float64) / float64(Utils.TimeExt{T: v.ResultDate}.DaysInMonth())
+			v.SetConvertedValue()
 		}
 		rInterface[i] = v
 	}
@@ -233,29 +236,26 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName str
 	return nil
 }
 
-func processSSAggRCH(results []database.MfResults, fileName, outputPath, mDesc string) error {
+func processSSAggRCH(results myResults, fileName, outputPath, mDesc string) error {
 	Rc := true
 	if results[0].IsNodeResult() {
 		Rc = false
 	}
 
-	var processResults []database.MfResults
-	// needs to do a few things
-	for _, r := range []int{1893, 1894} {
-		// find 1893 and 1894 and process those into annual results
-		// TODO: finish the first to years and make them annual values
-		// TODO: convert into ft / day
-		_ = r
-	}
+	annualResults := filterResultsForYear(results)
+	excludedResults := results.excludeResults([]int{1893, 1894})
 
-	// TODO: convert monthly values to ft / day
+	allResults := append(annualResults, excludedResults...)
 
 	rInterface := make([]interface {
 		Date() time.Time
 		Node() int
 		Value() float64
+		UseValue() bool
 		RowCol() (int, int)
-	}, len(processResults))
+		ConvertToFtPDay() float64
+		ConvertToFt3PDay() float64
+	}, len(allResults))
 
 	if err := Flogo.Input(false, true, Rc, fileName, rInterface, outputPath, mDesc); err != nil {
 		return err
@@ -264,8 +264,85 @@ func processSSAggRCH(results []database.MfResults, fileName, outputPath, mDesc s
 	return nil
 }
 
-func filterResultsByYear(results []database.MfResults, yr int) []database.MfResults {
-	// TODO: filter the results to each year to add them together by node
+type myResults []database.MfResults
+
+// filterMyResults is a method to filter myResults slice of database.MfResults into just the results for the year passed
+// to the method.
+func (mr myResults) filterMyResults(yr int) myResults {
+	var mnthResults []database.MfResults
+	for _, r := range mr {
+		if r.Year() == yr {
+			mnthResults = append(mnthResults, r)
+		}
+	}
+
+	return mnthResults
+}
+
+// GroupToAnnual is a method of myResults that will group all items within the slice by node. Make sure there are only
+// one year of data when calling this method.
+func (mr myResults) GroupToAnnual() map[int]myResults {
+	resultMap := make(map[int]myResults)
+	for _, r := range mr {
+		resultMap[r.Node()] = append(resultMap[r.Node()], r)
+	}
+
+	return resultMap
+}
+
+func (mr myResults) excludeResults(yrs []int) myResults {
+	var result myResults
+
+	for _, r := range mr {
+		found := false
+		for i := 0; i < len(yrs); i++ {
+			if r.Year() == yrs[i] {
+				found = true
+			}
+		}
+
+		if found { // found a year, don't amend
+			break
+		} else {
+			result = append(result, r)
+		}
+	}
+
+	return result
+}
+
+// filterResultsForYear is a function for steady state to convert the first two years of data into two annual datasets and
+// return them in a new slice where they are in the struct with dates of 11/1894 and 12/1894, but are annual datasets for the
+// first two time steps of the steady state model.
+func filterResultsForYear(allResults myResults) myResults {
+	var results myResults
+	for _, yr := range []int{1893, 1894} {
+		mnthResult := allResults.filterMyResults(yr)
+		groupedResults := mnthResult.GroupToAnnual()
+
+		for k, listResults := range groupedResults {
+			var daysInYear int
+			var totalAF float64
+			for _, lr := range listResults {
+				daysInYear += Utils.TimeExt{T: lr.ResultDate}.DaysInYear()
+				totalAF += lr.Rslt
+			}
+
+			// acre-feet / year -> ft / day, cell size cannot change during model
+			Rslt := (totalAF / listResults[0].CellSize.Float64) / float64(daysInYear)
+
+			mnth := 11
+			if yr == 1894 {
+				mnth = 12
+			}
+
+			mfResult := database.MfResults{ResultDate: time.Date(1894, time.Month(mnth), 1, 0, 0, 0, 0, time.UTC),
+				CellNode: k, Rslt: Rslt, CellSize: listResults[0].CellSize, Rw: listResults[0].Rw, Clm: listResults[0].Clm, ConvertedValue: true}
+
+			results = append(results, mfResult)
+		}
+
+	}
 
 	return results
 }

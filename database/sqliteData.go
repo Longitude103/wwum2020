@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Longitude103/wwum2020/Utils"
 	"strconv"
 	"strings"
 	"time"
@@ -21,12 +22,13 @@ func (f FileKeys) Print() string {
 }
 
 type MfResults struct {
-	CellNode   int             `db:"cell_node"`
-	CellSize   sql.NullFloat64 `db:"cell_size"`
-	ResultDate time.Time       `db:"dt"`
-	Rslt       float64         `db:"rslt"`
-	Rw         sql.NullInt64   `db:"rw"`
-	Clm        sql.NullInt64   `db:"clm"`
+	CellNode       int             `db:"cell_node"`
+	CellSize       sql.NullFloat64 `db:"cell_size"`
+	ResultDate     time.Time       `db:"dt"`
+	Rslt           float64         `db:"rslt"`
+	Rw             sql.NullInt64   `db:"rw"`
+	Clm            sql.NullInt64   `db:"clm"`
+	ConvertedValue bool            // value in Rslt is already converted, no need to use convert methods
 }
 
 type ResultsNote struct {
@@ -64,6 +66,22 @@ func (m MfResults) Year() int {
 
 func (m MfResults) Month() int {
 	return int(m.ResultDate.Month())
+}
+
+func (m MfResults) ConvertToFtPDay() float64 {
+	return (m.Rslt / m.CellSize.Float64) / float64(Utils.TimeExt{T: m.ResultDate}.DaysInMonth())
+}
+
+func (m MfResults) ConvertToFt3PDay() float64 {
+	return (m.Rslt * 43560) / float64(Utils.TimeExt{T: m.ResultDate}.DaysInMonth()) * -1
+}
+
+func (m MfResults) UseValue() bool {
+	return m.ConvertedValue
+}
+
+func (m *MfResults) SetConvertedValue() {
+	m.ConvertedValue = true
 }
 
 func GetFileKeys(db *sqlx.DB, wel bool) ([]string, error) {
