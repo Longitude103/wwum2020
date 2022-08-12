@@ -2,6 +2,7 @@ package actions
 
 import (
 	"fmt"
+	"github.com/pterm/pterm"
 	"path/filepath"
 	"time"
 
@@ -41,7 +42,9 @@ func MakeModflowFiles() error {
 	var aggWel, aggRch []database.MfResults
 
 	if steadyState {
-		aggRch, err = database.GetAggResults(db, false, a.RchFK)
+		pterm.Info.Println("Steady State Run Detected, will only make RCH File.")
+		pterm.Info.Println("Processing RCH from Local DB")
+		aggRch, err = database.GetAggResults(db, false, []string{})
 		if err != nil {
 			return err
 		}
@@ -49,6 +52,8 @@ func MakeModflowFiles() error {
 		if err := processSSAggRCH(aggRch, "AggregateRCH", path, mDesc); err != nil {
 			return err
 		}
+
+		pterm.Success.Println("Created RCH File, look in OutputFiles directory")
 		return nil
 	}
 
@@ -242,7 +247,10 @@ func processSSAggRCH(results myResults, fileName, outputPath, mDesc string) erro
 		Rc = false
 	}
 
+	pterm.Info.Println("Making First two time period annual results for SS Model")
 	annualResults := filterResultsForYear(results)
+
+	pterm.Info.Println("Excluding the annual years")
 	excludedResults := results.excludeResults([]int{1893, 1894})
 
 	allResults := append(annualResults, excludedResults...)
@@ -257,6 +265,11 @@ func processSSAggRCH(results myResults, fileName, outputPath, mDesc string) erro
 		ConvertToFt3PDay() float64
 	}, len(allResults))
 
+	for i := 0; i < len(allResults); i++ {
+		rInterface[i] = allResults[i]
+	}
+
+	pterm.Info.Println("Creating RCH File")
 	if err := Flogo.Input(false, true, Rc, fileName, rInterface, outputPath, mDesc); err != nil {
 		return err
 	}

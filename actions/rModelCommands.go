@@ -78,7 +78,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 		if err := noteDb.Add(database.Note{Nt: "grid=1"}); err != nil {
 			return err
 		}
-		if err := database.AddCellsToOutput(v); err != nil {
+		if err := database.AddCellsToOutput(v); err != nil { // TODO: Check, may need run for all models
 			return err
 		}
 	} else {

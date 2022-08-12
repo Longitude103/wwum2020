@@ -69,11 +69,11 @@ func RunSteadyState(mDesc, CSDir string, StartYr, EndYr, AvgStart, AvgEnd int, o
 		return err
 	}
 
+	if err := database.AddCellsToOutput(v); err != nil {
+		return err
+	}
 	if v.OldGrid {
 		if err := noteDb.Add(database.Note{Nt: "grid=1"}); err != nil {
-			return err
-		}
-		if err := database.AddCellsToOutput(v); err != nil {
 			return err
 		}
 	} else {

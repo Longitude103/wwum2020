@@ -109,6 +109,8 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 	var qry string
 	var results []MfResults
 
+	// TODO: Write a check here to ensure that cellrc table has records
+
 	if wel { // is a wel file
 		if len(excludeList) > 0 { // has an item in the to exclude list
 			list := excludeList[0][0:3]
