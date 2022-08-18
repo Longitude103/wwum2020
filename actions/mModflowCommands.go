@@ -250,15 +250,10 @@ func processSSAggRCH(results SliceMfResults, fileName, outputPath, mDesc string)
 
 	pterm.Info.Println("Making First two time period annual results for SS Model")
 	annualResults := filterResultsForYear(results)
-	fmt.Printf("There are %d records in annualResults\n", len(annualResults))
 
 	pterm.Info.Println("Excluding the annual years")
-	fmt.Printf("There are %d records in results\n", len(results))
 	excludedResults := results.ExcludeResults([]int{1893, 1894})
-	fmt.Printf("There are %d results in excludedResults\n", len(excludedResults))
-
 	allResults := append(annualResults, excludedResults...)
-	fmt.Printf("There are %d results in allResults\n", len(allResults))
 
 	rInterface := make([]interface {
 		Date() time.Time
