@@ -2,9 +2,10 @@ package actions
 
 import (
 	"fmt"
-	"github.com/pterm/pterm"
 	"path/filepath"
 	"time"
+
+	"github.com/pterm/pterm"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Longitude103/Flogo"
@@ -241,7 +242,7 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName str
 	return nil
 }
 
-func processSSAggRCH(results myResults, fileName, outputPath, mDesc string) error {
+func processSSAggRCH(results SliceMfResults, fileName, outputPath, mDesc string) error {
 	Rc := true
 	if results[0].IsNodeResult() {
 		Rc = false
@@ -249,11 +250,15 @@ func processSSAggRCH(results myResults, fileName, outputPath, mDesc string) erro
 
 	pterm.Info.Println("Making First two time period annual results for SS Model")
 	annualResults := filterResultsForYear(results)
+	fmt.Printf("There are %d records in annualResults\n", len(annualResults))
 
 	pterm.Info.Println("Excluding the annual years")
-	excludedResults := results.excludeResults([]int{1893, 1894})
+	fmt.Printf("There are %d records in results\n", len(results))
+	excludedResults := results.ExcludeResults([]int{1893, 1894})
+	fmt.Printf("There are %d results in excludedResults\n", len(excludedResults))
 
 	allResults := append(annualResults, excludedResults...)
+	fmt.Printf("There are %d results in allResults\n", len(allResults))
 
 	rInterface := make([]interface {
 		Date() time.Time
@@ -277,11 +282,11 @@ func processSSAggRCH(results myResults, fileName, outputPath, mDesc string) erro
 	return nil
 }
 
-type myResults []database.MfResults
+type SliceMfResults []database.MfResults
 
-// filterMyResults is a method to filter myResults slice of database.MfResults into just the results for the year passed
+// filterMyResults is a method to filter SliceMfResults slice of database.MfResults into just the results for the year passed
 // to the method.
-func (mr myResults) filterMyResults(yr int) myResults {
+func (mr SliceMfResults) filterMyResults(yr int) SliceMfResults {
 	var mnthResults []database.MfResults
 	for _, r := range mr {
 		if r.Year() == yr {
@@ -292,10 +297,10 @@ func (mr myResults) filterMyResults(yr int) myResults {
 	return mnthResults
 }
 
-// GroupToAnnual is a method of myResults that will group all items within the slice by node. Make sure there are only
+// GroupToAnnual is a method of SliceMfResults that will group all items within the slice by node. Make sure there are only
 // one year of data when calling this method.
-func (mr myResults) GroupToAnnual() map[int]myResults {
-	resultMap := make(map[int]myResults)
+func (mr SliceMfResults) GroupToAnnual() map[int]SliceMfResults {
+	resultMap := make(map[int]SliceMfResults)
 	for _, r := range mr {
 		resultMap[r.Node()] = append(resultMap[r.Node()], r)
 	}
@@ -303,8 +308,9 @@ func (mr myResults) GroupToAnnual() map[int]myResults {
 	return resultMap
 }
 
-func (mr myResults) excludeResults(yrs []int) myResults {
-	var result myResults
+// ExcludeResults is a method to return a subset of SliceMfResults that does not have a slice of years present.
+func (mr SliceMfResults) ExcludeResults(yrs []int) SliceMfResults {
+	var result SliceMfResults
 
 	for _, r := range mr {
 		found := false
@@ -315,7 +321,7 @@ func (mr myResults) excludeResults(yrs []int) myResults {
 		}
 
 		if found { // found a year, don't amend
-			break
+			continue
 		} else {
 			result = append(result, r)
 		}
@@ -327,8 +333,8 @@ func (mr myResults) excludeResults(yrs []int) myResults {
 // filterResultsForYear is a function for steady state to convert the first two years of data into two annual datasets and
 // return them in a new slice where they are in the struct with dates of 11/1894 and 12/1894, but are annual datasets for the
 // first two time steps of the steady state model.
-func filterResultsForYear(allResults myResults) myResults {
-	var results myResults
+func filterResultsForYear(allResults SliceMfResults) SliceMfResults {
+	var results SliceMfResults
 	for _, yr := range []int{1893, 1894} {
 		mnthResult := allResults.filterMyResults(yr)
 		groupedResults := mnthResult.GroupToAnnual()

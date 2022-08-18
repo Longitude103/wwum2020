@@ -22,7 +22,7 @@ func getTestDBConn() (*database.Setup, error) {
 	var v *database.Setup
 
 	var opts []database.Option
-	opts = append(opts, database.WithSteadyState())
+	opts = append(opts, database.WithSteadyState(1893, 1952))
 	opts = append(opts, database.WithNoSQLite())
 
 	v, err = database.NewSetup(myEnv, opts...)
