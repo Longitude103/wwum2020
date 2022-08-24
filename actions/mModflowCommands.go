@@ -335,15 +335,13 @@ func filterResultsForYear(allResults SliceMfResults) SliceMfResults {
 		groupedResults := mnthResult.GroupToAnnual()
 
 		for k, listResults := range groupedResults {
-			var daysInYear int
 			var totalAF float64
 			for _, lr := range listResults {
-				daysInYear += Utils.TimeExt{T: lr.ResultDate}.DaysInYear()
 				totalAF += lr.Rslt
 			}
 
 			// acre-feet / year -> ft / day, cell size cannot change during model
-			Rslt := (totalAF / listResults[0].CellSize.Float64) / float64(daysInYear)
+			Rslt := (totalAF / listResults[0].CellSize.Float64) / float64(Utils.TimeExt{T: listResults[0].ResultDate}.DaysInYear())
 
 			mnth := 11
 			if yr == 1894 {
