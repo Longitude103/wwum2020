@@ -2,6 +2,7 @@ package qc
 
 import (
 	"bufio"
+	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -30,21 +31,28 @@ type WellData struct {
 	Node     int     `db:"cell_node"`
 }
 
+var (
+	//go:embed sql/wellsQuery.sql
+	wellsQuery string
+	//go:embed sql/nodeQuery.sql
+	nodeQuery string
+	//go:embed sql/RchResultsData.sql
+	rQry string
+	//go:embed sql/SsQuery.sql
+	ssQry string
+)
+
 func (q *QC) WellPumpingGJson() error {
 	pterm.DefaultSection.Println("Well GeoJSON Creation")
 	spin, _ := pterm.DefaultSpinner.Start("Getting Wells from DB")
 
 	var wlls []Well
-	qry := "select st_asgeojson(q) geojson, wellid, nrd from (select st_transform(geom, 4326), wellid, 'np' nrd from np.npnrd_wells union select st_transform(geom, 4326), wellid, 'sp' nrd from sp.spnrd_wells) q;"
-
-	if err := q.v.PgDb.Select(&wlls, qry); err != nil {
+	if err := q.v.PgDb.Select(&wlls, wellsQuery); err != nil {
 		return err
 	}
 
-	nodeQry := fmt.Sprintf("select st_asgeojson(q) geojson, node from (select st_transform(st_centroid(geom), 4326), node from model_cells where cell_type = %d) q;", q.grid)
-
 	var nodes []NodeCentroid
-	if err := q.v.PgDb.Select(&nodes, nodeQry); err != nil {
+	if err := q.v.PgDb.Select(&nodes, nodeQuery, q.grid); err != nil {
 		return nil
 	}
 
@@ -63,17 +71,10 @@ func (q *QC) WellPumpingGJson() error {
 			mnString = fmt.Sprintf("%d", m)
 		}
 
-		rqry := fmt.Sprintf("select well_id, file_type, result from wel_results "+
-			"where strftime('%%Y', dt) = '%d' and strftime('%%m', dt) = '%s' and file_type < 209;", q.Year, mnString)
-
-		if err := q.v.SlDb.Select(&rResults, rqry); err != nil {
+		if err := q.v.SlDb.Select(&rResults, rQry, q.Year, mnString); err != nil {
 			return err
 		}
-
-		ssqry := fmt.Sprintf("select cell_node, sum(result) result from wel_results "+
-			"where strftime('%%Y', dt) = '%d' and strftime('%%m', dt) = '%s' and file_type > 208 GROUP BY cell_node;", q.Year, mnString)
-
-		if err := q.v.SlDb.Select(&ssResults, ssqry); err != nil {
+		if err := q.v.SlDb.Select(&ssResults, ssQry, q.Year, mnString); err != nil {
 			return err
 		}
 

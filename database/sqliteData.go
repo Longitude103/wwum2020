@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	_ "embed"
 	"errors"
 	"fmt"
 	"github.com/Longitude103/wwum2020/Utils"
@@ -105,6 +106,17 @@ func GetFileKeys(db *sqlx.DB, wel bool) ([]string, error) {
 	return resultFileKeys, nil
 }
 
+var (
+	//go:embed sql/AggResultsNoExclude.sql
+	AggResultsNoExclude string
+	//go:embed sql/RchAggResultsNoExclude.sql
+	RchAggResultsNoExclude string
+	//go:embed sql/WelSingleResult.sql
+	WelSingleResult string
+	//go:embed sql/RchSingleResult.sql
+	RchSingleResult string
+)
+
 func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, error) {
 	var qry string
 	var results []MfResults
@@ -124,13 +136,9 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
  								  FROM wel_results LEFT JOIN cellrc on cell_node = node WHERE file_type NOT IN (%s)
 									group by cell_node, dt) where rslt > 0;`, list)
 		} else { // don't exclude anything
-			qry = `SELECT cell_node, rw, clm, dt, rslt
-									from (SELECT cell_node, rw, clm, dt, sum(result) rslt
- 								  FROM wel_results
-    								LEFT JOIN cellrc on cell_node = node group by cell_node, dt)
-								  where rslt > 0;`
+			qry = AggResultsNoExclude
 		}
-	} else { // is a recharge file
+	} else {                      // is a recharge file
 		if len(excludeList) > 0 { // has an item in exclude list
 			list := excludeList[0][0:3]
 			for i := 1; i < len(excludeList); i++ {
@@ -142,9 +150,7 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 									clm, dt, sum(result) rslt FROM results LEFT JOIN cellrc on cell_node = node 
 								    WHERE file_type NOT IN (%s) group by cell_node, cell_size, dt) where rslt > 0;`, list)
 		} else { // don't exclude anything
-			qry = `SELECT cell_node, cell_size, rw, clm, dt, rslt from (SELECT cell_node, cell_size, rw, 
-									clm, dt, sum(result) rslt FROM results LEFT JOIN cellrc on cell_node = node 
-								  group by cell_node, cell_size, dt) where rslt > 0;`
+			qry = RchAggResultsNoExclude
 		}
 	}
 
@@ -160,16 +166,12 @@ func SingleResult(db *sqlx.DB, wel bool, fileKey string) ([]MfResults, error) {
 	var qry string
 
 	if wel {
-		qry = fmt.Sprintf(`SELECT cell_node, rw, clm, dt, rslt from (SELECT cell_node, rw, clm, dt, sum(result) rslt FROM
-    								wel_results LEFT JOIN cellrc on cell_node = node WHERE file_type = %s group by cell_node, dt)
-									where rslt > 0;`, fileKey[0:3])
+		qry = WelSingleResult
 	} else {
-		qry = fmt.Sprintf(`SELECT cell_node, rw, clm, dt, rslt from (SELECT cell_node, rw, clm, dt, sum(result) 
-									rslt FROM results LEFT JOIN cellrc on cell_node = node
-                                 	WHERE file_type = %s group by cell_node, dt) where rslt > 0;`, fileKey[0:3])
+		qry = RchSingleResult
 	}
 
-	if err := db.Select(&results, qry); err != nil {
+	if err := db.Select(&results, qry, fileKey[0:3]); err != nil {
 		return results, err
 	}
 

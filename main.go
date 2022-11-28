@@ -42,12 +42,26 @@ func main() {
 4. qcResults -> Runs QC analysis on the results DB chosen, can output many things
 -------------------------------------------------------------------------------------------------
 Use this command: runModel
-    Required Flags: --Desc: A description of the model being run
-					--CSDir: The directory path to the CropSim Results text files
+    Required Flags: --Desc: A description of the model being run, use " " around description
+					--CSDir: The directory path to the CropSim Results text files, use " " if path has spaces
+
+    Optional Flags: --StartYr <year>: Will start the model at a specific year (default = 1997)
+                    --EndYr <year>: Will end the model run at a specific year (default = 2020)
+                    --excessFlow: sets the model as an excess flow run where it will not be included (default = false)
+                    --post97: sets the model to post 1997 mode where it holds 1997 acres and crop types constant
+                    --oldGrid: sets the model use the "old 40 acre grid" and not the new unstructured grid
+                    --mf6Grid40: sets the model to use the old 40 acre grid but with MF6 node numbers, not Row, Column
 					
 Use this command: runSteadyState
     Required Flags: --Desc: A description of the model being run
 					--CSDir: The directory path to the CropSim Results text files
+
+    Optionsal Flags: --StartYr <year>: Will start the model at a specific year (default = 1893)
+                     --EndYr <year>: Will end the model run at a specific year (default = 1952)
+                     --AvgStartYr <year>: Sets the start averaging year
+                     --AvgEndYr <year>: Sets the end averaging year
+                     --oldGrid: sets the model use the "old 40 acre grid" and not the new unstructured grid
+                     --mf6Grid40: sets the model to use the old 40 acre grid but with MF6 node numbers, not Row, Column
 
 Use this command: mfFiles
 	Required Flags: None, but will prompt for selection responses based on data
