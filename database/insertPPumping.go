@@ -11,6 +11,7 @@ type Pumping struct {
 	ParcelID int       `db:"parcelID"`
 	Nrd      string    `db:"nrd"`
 	Dt       time.Time `db:"dt"`
+	FileType int       `db:"file_type"`
 	Pump     float64   `db:"pump"`
 }
 
@@ -21,7 +22,7 @@ type PPDB struct {
 }
 
 func ParcelPumpDB(sqlDB *sqlx.DB) (*PPDB, error) {
-	insertSql := `INSERT INTO parcelPumping (parcelID, nrd, dt, pump) VALUES (?, ?, ?, ?)`
+	insertSql := `INSERT INTO parcelPumping (parcelID, nrd, dt, file_type, pump) VALUES (?, ?, ?, ?, ?)`
 
 	stmt, err := sqlDB.Preparex(insertSql)
 	if err != nil {
@@ -56,7 +57,7 @@ func (db *PPDB) Flush() error {
 
 	for _, ppump := range db.buffer {
 		if ppump.Pump > 0 {
-			_, err := tx.Stmtx(db.stmt).Exec(ppump.ParcelID, ppump.Nrd, ppump.Dt, ppump.Pump)
+			_, err := tx.Stmtx(db.stmt).Exec(ppump.ParcelID, ppump.Nrd, ppump.Dt, ppump.FileType, ppump.Pump)
 			if err != nil {
 				_ = tx.Rollback()
 				return err

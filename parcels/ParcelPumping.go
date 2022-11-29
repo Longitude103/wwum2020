@@ -124,8 +124,9 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 					for m := 1; m < 13; m++ {
 						if parcels[p].Pump[m-1] > 0 {
 							dt := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+							ft, _ := parcels[p].GetFileType()
 							_ = pPumpDB.Add(database.Pumping{ParcelID: parcels[p].ParcelNo, Nrd: parcels[p].Nrd, Dt: dt,
-								Pump: parcels[p].Pump[m-1]})
+								FileType: ft, Pump: parcels[p].Pump[m-1]})
 						}
 					}
 				}

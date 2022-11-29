@@ -449,3 +449,48 @@ func (p *Parcel) IsComingled() bool {
 
 	return false
 }
+
+func (p *Parcel) IsPost97() bool {
+	if p.FirstIrr.Valid {
+		if p.FirstIrr.Int64 > 1997 {
+			return true
+		}
+	}
+
+	return false
+}
+
+// GetFileType is a method to get the Filetype int for parcel.
+func (p *Parcel) GetFileType() (int, error) {
+	switch {
+	case p.IsComingled(): // co-mingled
+		if p.Nrd == "sp" {
+			if p.IsPost97() {
+				return 108, nil
+			}
+			return 107, nil
+		}
+		if p.IsPost97() {
+			return 106, nil
+		}
+		return 105, nil
+	case p.IsSWO(): // SW Only
+		if p.Nrd == "sp" {
+			return 104, nil
+		}
+		return 103, nil
+	case p.IsGWO(): // GW Only
+		if p.Nrd == "sp" {
+			if p.IsPost97() {
+				return 112, nil
+			}
+			return 111, nil
+		}
+		if p.IsPost97() {
+			return 110, nil
+		}
+		return 109, nil
+	default:
+		return 100, errors.New("cannot classify parcel")
+	}
+}

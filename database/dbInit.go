@@ -137,6 +137,9 @@ func InitializeDb(db *sqlx.DB, logger lg) error {
 										parcelID integer,
 										nrd text,
 										dt TIMESTAMP,
+										file_type int not null
+											constraint parcelPumping_file_keys_file_key_fk
+											references file_keys,
 										pump real
 									);`)
 	if err != nil {
