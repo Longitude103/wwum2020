@@ -2,6 +2,7 @@ package parcels_test
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/Longitude103/wwum2020/parcels"
 	"testing"
 )
@@ -23,7 +24,7 @@ var p5 = parcels.Parcel{ParcelNo: 1237, AppEff: 0.85,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 102.5,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
-var p97ParcelSlice = []parcels.Parcel{p5}
+var p97ParcelSlice = []parcels.Parcel{p5, p3b}
 
 func Test_parcelPost97(t *testing.T) {
 	p97Parcels := parcels.ParcelsPost97(testParcelSlice, p97ParcelSlice)
@@ -31,8 +32,10 @@ func Test_parcelPost97(t *testing.T) {
 	// make sure parcel 159988 isn't in the new slice and that 1237 is in the new slice
 	found1237 := false
 	for _, parcel := range p97Parcels {
+		fmt.Printf("%+v\n\n", parcel)
+
 		if parcel.ParcelNo == 159988 {
-			t.Error("Found Parcel that should have been removed")
+			t.Error("Found Parcel 159988 (p3) that should have been removed")
 		}
 
 		if parcel.ParcelNo == 1237 {
@@ -46,12 +49,62 @@ func Test_parcelPost97(t *testing.T) {
 }
 
 func Test_removeGWO(t *testing.T) {
-	pcls := parcels.RemoveGWO(testParcelSlice)
+	pcls := parcels.RemoveGWO(p97ParcelSlice)
 
 	// want no GWO parcels
 	for _, parcel := range pcls {
-		if parcel.Gw.Bool == true && parcel.Sw.Bool == false {
+		fmt.Printf("%+v\n\n", parcel)
+
+		if parcel.IsGWO() {
 			t.Error("Found a groundwater only parcel and there shouldn't be one")
 		}
+	}
+}
+
+func Test_post97Parcels(t *testing.T) {
+	v := dbConnection()
+	if err := v.SetYears(1997, 2020); err != nil {
+		t.Error("Error Setting years for setup")
+	}
+
+	// run post97 first
+	v.Post97 = true
+	p97 := parcels.GetParcels(v, 2008)
+
+	// change v to be post97 == false and re-run
+	v.Post97 = false
+	original := parcels.GetParcels(v, 2008)
+
+	p97SWO := 0
+	origSWO := 0
+	p97Comingled := 0
+	origComingled := 0
+
+	for _, parcel := range p97 {
+		if parcel.IsSWO() {
+			p97SWO += 1
+		}
+
+		if parcel.IsComingled() {
+			p97Comingled += 1
+		}
+	}
+
+	for _, parcel := range original {
+		if parcel.IsSWO() {
+			origSWO += 1
+		}
+
+		if parcel.IsComingled() {
+			origComingled += 1
+		}
+	}
+
+	if p97SWO != origSWO {
+		t.Errorf("Post 97 SWO parcel count does not equal Original Model SWO parcel count %d != %d", p97SWO, origSWO)
+	}
+
+	if p97Comingled != origComingled {
+		t.Errorf("Post 97 comingled parcel count does not equal Original Model comingled parcel count %d != %d", p97Comingled, origComingled)
 	}
 }

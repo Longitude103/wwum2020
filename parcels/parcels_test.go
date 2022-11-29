@@ -55,6 +55,23 @@ var p3 = parcels.Parcel{ParcelNo: 159988, AppEff: 0.65,
 	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 102.5,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
+// p3 is the groundwater only cell made into a parcel from the TFG Example document
+var p3b = parcels.Parcel{ParcelNo: 159989, AppEff: 0.65,
+	Nir:       [12]float64{0, 0, 0, 0, 0, 0, 4.98, 4.31, 1.65, 0, 0, 0},
+	DryEt:     [12]float64{0.24, 0.62, 0.39, 1.36, 1.82, 5.13, 4.55, 2.66, 1.16, 0.70, 0.66, 0.19},
+	Et:        [12]float64{0.27, 0.33, 0.82, 1.36, 1.82, 5.13, 7.77, 7.21, 4.02, 0.44, 0.51, 0.23},
+	Pump:      [12]float64{0, 0, 0, 0, 0, 0, 2.34, 2.32, 1.4, 0, 0, 0},
+	Ro:        [12]float64{0, 0, 0, 1.04, 0.73, 1.81, 0, 0.11, 0, 0.03, 0, 0},
+	Dp:        [12]float64{0, 0, 0, 0, 0, 0.39, 0, 0, 0, 0.01, 0, 0},
+	CoeffZone: 2, SoilCode: 622, Area: 40.0, IrrType: sql.NullString{String: "FLOOD", Valid: true},
+	Crop1: sql.NullInt64{Int64: 1, Valid: true}, Crop1Cov: sql.NullFloat64{Float64: 1, Valid: true},
+	Crop2:    sql.NullInt64{Int64: 0, Valid: false},
+	Crop2Cov: sql.NullFloat64{Float64: 0, Valid: false}, Crop3: sql.NullInt64{Int64: 0, Valid: false},
+	Crop3Cov: sql.NullFloat64{Float64: 0, Valid: false}, Crop4: sql.NullInt64{Int64: 0, Valid: false},
+	Crop4Cov: sql.NullFloat64{Float64: 0, Valid: false}, Nrd: "np", Yr: 2014,
+	CertNum: sql.NullString{String: "3456", Valid: true}, PointX: 41.4, PointY: 102.5,
+	Sw: sql.NullBool{Bool: false, Valid: false}, Gw: sql.NullBool{Bool: true, Valid: true}}
+
 // p4 is a parcel with fallow
 var p4 = parcels.Parcel{ParcelNo: 1235, AppEff: 0.65,
 	Nir:       [12]float64{0, 0, 0, 0, 0, 0, 4.98, 4.31, 1.65, 0, 0, 0},
@@ -132,6 +149,10 @@ func Test_isGWO(t *testing.T) {
 
 	if !p3.IsGWO() {
 		t.Error("Parcel 3 is Ground Water only but returned that is wasn't Groundwater only")
+	}
+
+	if !p3b.IsGWO() {
+		t.Error("Parcel 3b is Groundwater only but retruned it wasn't GWO, but SW is not valid")
 	}
 }
 

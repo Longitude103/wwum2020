@@ -401,8 +401,8 @@ func (p *Parcel) NoCropCheck() {
 }
 
 // IsGWO is a method that returns a bool if the parcel is groundwater only
-func (p Parcel) IsGWO() bool {
-	if p.Gw.Valid && p.Gw.Bool {
+func (p *Parcel) IsGWO() bool {
+	if p.IsGW() {
 		if !p.Sw.Valid || !p.Sw.Bool {
 			return true
 		}
@@ -411,10 +411,40 @@ func (p Parcel) IsGWO() bool {
 	return false
 }
 
-// isGW is a method that returns a bool if the parcel recieves supply from groundwater
-func (p Parcel) isGW() bool {
+// IsGW is a method that returns a bool if the parcel receives supply from groundwater
+func (p *Parcel) IsGW() bool {
 	if p.Gw.Valid && p.Gw.Bool {
 		return true
+	}
+
+	return false
+}
+
+// IsSW is a method that returns a bool if the parcel receives surface water
+func (p *Parcel) IsSW() bool {
+	if p.Sw.Valid && p.Sw.Bool {
+		return true
+	}
+
+	return false
+}
+
+// IsSWO is a method that returns a bool true if a parcel is surface water only
+func (p *Parcel) IsSWO() bool {
+	if !p.IsGW() {
+		if p.Sw.Valid && p.Sw.Bool {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (p *Parcel) IsComingled() bool {
+	if p.IsGW() {
+		if p.IsSW() {
+			return true
+		}
 	}
 
 	return false

@@ -117,7 +117,7 @@ func AdjustmentFactor(p *Parcel, cCrops []database.CoeffCrop, adj database.Adjus
 	return c1*p.Crop1Cov.Float64 + c2*p.Crop2Cov.Float64 + c3*p.Crop3Cov.Float64 + c4*p.Crop4Cov.Float64, nil
 }
 
-// nirFactor is a filter function that returns the NirAdjFactor from the CoeffCrop slice and limits it to the zone of the
+// AdjFactor is a filter function that returns the NirAdjFactor from the CoeffCrop slice and limits it to the zone of the
 // Parcel and the crop type.
 func AdjFactor(cCrops []database.CoeffCrop, zone int, crop int, adj database.Adjustment) (nf float64, err error) {
 	for _, v := range cCrops {

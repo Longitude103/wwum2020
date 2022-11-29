@@ -99,7 +99,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 		p.UpdateTitle(fmt.Sprintf("Simulating %d Parcel Pumping", y))
 		v.Logger.Infof("Simulating Pumping for year %d", y)
 		for p := 0; p < len(parcels); p++ {
-			if (&parcels[p]).isGW() {
+			if (&parcels[p]).IsGW() {
 				if err := (&parcels[p]).EstimatePumping(v, cCrops); err != nil {
 					return []Parcel{}, err
 				}
@@ -119,7 +119,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 			// write out parcel pumping for each parcel in sqlite results
 			p.UpdateTitle(fmt.Sprintf("Saving %d Parcel Pumping Results", y))
 			for p := 0; p < len(parcels); p++ {
-				if parcels[p].isGW() {
+				if parcels[p].IsGW() {
 					// Add data to pumpingStruct and then append
 					for m := 1; m < 13; m++ {
 						if parcels[p].Pump[m-1] > 0 {
