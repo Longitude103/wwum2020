@@ -153,8 +153,12 @@ func get97GWOParcels(v *database.Setup, Year int) []Parcel {
 }
 
 // FilterParcelByCert filters a slice of parcels by the CertNum and returns a slice of the parcels that have that CertNum.
-func FilterParcelByCert(p *[]Parcel, c string) (fParcels []int) {
+func FilterParcelByCert(p *[]Parcel, c string, post97 bool) (fParcels []int) {
 	for i := 0; i < len(*p); i++ {
+		if post97 && (*p)[i].IsGWO() {
+			continue
+		}
+
 		if (*p)[i].CertNum.String == c {
 			fParcels = append(fParcels, i)
 		}

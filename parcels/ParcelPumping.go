@@ -87,7 +87,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 				(&parcels[ip]).SetAppEfficiency(efficiencies, y)
 
 				// add SW Delivery to the parcels
-				if parcels[ip].Sw.Bool {
+				if parcels[ip].IsSW() {
 					(&parcels[ip]).parcelSWDelivery(swDelivery[y])
 				}
 			}(i) // must be a pointer to work
@@ -106,13 +106,11 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 			}
 		}
 
-		if !v.Post97 {
-			// add usage to parcel
-			p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
-			v.Logger.Info("Setting Annual Usage")
-			if err := DistUsage(usage[y], &parcels); err != nil {
-				return []Parcel{}, err
-			}
+		// add usage to parcel
+		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
+		v.Logger.Info("Setting Annual Usage")
+		if err := DistUsage(usage[y], &parcels, v.Post97); err != nil {
+			return []Parcel{}, err
 		}
 
 		if !v.AppDebug {
@@ -160,10 +158,10 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 	return AllParcels, nil
 }
 
-func DistUsage(annUsage []Usage, parcels *[]Parcel) error {
+func DistUsage(annUsage []Usage, parcels *[]Parcel, post97 bool) error {
 	for _, u := range annUsage {
 		// filter parcels to this usage cert
-		filteredParcels := FilterParcelByCert(parcels, u.CertNum)
+		filteredParcels := FilterParcelByCert(parcels, u.CertNum, post97)
 
 		totalNIR := 0.0
 		totalMonthlyNIR := [12]float64{}

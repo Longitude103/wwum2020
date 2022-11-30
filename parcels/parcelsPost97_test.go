@@ -69,11 +69,11 @@ func Test_post97Parcels(t *testing.T) {
 
 	// run post97 first
 	v.Post97 = true
-	p97 := parcels.GetParcels(v, 2008)
+	p97 := parcels.GetParcels(v, 2017)
 
 	// change v to be post97 == false and re-run
 	v.Post97 = false
-	original := parcels.GetParcels(v, 2008)
+	original := parcels.GetParcels(v, 2017)
 
 	p97SWO := 0
 	origSWO := 0

@@ -45,7 +45,7 @@ func Test_distUsage(t *testing.T) {
 		testParcelSlice[0].Pump[i] = 0
 	}
 
-	err := parcels.DistUsage(testUsageSlice, &testParcelSlice)
+	err := parcels.DistUsage(testUsageSlice, &testParcelSlice, false)
 	if err != nil {
 		t.Error("Function returned an error:", err)
 	}
@@ -62,7 +62,9 @@ func Test_distUsage(t *testing.T) {
 
 func Test_ParcelPump(t *testing.T) {
 	v := dbConnection()
-	v.SetYears(2010, 2010)
+	if err := v.SetYears(2010, 2010); err != nil {
+		t.Error("Error Setting Years")
+	}
 
 	csResults, _ := fileio.LoadTextFiles("../testData/CropSimOutput", v.Logger)
 	wStations, _ := database.GetWeatherStations(v.PgDb)
@@ -91,6 +93,49 @@ func Test_ParcelPump(t *testing.T) {
 			if i > 15 {
 				break
 			}
+		}
+	}
+
+}
+
+func Test_ParcelPumpPost97(t *testing.T) {
+	v := dbConnection()
+	if err := v.SetYears(2017, 2017); err != nil {
+		t.Error("Error Setting Years")
+	}
+	v.Post97 = true
+
+	csResults, _ := fileio.LoadTextFiles("../testData/CropSimOutput", v.Logger)
+	wStations, _ := database.GetWeatherStations(v.PgDb)
+	cCoefficients, _ := database.GetCoeffCrops(v)
+
+	irrParcels, err := parcels.ParcelPump(v, csResults, wStations, cCoefficients)
+	if err != nil {
+		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
+	}
+
+	//i := 0
+	for _, parcel := range irrParcels {
+		// was 310
+		//if parcel.ParcelNo == 1022 {
+		//	i += 1
+		//	v.Logger.Debug(parcel.String())
+		//	v.Logger.Debug(parcel.NIRString())
+		//	v.Logger.Debug(strings.Repeat("-", 100))
+		//	v.Logger.Debug(parcel.SWString())
+		//	v.Logger.Debug(parcel.PumpString())
+		//	v.Logger.Debug(strings.Repeat("-", 100))
+		//	v.Logger.Debug(parcel.RoString())
+		//	v.Logger.Debug(parcel.DpString())
+		//	v.Logger.Debug(strings.Repeat("=", 100))
+		//
+		//	if i > 15 {
+		//		break
+		//	}
+		//}
+
+		if parcel.IsComingled() {
+			fmt.Printf("%+v\n\n", parcel)
 		}
 	}
 

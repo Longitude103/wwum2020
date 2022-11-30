@@ -17,7 +17,7 @@ func (p *Parcel) EstimatePumping(v *database.Setup, cCrops []database.CoeffCrop)
 		// }
 
 		var swAvailableCU, nirRemaining [12]float64
-		if p.Sw.Bool {
+		if p.IsSW() {
 			for i := 0; i < 12; i++ {
 				swAvailableCU[i] = p.SWDel[i] * p.AppEff
 			}
