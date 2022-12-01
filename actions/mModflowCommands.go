@@ -20,7 +20,7 @@ func MakeModflowFiles() error {
 		return err
 	}
 
-	path, _, err := Utils.MakeOutputDir()
+	path, _, err := Utils.MakeOutputDir("mfFiles")
 	if err != nil {
 		return err
 	}

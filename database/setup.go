@@ -34,7 +34,7 @@ type Option func(*Setup)
 // the flags for excess flow and debug.
 func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 	s := &Setup{EYear: 1953, SYear: 2020, SqliteDB: true}
-	path, fn, err := Utils.MakeOutputDir()
+	path, fn, err := Utils.MakeOutputDir("results")
 	if err != nil {
 		return s, err
 	}

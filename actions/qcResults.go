@@ -1,19 +1,22 @@
 package actions
 
 import (
+	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
+	"github.com/Longitude103/wwum2020/logging"
 	"github.com/Longitude103/wwum2020/qc"
+	"path/filepath"
 )
 
 func QcResults(myEnv map[string]string) error {
-	_, db, err := DbQuestion()
+	dbString, db, err := DbQuestion()
 	if err != nil {
 		return err
 	}
 
-	path, _, err := Utils.MakeOutputDir()
+	path, fileName, err := Utils.MakeOutputDir("qc")
 	if err != nil {
 		return err
 	}
@@ -90,15 +93,21 @@ func QcResults(myEnv map[string]string) error {
 		opts = append(opts, qc.WithYear(yr))
 	}
 
-	v, err := database.NewSetup(myEnv, database.WithNoSQLite())
+	v := database.Setup{}
+	logFileName := fmt.Sprintf("qcFiles%s.log", fileName)
+	filePath := filepath.Join(path, logFileName)
+
+	v.PgDb, err = database.PgConnx(myEnv)
 	if err != nil {
-		return err
+		fmt.Printf("Cannot set PgConnx")
 	}
 
+	l := logging.NewLogger(filePath)
+	v.Logger = l
 	v.SlDb = db
 
-	q := qc.NewQC(v, path, opts...)
-
+	v.Logger.Info("Using Results Database: " + dbString)
+	q := qc.NewQC(&v, path, opts...)
 	if err := qc.StartQcRMain(q); err != nil {
 		return err
 	}
