@@ -40,9 +40,9 @@ func IrrigationRCH(v *database.Setup, AllParcels []parcels.Parcel, cCData []data
 				v.Logger.Errorf("parcelFilterById error for parcel Id: %d, year: %d, and nrd: %s", irrCells[i].ParcelId, y, irrCells[i].Nrd)
 				return err
 			}
-			fileType, err := assignRCHType(p.Nrd, p.Sw.Bool, p.Gw.Bool, post97(p.FirstIrr.Int64))
+			fileType, err := assignRCHType(p.Nrd, p.Sw.Bool, p.Gw.Bool, p.IsPost97())
 			if err != nil {
-				v.Logger.Errorf("assignRCHType error where nrd is %s, SW: %t, GW: %t, post97: %t", p.Nrd, p.Sw.Bool, p.Gw.Bool, post97(p.FirstIrr.Int64))
+				v.Logger.Errorf("assignRCHType error where nrd is %s, SW: %t, GW: %t, post97: %t", p.Nrd, p.Sw.Bool, p.Gw.Bool, p.IsPost97())
 				v.Logger.Errorf("Parcel trace: %+v", p)
 				return err
 			}
@@ -125,13 +125,4 @@ func assignRCHType(nrd string, sw bool, gw bool, post97 bool) (int, error) {
 	default:
 		return 100, errors.New("cannot classify recharge")
 	}
-}
-
-// post97 returns a bool if the year is post97
-func post97(yr int64) bool {
-	if yr > 1997 {
-		return true
-	}
-
-	return false
 }
