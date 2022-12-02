@@ -470,14 +470,14 @@ func (p *Parcel) GetFileType() (int, error) {
 	case p.IsComingled(): // co-mingled
 		if p.Nrd == "sp" {
 			if p.IsPost97() {
-				return 108, nil
+				return 207, nil
 			}
-			return 107, nil
+			return 205, nil
 		}
 		if p.IsPost97() {
-			return 106, nil
+			return 203, nil
 		}
-		return 105, nil
+		return 201, nil
 	case p.IsSWO(): // SW Only
 		if p.Nrd == "sp" {
 			return 104, nil
@@ -486,15 +486,15 @@ func (p *Parcel) GetFileType() (int, error) {
 	case p.IsGWO(): // GW Only
 		if p.Nrd == "sp" {
 			if p.IsPost97() {
-				return 112, nil
+				return 208, nil
 			}
-			return 111, nil
+			return 206, nil
 		}
 		if p.IsPost97() {
-			return 110, nil
+			return 204, nil
 		}
-		return 109, nil
+		return 202, nil
 	default:
-		return 100, errors.New("cannot classify parcel")
+		return 200, errors.New("cannot classify parcel")
 	}
 }
