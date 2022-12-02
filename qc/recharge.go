@@ -2,6 +2,7 @@ package qc
 
 import (
 	"bufio"
+	_ "embed"
 	"errors"
 	"fmt"
 	"os"
@@ -61,7 +62,14 @@ type resultData struct {
 	Rslt float64 `db:"rslt"`
 }
 
+var (
+	//go:embed sql/recharge.sql
+	rechargeQrys string
+)
+
 func (q *QC) rechargeGeoJson() error {
+	formattedQueries := Utils.SplitQueries(rechargeQrys)
+
 	grid, err := findGrid(q)
 	if err != nil {
 		return err
@@ -71,7 +79,7 @@ func (q *QC) rechargeGeoJson() error {
 	pterm.DefaultSection.Println("GeoJSON Creation")
 	spin, _ := pterm.DefaultSpinner.Start("Getting Model Cells from DB")
 	var mCells []modelCells
-	qry := fmt.Sprintf("select st_asgeojson(q) geojson, area_ac, node from (select st_transform(geom, 4326), node, st_area(geom)/43560 area_ac from model_cells where cell_type = %d) q;", grid)
+	qry := fmt.Sprintf(formattedQueries[0], grid)
 
 	if err := q.v.PgDb.Select(&mCells, qry); err != nil {
 		return err
@@ -89,9 +97,7 @@ func (q *QC) rechargeGeoJson() error {
 			mnString = fmt.Sprintf("%d", m)
 		}
 
-		rqry := fmt.Sprintf("select cell_node node, sum(result) rslt from results "+
-			"where strftime('%%Y', dt) = '%d' and strftime('%%m', dt) = '%s' group by cell_node, strftime('%%m', dt);", q.Year, mnString)
-
+		rqry := fmt.Sprintf(formattedQueries[1], q.Year, mnString)
 		if err := q.v.SlDb.Select(&rResults, rqry); err != nil {
 			return err
 		}
@@ -186,7 +192,7 @@ type Note struct {
 
 func findGrid(q *QC) (int, error) {
 	var notes []Note
-	notesQry := "select note from results_notes"
+	notesQry := "select note from results_notes;"
 
 	q.v.SlDb.Select(&notes, notesQry)
 
