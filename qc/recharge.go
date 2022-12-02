@@ -55,11 +55,18 @@ type modelCells struct {
 	Gjson []byte  `db:"geojson"`
 	Ac    float64 `db:"area_ac"`
 	Node  int     `db:"node"`
+	Rc    [2]int
 }
 
 type resultData struct {
 	Node int     `db:"node"`
 	Rslt float64 `db:"rslt"`
+}
+
+type location struct {
+	Node int `db:"node"`
+	Rw   int `db:"rw"`
+	Clm  int `db:"clm"`
 }
 
 var (
@@ -85,6 +92,19 @@ func (q *QC) rechargeGeoJson() error {
 		return err
 	}
 	spin.Success()
+
+	if grid == 1 || grid == 3 {
+		var locationInfo []location
+		locQuery := formattedQueries[2]
+
+		if err := q.v.SlDb.Select(&locationInfo, locQuery); err != nil {
+			return err
+		}
+
+		for i := 0; i < len(mCells); i++ {
+			mCells[i].Rc = findRC(locationInfo, mCells[i].Node)
+		}
+	}
 
 	spin, _ = pterm.DefaultSpinner.Start("Getting Result Data")
 	rResMap := make(map[int][]resultData)
@@ -153,6 +173,11 @@ func (q *QC) rechargeGeoJson() error {
 		fc.Properties["AnTl_Ft/y"] = annTotal / mCells[i].Ac
 		fc.Properties["AnTl_Ft/d"] = annTotal / mCells[i].Ac / 365.25
 
+		if grid == 1 || grid == 3 {
+			fc.Properties["Row"] = mCells[i].Rc[0]
+			fc.Properties["Column"] = mCells[i].Rc[1]
+		}
+
 		// marshal that item back to json
 		d, err := fc.MarshalJSON()
 		if err != nil {
@@ -210,4 +235,14 @@ func findGrid(q *QC) (int, error) {
 	}
 
 	return 0, errors.New("couldn't find grid type")
+}
+
+func findRC(mcData []location, node int) (rcData [2]int) {
+	for _, mc := range mcData {
+		if mc.Node == node {
+			return [2]int{mc.Rw, mc.Clm}
+		}
+	}
+
+	return [2]int{0, 0}
 }
