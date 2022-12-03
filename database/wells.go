@@ -2,8 +2,10 @@ package database
 
 import (
 	"database/sql"
+	_ "embed"
 	"errors"
 	"fmt"
+	"github.com/Longitude103/wwum2020/Utils"
 	"time"
 )
 
@@ -174,20 +176,27 @@ func (s *SSWell) monthlyVolume() (err error) {
 	return nil
 }
 
+//go:embed sql/wells.sql
+var queries string
+
 func GetMIWells(v *Setup) (miWells []MIWell, err error) {
-	miQuery := fmt.Sprintf("SELECT mi.id, mi.wellname, mi.defaultq, mi.muni_well, mi.indust_well, mi.stop_97, mi.start_97, "+
-		"mc.node FROM mi_wells mi inner join model_cells mc on st_contains(mc.geom, st_translate(mi.geom, 20, 20)) where mc.cell_type = %d;", v.CellType())
+	formattedQueries := Utils.SplitQueries(queries)
+
+	miQuery := fmt.Sprintf(formattedQueries[0], v.CellType())
 
 	if err = v.PgDb.Select(&miWells, miQuery); err != nil {
 		return miWells, errors.New("error getting Municipal and industrial wells")
 	}
 
 	// use setup to get bounds of pumping (earliest is 1997)
-	miPumpQuery := fmt.Sprintf("SELECT well_id, dt, pumping FROM mi_pumping where "+
-		"extract(YEAR from dt) between %d and %d", v.SYear, v.EYear)
+	var miPumpQuery string
+	if v.Post97 {
+		miPumpQuery = fmt.Sprintf(formattedQueries[1], 1997, 1997)
+	} else {
+		miPumpQuery = fmt.Sprintf(formattedQueries[1], v.SYear, v.EYear)
+	}
 
 	var miPump []MIPumping
-
 	if err = v.PgDb.Select(&miPump, miPumpQuery); err != nil {
 		return miWells, errors.New("error getting Pumping for M&I wells")
 	}

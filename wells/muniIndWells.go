@@ -15,7 +15,6 @@ type resultDatabase interface {
 // MunicipalIndWells is a function that adds the municipal and industrial wells from postgresql to the results database
 // and uses either assumed pumping rates or actual pumping numbers.
 func MunicipalIndWells(v *database.Setup, welDB resultDatabase) error {
-
 	spin, _ := pterm.DefaultSpinner.Start("Getting MI Wells Data and results DB")
 	// go get the wells data
 	wells, err := database.GetMIWells(v)
@@ -33,28 +32,14 @@ func MunicipalIndWells(v *database.Setup, welDB resultDatabase) error {
 					wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
 				}
 			}
-		}
-
-		if yr >= 1997 {
-			if v.Post97 {
-				for _, well := range wells {
-					if !well.Stop97 && !well.Start97 {
-						wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: 1997})...)
-					}
-
-					if well.Start97 {
-						wlResult = append(wlResult, pumpMIWell(well, Utils.TimeExt{Y: 1997})...)
-					}
+		} else {
+			for _, well := range wells {
+				if !well.Stop97 && !well.Start97 {
+					wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
 				}
-			} else {
-				for _, well := range wells {
-					if !well.Stop97 && !well.Start97 {
-						wlResult = append(wlResult, constMIWell(well, Utils.TimeExt{Y: yr})...)
-					}
 
-					if well.Start97 {
-						wlResult = append(wlResult, pumpMIWell(well, Utils.TimeExt{Y: yr})...)
-					}
+				if well.Start97 {
+					wlResult = append(wlResult, pumpMIWell(well, Utils.TimeExt{Y: yr}, v.Post97)...)
 				}
 			}
 		}
@@ -70,8 +55,7 @@ func MunicipalIndWells(v *database.Setup, welDB resultDatabase) error {
 	return nil
 }
 
-func constMIWell(well database.MIWell, yr Utils.TimeExt) []database.WelResult {
-	var wrList []database.WelResult
+func constMIWell(well database.MIWell, yr Utils.TimeExt) (wrList []database.WelResult) {
 	annVolume := -1.0 * float64(well.Rate) * float64(yr.DaysInYear()) / 43560
 	for i := 0; i < 12; i++ {
 		dInMon := Utils.TimeExt{T: time.Date(yr.Y, time.Month(i+1), 1, 0, 0, 0, 0, time.UTC)}
@@ -84,13 +68,22 @@ func constMIWell(well database.MIWell, yr Utils.TimeExt) []database.WelResult {
 	return wrList
 }
 
-func pumpMIWell(well database.MIWell, yr Utils.TimeExt) []database.WelResult {
-	var wrList []database.WelResult
-	for _, p := range well.Pumping {
-		if p.PumpDate.Year() == yr.Y {
+func pumpMIWell(well database.MIWell, yr Utils.TimeExt, post97 bool) (wrList []database.WelResult) {
+	if post97 {
+		for _, p := range well.Pumping {
+			newDate := time.Date(yr.Y, p.PumpDate.Month(), p.PumpDate.Day(), 0, 0, 0, 0, time.UTC)
+
 			wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: well.MIFileType(),
-				Dt: p.PumpDate, Result: p.Pump}
+				Dt: newDate, Result: p.Pump}
 			wrList = append(wrList, wl)
+		}
+	} else {
+		for _, p := range well.Pumping {
+			if p.PumpDate.Year() == yr.Y {
+				wl := database.WelResult{Wellid: well.WellId, Node: well.Node, FileType: well.MIFileType(),
+					Dt: p.PumpDate, Result: p.Pump}
+				wrList = append(wrList, wl)
+			}
 		}
 	}
 
