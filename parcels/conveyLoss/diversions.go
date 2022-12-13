@@ -2,7 +2,9 @@ package conveyLoss
 
 import (
 	"database/sql"
+	_ "embed"
 	"fmt"
+	"github.com/Longitude103/wwum2020/Utils"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +19,7 @@ type efPeriod struct {
 	EndDate   sql.NullTime `db:"end_date"`
 }
 
-// Diversion is a struct to hold the dailydiversions table data and also the results are this struct which is a monthly
+// Diversion is a struct to hold the daily diversions table data and also the results are this struct which is a monthly
 // total using the first day of each month.
 type Diversion struct {
 	CanalId   int             `db:"canal_id"`
@@ -25,7 +27,7 @@ type Diversion struct {
 	DivAmount sql.NullFloat64 `db:"div_amnt_cfs"`
 }
 
-// SSDiversion is a struct to hold the dailydiversions table data and also the results are this struct which is a monthly
+// SSDiversion is a struct to hold the daily diversions table data and also the results are this struct which is a monthly
 // total using the first day of each month.
 type SSDiversion struct {
 	CanalId   int             `db:"canal_id"`
@@ -51,19 +53,20 @@ func (d *Diversion) printString() string {
 	return fmt.Sprintf("Canal ID: %d, DivDate: %d-%d, DivAmount: %.3f", d.CanalId, d.DivDate.Time.Month(), d.DivDate.Time.Year(), d.DivAmount.Float64)
 }
 
+var (
+	//go:embed sql/diversions.sql
+	divQueries string
+)
+
 // getDiversions retrieves the diversions from the pg database and returns a slice of Diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
 // excess flow from the daily diversions based on excess flow periods. Result diversions are in day cfs.
 func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
 	// TODO: Change this to be a map[canalid][]Diversion
+	formattedQueries := Utils.SplitQueries(divQueries)
 
 	if v.ExcessFlow {
-		divQry := fmt.Sprintf(`select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), 
-cast(extract(MONTH from div_dt) as int), 1, 0, 0, 0) as div_dt, sum(div_amnt_cfs) as div_amnt_cfs 
-from (select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from sw.dailydiversions 
-inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id WHERE 
-div_dt >= '%d-01-01' AND div_dt <= '%d-12-31' group by cdj.canal_id, div_dt) as daily_query group by canal_id, 
-extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;`, v.SYear, v.EYear)
+		divQry := fmt.Sprintf(formattedQueries[0], v.SYear, v.EYear)
 
 		if err := v.PgDb.Select(&diversions, divQry); err != nil {
 			v.Logger.Errorf("Error in getting diversion records with Excess Flow: %s", err)
@@ -71,16 +74,8 @@ extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;
 		}
 	} else if v.SteadyState {
 		// steady state will need to generate diversions for 1895 through 1952 from the averages of the range
-		divQry := `select canal_id, cast(extract(MONTH from div_dt) as int) as mnth, avg(div_amnt_cfs) as div_avg from (select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), cast(extract(MONTH from div_dt) as int), 1, 0, 0, 0) as div_dt, sum(div_amnt_cfs) as div_amnt_cfs
-from (select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs
-      from sw.dailydiversions
-          inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
-      WHERE div_dt >= '1953-01-01' AND div_dt <= '2020-12-31' group by cdj.canal_id, div_dt) as daily_query
-group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt) as mnth_query
-group by canal_id, extract(MONTH from div_dt);`
-
 		var SSDivs []SSDiversion
-		if err := v.PgDb.Select(&SSDivs, divQry); err != nil {
+		if err := v.PgDb.Select(&SSDivs, formattedQueries[1]); err != nil {
 			v.Logger.Errorf("Error in getting diversion records with Excess Flow: %s", err)
 			return nil, err
 		}
@@ -89,9 +84,7 @@ group by canal_id, extract(MONTH from div_dt);`
 
 	} else {
 		// get all Diversion data
-		divQry := fmt.Sprintf(`select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from sw.dailydiversions
-inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
-WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, v.SYear, v.EYear)
+		divQry := fmt.Sprintf(formattedQueries[2], v.SYear, v.EYear)
 
 		var preDiversions []Diversion
 
@@ -101,17 +94,15 @@ WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, 
 		}
 
 		// remove the excess flows
-		efQuery := "select canal_id, st_date, end_date from sw.excess_flow_periods;"
-
 		var efPeriods []efPeriod
-		if err = v.PgDb.Select(&efPeriods, efQuery); err != nil {
+		if err = v.PgDb.Select(&efPeriods, formattedQueries[3]); err != nil {
 			v.Logger.Errorf("Error in getting Excess Flow Periods: %s", err)
 		}
 
 		// list of canals that have excess flows
 		var efCanals []int
 		for _, v := range efPeriods {
-			if find(efCanals, v.CanalId) {
+			if !find(efCanals, v.CanalId) {
 				efCanals = append(efCanals, v.CanalId)
 			}
 		}
@@ -148,7 +139,10 @@ WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, 
 			// reduce the daily flows to monthly
 			for y := v.SYear; y < v.EYear+1; y++ {
 				for m := 1; m < 13; m++ {
-					canalMonthlyDiversion = append(diversions, monthlyDiversion(canalDailyDiversion, m, y, canal))
+					mDiv := monthlyDiversion(canalDailyDiversion, m, y, canal)
+					if mDiv.DivAmount.Float64 > 0.0 {
+						canalMonthlyDiversion = append(canalMonthlyDiversion, mDiv)
+					}
 				}
 			}
 		}
@@ -165,12 +159,7 @@ WHERE div_dt between '%d-01-01' and '%d-12-31' group by cdj.canal_id, div_dt;`, 
 		}
 
 		// need to make an alternate if len(strCanal) == 0
-		remainDiversionQry := fmt.Sprintf(`select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), 
-cast(extract(MONTH from div_dt) as int), 1, 0, 0, 0) as div_dt, sum(div_amnt_cfs) as div_amnt_cfs 
-from (select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs from sw.dailydiversions 
-inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id WHERE div_dt >= '%d-01-01' 
-AND div_dt <= '%d-12-31' %s group by cdj.canal_id, div_dt) as daily_query 
-group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order by canal_id, div_dt;`, v.SYear, v.EYear, canalLimit)
+		remainDiversionQry := fmt.Sprintf(formattedQueries[4], v.SYear, v.EYear, canalLimit)
 
 		var remainingDiversions []Diversion
 		if err = v.PgDb.Select(&remainingDiversions, remainDiversionQry); err != nil {
@@ -181,7 +170,6 @@ group by canal_id, extract(MONTH from div_dt), extract(YEAR from div_dt) order b
 	}
 
 	amendedDivs := adjLaramie(diversions)
-
 	return amendedDivs, nil
 }
 
