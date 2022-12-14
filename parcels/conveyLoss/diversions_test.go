@@ -1,9 +1,7 @@
 package conveyLoss
 
 import (
-	"fmt"
 	"testing"
-	"time"
 )
 
 func Test_getDiversions(t *testing.T) {
@@ -12,7 +10,7 @@ func Test_getDiversions(t *testing.T) {
 	v.SYear = 1953
 	v.EYear = 1953
 
-	divs, err := getDiversions(v)
+	divs, _, err := getDiversions(v)
 	if err != nil {
 		t.Error("Get Diversions errored")
 	}
@@ -51,10 +49,10 @@ func Test_getDiversions(t *testing.T) {
 
 func Test_getDiversionsSS(t *testing.T) {
 	v := dbConnection()
-	v.SetYears(1953, 2020)
+	_ = v.SetYears(1953, 2020)
 	v.SteadyState = true
 
-	divs, err := getDiversions(v)
+	divs, _, err := getDiversions(v)
 	if err != nil {
 		t.Error("Get Diversions errored")
 	}
@@ -76,48 +74,14 @@ func Test_getEFDiversions(t *testing.T) {
 		t.Error("Failed to set years")
 	}
 
-	withOutEFDivs, err := getDiversions(v)
+	_, div, err := getDiversions(v)
 	if err != nil {
-		t.Error("Get Diversions errored")
+		t.Error("Error in getDiversions: ", err)
 	}
 
-	v.ExcessFlow = true
-	efDivs, err := getDiversions(v)
-	if err != nil {
-		t.Error("Get Diversions errored")
-	}
-
-	canalFilter := 29
-
-	var filteredWO, filteredWEF []Diversion
-	for _, div := range withOutEFDivs {
-		if div.CanalId == canalFilter {
-			filteredWO = append(filteredWO, div)
-		}
-	}
-
-	for _, div := range efDivs {
-		if div.CanalId == canalFilter {
-			filteredWEF = append(filteredWEF, div)
-		}
-	}
-
-	var WOEFMay, WEFMay Diversion
-	for _, div := range filteredWO {
-		if div.DivDate.Time.Month() == time.May {
-			WOEFMay = div
-		}
-	}
-
-	for _, div := range filteredWEF {
-		if div.DivDate.Time.Month() == time.May {
-			WEFMay = div
-		}
-	}
-
-	if WOEFMay.DivAmount.Float64 >= WEFMay.DivAmount.Float64 {
-		t.Error("May 2016 Canal 29 Excess Flow is not being removed")
-		fmt.Println("Without Excess Flow: ", filteredWO)
-		fmt.Println("With Excess Flow: ", filteredWEF)
+	want := 15
+	got := len(div)
+	if want != got {
+		t.Errorf("getDiversions should have returned %d diversion records but got %d records", want, got)
 	}
 }

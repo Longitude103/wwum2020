@@ -17,7 +17,7 @@ func GetSurfaceWaterDelivery(v *database.Setup) (map[int][]Diversion, error) {
 		}
 	}
 
-	diversions, err := getDiversions(v)
+	diversions, _, err := getDiversions(v)
 	if err != nil {
 		v.Logger.Errorf("Error in getDiversions: %s", err)
 		return nil, err

@@ -19,7 +19,7 @@ func Conveyance(v *database.Setup) (err error) {
 		return err
 	}
 
-	diversions, err := getDiversions(v)
+	diversions, _, err := getDiversions(v)
 	if err != nil {
 		spinner.Fail("Get Diversions Failed")
 		return err
@@ -60,11 +60,10 @@ func Conveyance(v *database.Setup) (err error) {
 			cellIdDiv = 2
 		}
 
-		// if prev_id != cell_id_div save off and get new canal diversions -- not sure we need this...
 		// filter diversions to the canal
 		canalDiversions := filterCanal(diversions, cellIdDiv)
 
-		if cell.Node == 15661 {
+		if v.AppDebug && cell.Node == 15661 {
 			v.Logger.Debugf("Cell Properties: %s", cell.sprint())
 			v.Logger.Debugf("cellIdDiv: %d", cellIdDiv)
 			v.Logger.Debugf("CellDiversions: %+v", canalDiversions)

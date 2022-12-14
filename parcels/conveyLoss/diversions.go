@@ -61,23 +61,16 @@ var (
 // getDiversions retrieves the diversions from the pg database and returns a slice of Diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
 // excess flow from the daily diversions based on excess flow periods. Result diversions are in day cfs.
-func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
+func getDiversions(v *database.Setup) (diversions []Diversion, efDiversions []Diversion, err error) {
 	// TODO: Change this to be a map[canalid][]Diversion
 	formattedQueries := Utils.SplitQueries(divQueries)
 
-	if v.ExcessFlow {
-		divQry := fmt.Sprintf(formattedQueries[0], v.SYear, v.EYear)
-
-		if err := v.PgDb.Select(&diversions, divQry); err != nil {
-			v.Logger.Errorf("Error in getting diversion records with Excess Flow: %s", err)
-			return nil, err
-		}
-	} else if v.SteadyState {
+	if v.SteadyState {
 		// steady state will need to generate diversions for 1895 through 1952 from the averages of the range
 		var SSDivs []SSDiversion
 		if err := v.PgDb.Select(&SSDivs, formattedQueries[1]); err != nil {
 			v.Logger.Errorf("Error in getting diversion records with Excess Flow: %s", err)
-			return nil, err
+			return nil, nil, err
 		}
 
 		diversions = makeSSDivs(SSDivs)
@@ -87,15 +80,15 @@ func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
 		divQry := fmt.Sprintf(formattedQueries[2], v.SYear, v.EYear)
 
 		var preDiversions []Diversion
-
 		if err := v.PgDb.Select(&preDiversions, divQry); err != nil {
 			v.Logger.Errorf("Error getting all diversions starting Excess Flow Limitation: %s", err)
-			return nil, err
+			return nil, nil, err
 		}
 
 		// remove the excess flows
+		efQuery := fmt.Sprintf(formattedQueries[3], v.SYear, v.EYear, v.SYear, v.EYear)
 		var efPeriods []efPeriod
-		if err = v.PgDb.Select(&efPeriods, formattedQueries[3]); err != nil {
+		if err = v.PgDb.Select(&efPeriods, efQuery); err != nil {
 			v.Logger.Errorf("Error in getting Excess Flow Periods: %s", err)
 		}
 
@@ -129,10 +122,12 @@ func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
 
 			// filter out the times when there was excess flow and only return the times the flow wasn't during that
 			// excess flow period
-			var canalDailyDiversion []Diversion
+			var canalDailyDiversion, efDailyDiversions []Diversion
 			for _, div := range allCanalDailyDiversion {
 				if findDiversion(div, efCanalPeriods) {
 					canalDailyDiversion = append(canalDailyDiversion, div)
+				} else {
+					efDailyDiversions = append(efDailyDiversions, div)
 				}
 			}
 
@@ -140,8 +135,12 @@ func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
 			for y := v.SYear; y < v.EYear+1; y++ {
 				for m := 1; m < 13; m++ {
 					mDiv := monthlyDiversion(canalDailyDiversion, m, y, canal)
+					eDiv := monthlyDiversion(efDailyDiversions, m, y, canal)
 					if mDiv.DivAmount.Float64 > 0.0 {
 						canalMonthlyDiversion = append(canalMonthlyDiversion, mDiv)
+					}
+					if eDiv.DivAmount.Float64 > 0.0 {
+						efDiversions = append(efDiversions, eDiv)
 					}
 				}
 			}
@@ -170,7 +169,7 @@ func getDiversions(v *database.Setup) (diversions []Diversion, err error) {
 	}
 
 	amendedDivs := adjLaramie(diversions)
-	return amendedDivs, nil
+	return amendedDivs, efDiversions, nil
 }
 
 func makeSSDivs(ssDivs []SSDiversion) (divs []Diversion) {

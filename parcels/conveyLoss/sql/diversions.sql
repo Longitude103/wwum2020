@@ -19,7 +19,9 @@ from sw.dailydiversions
 WHERE div_dt between '%d-01-01' and '%d-12-31'
 group by cdj.canal_id, div_dt;
 
-select canal_id, st_date, end_date from sw.excess_flow_periods;
+select canal_id, st_date, end_date
+from sw.excess_flow_periods
+where st_date between '%d-01-01' and '%d-12-31' and end_date between '%d-01-01' and '%d-12-31';
 
 select canal_id, make_timestamp(cast(extract(YEAR from div_dt) as int), cast(extract(MONTH from div_dt) as int), 1, 0, 0, 0) as div_dt, sum(div_amnt_cfs) as div_amnt_cfs
 from (select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs
