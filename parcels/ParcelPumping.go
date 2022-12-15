@@ -34,7 +34,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 		v.Logger.Errorf("Error in Conveyance Losses %s", err)
 	}
 
-	if !v.Post97 || !v.NoExcessFlow {
+	if !v.NoExcessFlow {
 		err = conveyLoss.CanalRecharge(v)
 	}
 

@@ -12,7 +12,8 @@ import (
 // CanalRecharge is a function to get the recharge amounts from the diversions and apportion them to the Canal sections
 // and recharge them into the groundwater model.
 func CanalRecharge(v *database.Setup) (err error) {
-	spinner, _ := pterm.DefaultSpinner.Start("Getting Canal Cells and Diversions")
+	v.Logger.Info("Started Excess Flow Procedure")
+	spinner, _ := pterm.DefaultSpinner.Start("Started Excess Flow Procedure")
 	_, diversions, err := getDiversions(v)
 	if err != nil {
 		spinner.Fail("Get Diversions Failed")

@@ -107,7 +107,10 @@ func WithNoSQLite() Option {
 }
 
 func WithPost97() Option {
-	return func(s *Setup) { s.Post97 = true }
+	return func(s *Setup) {
+		s.Post97 = true
+		s.NoExcessFlow = true
+	}
 }
 
 func WithOldGrid() Option {
