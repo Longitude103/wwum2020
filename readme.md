@@ -26,8 +26,10 @@ of flags in the CLI. This is a core go package.
     - --debug: run in debug mode with more log output and limited write operations
     - --StartYr: start year of the distribution, defaults to: 1997
     - --EndYr: end year of the distribution, defaults to: 2020
+    - --NoExcessFlow: Removes the excess flow recharge from the model
     - --oldGrid: runs the model with the original 40-acre grid pattern from previous models
     - --mf6Grid40: runs the model with the 40 acre grids using MODFLOW 6 node numbers
+    - --post97: sets the model to post 1997 mode where it holds 1997 acres and crop types constant, no excess flows
 
 
 - mfFiles => is the CLI function to use the results from the `runModel` function and results database to create
@@ -40,13 +42,15 @@ of flags in the CLI. This is a core go package.
   type. In addition, it can also create a GeoJSON file for further analysis in the "OutputFiles" directory
 ### Common CLI Examples
 - Production runModel:
-  - Windows -> In Powershell: `wwum2020-amd64.exe runModel --Desc "Test Run" --CSDir "<path>\WWUMM2020\CropSim\Run005_WWUM2020\Output"`
-  - MacOS -> In a Terminal: `./wwum2020-amd64-darwin runModel --Desc "Test Run" --CSDir "<path>/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
+  - Windows -> In Powershell: `wwum2020-amd64-windows.exe runModel --Desc "Test Run" --CSDir "<path>\WWUMM2020\CropSim\Run005_WWUM2020\Output"`
+  - MacOS (Intel Mac)-> In a Terminal: `./wwum2020-amd64-darwin runModel --Desc "Test Run" --CSDir "<path>/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
+  - MacOS (Apple Silicon)-> In a Terminal: `./wwum2020-arm64-darwin runModel --Desc "Test Run" --CSDir "<path>/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
   - Linux -> In a Terminal: `./wwum2020-amd64-linux runModel --Desc "Test Run" --CSDir "<path>/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
    
 - Production mfFiles
-  - Windows -> In Powershell: `wwum2020-amd64.exe mfFiles` -> Follow Prompts
-  - MacOS -> In a Terminal: `./wwum2020-amd64-darwin mfFiles` -> Follow Prompts
+  - Windows -> In Powershell: `wwum2020-amd64-windows.exe mfFiles` -> Follow Prompts
+  - MacOS (Intel Mac) -> In a Terminal: `./wwum2020-amd64-darwin mfFiles` -> Follow Prompts
+  - MacOS (Apple Silicon)-> In a Terminal: `./wwum2020-arm64-darwin mfFiles` -> Follow Prompts
   - Linux -> In a Terminal: `./wwum2020-amd64-linux mfFIles` -> Follow Prompts
 
 
@@ -67,14 +71,14 @@ the results database and are named the same.
 The second command that is used by the app is the `mfFiles` command that enables you to write out ModFlow 6 files needed for the 
 further model runs.
 
-- Create the MODFLOW 6 files by using `./wwum2020-amd64.exe mfFiles` (Windows Example)
+- Create the MODFLOW 6 files by using `./wwum2020-amd64-windows.exe mfFiles` (Windows Example)
 
 ### QC Results
 This function is intended to analyze the results database and produce some totaling and output files that can make it easier
 to spot problems and issues with the runs. This creates a recharge table section that outputs the selected annual amount of 
 recharge by type. In addition, there is an optional recharge output that will allow you to create a GeoJSON file that can be used
 by that can be added to GIS desktop software or online mapping software for spatial analysis of the results by model grid. 
-We've tested this on [QGIS](https://qgis.org) and it should also work on ESRI products.
+We've tested this on [QGIS,](https://qgis.org) and it should also work on ESRI products.
 
-- Create the QC Results by using `./wwum2020-amd64.exe qcResults` (Windows Example)
+- Create the QC Results by using `./wwum2020-amd64-windows.exe qcResults` (Windows Example)
     
