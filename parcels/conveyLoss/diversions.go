@@ -14,9 +14,35 @@ import (
 
 // efPeriod is a struct to hold the data from excess_flow_periods
 type efPeriod struct {
-	CanalId   int          `db:"canal_id"`
-	StartDate sql.NullTime `db:"st_date"`
-	EndDate   sql.NullTime `db:"end_date"`
+	CanalId    int             `db:"canal_id"`
+	StartDate  sql.NullTime    `db:"st_date"`
+	EndDate    sql.NullTime    `db:"end_date"`
+	LossPercet sql.NullFloat64 `db:"loss_percent"`
+}
+
+func (e *efPeriod) GetYearAndMonths() (year int, months []int) {
+	year = e.StartDate.Time.Year()
+	dt := e.StartDate.Time.Add(time.Hour * 24)
+	daysBetween := int(e.EndDate.Time.Sub(e.StartDate.Time).Hours() / 24)
+
+	months = append(months, int(dt.Month()))
+
+	for i := 0; i < daysBetween; i++ {
+		dt = dt.Add(time.Hour * 24)
+
+		addIt := true
+		for _, m := range months {
+			if m == int(dt.Month()) {
+				addIt = false
+			}
+		}
+
+		if addIt {
+			months = append(months, int(dt.Month()))
+		}
+	}
+
+	return
 }
 
 // Diversion is a struct to hold the daily diversions table data and also the results are this struct which is a monthly
@@ -25,6 +51,29 @@ type Diversion struct {
 	CanalId   int             `db:"canal_id"`
 	DivDate   sql.NullTime    `db:"div_dt"`
 	DivAmount sql.NullFloat64 `db:"div_amnt_cfs"`
+}
+
+type Diversions []Diversion
+
+func (divs *Diversions) FindDiversionsByCanalId(canalId int) (canalDiversions Diversions) {
+	// filterCanal filters the canal diversions to a specific canal and returns a slice of Diversion
+	for _, v := range *divs {
+		if v.CanalId == canalId {
+			canalDiversions = append(canalDiversions, v)
+		}
+	}
+
+	return
+}
+
+func (divs *Diversions) FilterSWDeliveryByYear(y int) (filteredDivs Diversions) {
+	for _, v := range *divs {
+		if v.DivDate.Time.Year() == y {
+			filteredDivs = append(filteredDivs, v)
+		}
+	}
+
+	return
 }
 
 // SSDiversion is a struct to hold the daily diversions table data and also the results are this struct which is a monthly
@@ -61,7 +110,7 @@ var (
 // getDiversions retrieves the diversions from the pg database and returns a slice of Diversion struct for each canal
 // during the year and also takes in a start year, end year and also excessFlow bool that if false will remove the
 // excess flow from the daily diversions based on excess flow periods. Result diversions are in day cfs.
-func getDiversions(v *database.Setup) (diversions []Diversion, efDiversions []Diversion, err error) {
+func getDiversions(v *database.Setup) (diversions Diversions, efDiversions Diversions, err error) {
 	// TODO: Change this to be a map[canalid][]Diversion
 	formattedQueries := Utils.SplitQueries(divQueries)
 

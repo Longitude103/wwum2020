@@ -19,7 +19,7 @@ from sw.dailydiversions
 WHERE div_dt between '%d-01-01' and '%d-12-31'
 group by cdj.canal_id, div_dt;
 
-select canal_id, st_date, end_date
+select canal_id, st_date, end_date, loss_percent
 from sw.excess_flow_periods
 where st_date between '%d-01-01' and '%d-12-31' and end_date between '%d-01-01' and '%d-12-31';
 

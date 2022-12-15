@@ -7,7 +7,7 @@ import (
 
 // GetSurfaceWaterDelivery function returns a map with a key of year and a value of slice of Diversion that is a monthly amount of surface water delivered to
 // an acre of land. The units of the Diversion are in acre-feet per acre for use in subsequent processes.
-func GetSurfaceWaterDelivery(v *database.Setup) (map[int][]Diversion, error) {
+func GetSurfaceWaterDelivery(v *database.Setup) (map[int]Diversions, error) {
 	var db *database.SWDelDB
 	var err error
 	if !v.AppDebug {
@@ -59,10 +59,10 @@ func GetSurfaceWaterDelivery(v *database.Setup) (map[int][]Diversion, error) {
 		_ = db.Close()
 	}
 
-	mapDivs := make(map[int][]Diversion)
+	mapDivs := make(map[int]Diversions)
 
 	for y := v.SYear; y < v.EYear+1; y++ {
-		mapDivs[y] = FilterSWDeliveryByYear(diversions, y)
+		mapDivs[y] = diversions.FilterSWDeliveryByYear(y)
 	}
 
 	return mapDivs, nil
@@ -104,14 +104,4 @@ func filterCnl(canals []Canal, canal int, yr int) (c Canal) {
 	}
 
 	return c
-}
-
-func FilterSWDeliveryByYear(divs []Diversion, y int) (diversions []Diversion) {
-	for _, v := range divs {
-		if v.DivDate.Time.Year() == y {
-			diversions = append(diversions, v)
-		}
-	}
-
-	return diversions
 }

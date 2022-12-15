@@ -61,7 +61,7 @@ func Conveyance(v *database.Setup) (err error) {
 		}
 
 		// filter diversions to the canal
-		canalDiversions := filterCanal(diversions, cellIdDiv)
+		canalDiversions := diversions.FindDiversionsByCanalId(cellIdDiv)
 
 		if v.AppDebug && cell.Node == 15661 {
 			v.Logger.Debugf("Cell Properties: %s", cell.sprint())
@@ -129,16 +129,6 @@ func Conveyance(v *database.Setup) (err error) {
 	pterm.Success.Println("Canal Loss Calculations")
 	v.Logger.Info("Canal Loss Completed Successfully")
 	return nil
-}
-
-// filterCanal filters the canal diversions to a specific canal and returns a slice of Diversion
-func filterCanal(diversions []Diversion, canal int) (canalDiversion []Diversion) {
-	for _, v := range diversions {
-		if v.CanalId == canal {
-			canalDiversion = append(canalDiversion, v)
-		}
-	}
-	return canalDiversion
 }
 
 // getFactor is a function that returns the loss factor of the cell based on the "CFlag" of that cell. I can also give a default value

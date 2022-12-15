@@ -12,20 +12,20 @@ import (
 )
 
 type Setup struct {
-	PgDb        *sqlx.DB
-	SqliteDB    bool
-	SlDb        *sqlx.DB
-	SYear       int
-	EYear       int
-	Logger      *logging.TheLogger
-	PNirDB      *DB
-	RchDb       *RchDB
-	AppDebug    bool
-	ExcessFlow  bool
-	Post97      bool
-	OldGrid     bool
-	MF640Grid   bool
-	SteadyState bool
+	PgDb         *sqlx.DB
+	SqliteDB     bool
+	SlDb         *sqlx.DB
+	SYear        int
+	EYear        int
+	Logger       *logging.TheLogger
+	PNirDB       *DB
+	RchDb        *RchDB
+	AppDebug     bool
+	NoExcessFlow bool
+	Post97       bool
+	OldGrid      bool
+	MF640Grid    bool
+	SteadyState  bool
 }
 
 type Option func(*Setup)
@@ -49,12 +49,12 @@ func NewSetup(myEnv map[string]string, options ...Option) (*Setup, error) {
 		s.Logger.Info("Debug is Set, limited records retrieved for speed, no output DB")
 	}
 
-	if s.ExcessFlow {
-		s.Logger.Info("Using Excess Flows")
+	if s.NoExcessFlow {
+		s.Logger.Info("Excess Flows is not included")
 	}
 
 	if s.Post97 {
-		s.Logger.Info("Is in Post 97 Mode; 97 Land Use for Groundwater Only and MI Pumping is held constant")
+		s.Logger.Info("Is in Post 97 Mode; 97 Land Use for Groundwater Only and MI Pumping is held constant, no excess flows")
 	}
 
 	if s.SqliteDB {
@@ -98,8 +98,8 @@ func WithDebug() Option {
 	return func(s *Setup) { s.AppDebug = true }
 }
 
-func WithExcessFlow() Option {
-	return func(s *Setup) { s.ExcessFlow = true }
+func WithNoExcessFlow() Option {
+	return func(s *Setup) { s.NoExcessFlow = true }
 }
 
 func WithNoSQLite() Option {

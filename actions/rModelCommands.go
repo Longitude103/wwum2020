@@ -22,7 +22,7 @@ func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, 
 	}
 
 	if eF {
-		opts = append(opts, database.WithExcessFlow())
+		opts = append(opts, database.WithNoExcessFlow())
 	}
 
 	if p97 {

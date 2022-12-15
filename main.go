@@ -18,7 +18,6 @@
 // are asked as to the model options for the output files
 // that allow some flexibility for the creation of the
 // files.
-//
 package main
 
 import (
@@ -47,8 +46,8 @@ Use this command: runModel
 
     Optional Flags: --StartYr <year>: Will start the model at a specific year (default = 1997)
                     --EndYr <year>: Will end the model run at a specific year (default = 2020)
-                    --excessFlow: sets the model as an excess flow run where it will not be included (default = false)
-                    --post97: sets the model to post 1997 mode where it holds 1997 acres and crop types constant
+                    --noExcessFlow: sets the model to exclude excess flows (default = false)
+                    --post97: sets the model to post 1997 mode where it holds 1997 acres and crop types constant, no excess flows
                     --oldGrid: sets the model use the "old 40 acre grid" and not the new unstructured grid
                     --mf6Grid40: sets the model to use the old 40 acre grid but with MF6 node numbers, not Row, Column
 					
@@ -82,7 +81,7 @@ For help with those functions type: runModel -h or mfFiles -h`
 	rModelStartY := runModelCmd.Int("StartYr", 1997, "Sets the start year of Command, default = 1997")
 	rModelEndY := runModelCmd.Int("EndYr", 2020, "Sets the end year of Command, default = 2020")
 	rModelCSDir := runModelCmd.String("CSDir", "", "REQUIRED! - CropSim Directory path")
-	rModelEF := runModelCmd.Bool("excessFlow", false, "Sets to use Excess Flow or Not, default = false")
+	rModelEF := runModelCmd.Bool("noExcessFlow", false, "Sets to use Excess Flow or Not, default = false")
 	rModelDesc := runModelCmd.String("Desc", "", "REQUIRED! - Model Description")
 	rModelP97 := runModelCmd.Bool("post97", false, "If flag set, a post 97 run will be made")
 	rModelGrid := runModelCmd.Bool("oldGrid", false, "If flag set, the model will use the 40 acre grid, not USG as default")

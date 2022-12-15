@@ -1,7 +1,9 @@
 package conveyLoss
 
 import (
+	"database/sql"
 	"testing"
+	"time"
 )
 
 func Test_getDiversions(t *testing.T) {
@@ -83,5 +85,30 @@ func Test_getEFDiversions(t *testing.T) {
 	got := len(div)
 	if want != got {
 		t.Errorf("getDiversions should have returned %d diversion records but got %d records", want, got)
+	}
+}
+
+func TestEfPeriod_GetYearAndMonths(t *testing.T) {
+	ef := efPeriod{
+		CanalId:    1,
+		StartDate:  sql.NullTime{Valid: true, Time: time.Date(2016, 4, 1, 0, 0, 0, 0, time.UTC)},
+		EndDate:    sql.NullTime{Valid: true, Time: time.Date(2016, 6, 6, 0, 0, 0, 0, time.UTC)},
+		LossPercet: sql.NullFloat64{Valid: true, Float64: 0.56},
+	}
+
+	y, months := ef.GetYearAndMonths()
+
+	if y != 2016 {
+		t.Errorf("Was expecting year 2016, got year %d", y)
+	}
+
+	if len(months) != 3 {
+		t.Errorf("was expecting a return of 3 months, but got %d months", len(months))
+	}
+
+	for _, m := range months {
+		if m < 4 && m > 6 {
+			t.Errorf("months should be 4, 5, or 6, but got %d", m)
+		}
 	}
 }

@@ -34,6 +34,10 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 		v.Logger.Errorf("Error in Conveyance Losses %s", err)
 	}
 
+	if !v.Post97 || !v.NoExcessFlow {
+		err = conveyLoss.CanalRecharge(v)
+	}
+
 	spinner, _ = pterm.DefaultSpinner.Start("Getting Surface Water Delivery")
 	// parcel delivery
 	v.Logger.Info("Getting Surface Water Delivery")

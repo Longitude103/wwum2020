@@ -63,9 +63,9 @@ func Test_FilterSWDeliveryByYear(t *testing.T) {
 	d3 := Diversion{CanalId: 1, DivDate: sql.NullTime{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true}, DivAmount: sql.NullFloat64{Float64: 100.0, Valid: true}}
 	d4 := Diversion{CanalId: 3, DivDate: sql.NullTime{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true}, DivAmount: sql.NullFloat64{Float64: 100.0, Valid: true}}
 
-	divSlice := []Diversion{d1, d2, d3, d4}
+	divSlice := Diversions{d1, d2, d3, d4}
 
-	d := FilterSWDeliveryByYear(divSlice, time.Now().Year())
+	d := divSlice.FilterSWDeliveryByYear(time.Now().Year())
 
 	for _, diversion := range d {
 		fmt.Printf("Divs: %+v\n", diversion)
