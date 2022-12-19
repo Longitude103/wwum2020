@@ -1,4 +1,4 @@
-// Copyright 2020 Longitude103. All rights reserved.
+// Copyright 2022 Longitude103. All rights reserved.
 // Use of this source code is governed by GPLv3
 // license that can be found in the LICENSE file.
 
