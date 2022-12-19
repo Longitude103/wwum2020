@@ -128,7 +128,7 @@ func getDiversions(v *database.Setup) (diversions Diversions, efDiversions Diver
 		// get all Diversion data
 		divQry := fmt.Sprintf(formattedQueries[2], v.SYear, v.EYear)
 
-		var preDiversions []Diversion
+		var preDiversions Diversions
 		if err := v.PgDb.Select(&preDiversions, divQry); err != nil {
 			v.Logger.Errorf("Error getting all diversions starting Excess Flow Limitation: %s", err)
 			return nil, nil, err
@@ -150,7 +150,7 @@ func getDiversions(v *database.Setup) (diversions Diversions, efDiversions Diver
 		}
 
 		// loop through the list of canals with excess flows
-		var canalMonthlyDiversion []Diversion
+		var canalMonthlyDiversion Diversions
 		for _, canal := range efCanals {
 
 			// generate list of excess flow periods for this canal
@@ -171,19 +171,19 @@ func getDiversions(v *database.Setup) (diversions Diversions, efDiversions Diver
 
 			// filter out the times when there was excess flow and only return the times the flow wasn't during that
 			// excess flow period
-			var canalDailyDiversion, efDailyDiversions []Diversion
+			var canalDailyDiversions, efDailyDiversions Diversions
 			for _, div := range allCanalDailyDiversion {
 				if findDiversion(div, efCanalPeriods) {
-					canalDailyDiversion = append(canalDailyDiversion, div)
-				} else {
 					efDailyDiversions = append(efDailyDiversions, div)
+				} else {
+					canalDailyDiversions = append(canalDailyDiversions, div)
 				}
 			}
 
 			// reduce the daily flows to monthly
 			for y := v.SYear; y < v.EYear+1; y++ {
 				for m := 1; m < 13; m++ {
-					mDiv := monthlyDiversion(canalDailyDiversion, m, y, canal)
+					mDiv := monthlyDiversion(canalDailyDiversions, m, y, canal)
 					eDiv := monthlyDiversion(efDailyDiversions, m, y, canal)
 					if mDiv.DivAmount.Float64 > 0.0 {
 						canalMonthlyDiversion = append(canalMonthlyDiversion, mDiv)
@@ -244,7 +244,7 @@ func find(slice []int, val int) bool {
 // findDiversion is a function to filter if a Diversion is within a period
 func findDiversion(div Diversion, period []efPeriod) bool {
 	for _, p := range period {
-		if div.DivDate.Time.Before(p.StartDate.Time) || div.DivDate.Time.After(p.EndDate.Time) {
+		if div.DivDate.Time.After(p.StartDate.Time.Add(time.Hour*-1)) && div.DivDate.Time.Before(p.EndDate.Time.Add(time.Hour)) {
 			return true
 		}
 	}

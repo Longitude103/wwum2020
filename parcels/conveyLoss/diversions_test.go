@@ -72,7 +72,7 @@ func Test_getDiversionsSS(t *testing.T) {
 
 func Test_getEFDiversions(t *testing.T) {
 	v := dbConnection()
-	if err := v.SetYears(2016, 2016); err != nil {
+	if err := v.SetYears(2011, 2020); err != nil {
 		t.Error("Failed to set years")
 	}
 
@@ -81,7 +81,7 @@ func Test_getEFDiversions(t *testing.T) {
 		t.Error("Error in getDiversions: ", err)
 	}
 
-	want := 15
+	want := 48
 	got := len(div)
 	if want != got {
 		t.Errorf("getDiversions should have returned %d diversion records but got %d records", want, got)
@@ -110,5 +110,63 @@ func TestEfPeriod_GetYearAndMonths(t *testing.T) {
 		if m < 4 && m > 6 {
 			t.Errorf("months should be 4, 5, or 6, but got %d", m)
 		}
+	}
+}
+
+func Test_FindDiversion(t *testing.T) {
+	diversion := Diversion{
+		CanalId:   5,
+		DivDate:   sql.NullTime{Time: time.Date(2011, 4, 5, 0, 0, 0, 0, time.UTC), Valid: true},
+		DivAmount: sql.NullFloat64{Float64: 100.1, Valid: true},
+	}
+
+	diversion2 := Diversion{
+		CanalId:   5,
+		DivDate:   sql.NullTime{Time: time.Date(2011, 3, 25, 0, 0, 0, 0, time.UTC), Valid: true},
+		DivAmount: sql.NullFloat64{Float64: 100.1, Valid: true},
+	}
+
+	diversion3 := Diversion{
+		CanalId:   5,
+		DivDate:   sql.NullTime{Time: time.Date(2011, 4, 1, 0, 0, 0, 0, time.UTC), Valid: true},
+		DivAmount: sql.NullFloat64{Float64: 100.1, Valid: true},
+	}
+
+	diversion4 := Diversion{
+		CanalId:   5,
+		DivDate:   sql.NullTime{Time: time.Date(2011, 6, 2, 0, 0, 0, 0, time.UTC), Valid: true},
+		DivAmount: sql.NullFloat64{Float64: 100.1, Valid: true},
+	}
+
+	p1 := efPeriod{
+		CanalId:    5,
+		StartDate:  sql.NullTime{Time: time.Date(2011, 4, 1, 0, 0, 0, 0, time.UTC), Valid: true},
+		EndDate:    sql.NullTime{Time: time.Date(2011, 4, 25, 0, 0, 0, 0, time.UTC), Valid: true},
+		LossPercet: sql.NullFloat64{Float64: 0.45, Valid: true},
+	}
+
+	p2 := efPeriod{
+		CanalId:    5,
+		StartDate:  sql.NullTime{Time: time.Date(2011, 5, 3, 0, 0, 0, 0, time.UTC), Valid: true},
+		EndDate:    sql.NullTime{Time: time.Date(2011, 6, 2, 0, 0, 0, 0, time.UTC), Valid: true},
+		LossPercet: sql.NullFloat64{Float64: 0.45, Valid: true},
+	}
+
+	periods := []efPeriod{p1, p2}
+
+	if !findDiversion(diversion, periods) {
+		t.Error("Should have produced true.")
+	}
+
+	if findDiversion(diversion2, periods) {
+		t.Error("Should have produced false.")
+	}
+
+	if !findDiversion(diversion3, periods) {
+		t.Error("Should have produced true.")
+	}
+
+	if !findDiversion(diversion4, periods) {
+		t.Error("Should have produced true.")
 	}
 }

@@ -17,7 +17,7 @@ select cdj.canal_id, div_dt, sum(div_amnt_cfs) as div_amnt_cfs
 from sw.dailydiversions
     inner join sw.canal_diversion_jct cdj on dailydiversions.ndnr_id = cdj.ndnr_id
 WHERE div_dt between '%d-01-01' and '%d-12-31'
-group by cdj.canal_id, div_dt;
+group by cdj.canal_id, div_dt order by div_dt;
 
 select canal_id, st_date, end_date, loss_percent
 from sw.excess_flow_periods
