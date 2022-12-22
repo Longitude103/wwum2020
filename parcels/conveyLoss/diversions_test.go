@@ -51,7 +51,7 @@ func Test_getDiversions(t *testing.T) {
 
 func Test_getDiversionsSS(t *testing.T) {
 	v := dbConnection()
-	_ = v.SetYears(1953, 2020)
+	_ = v.SetYears(1895, 1905)
 	v.SteadyState = true
 
 	divs, _, err := getDiversions(v)

@@ -75,6 +75,7 @@ func (c *CanalCell) sprint() string {
 func getCanals(v *database.Setup) (canals []Canal, err error) {
 	for i := v.SYear; i < v.EYear+1; i++ {
 		var query string
+		var qryCanals []Canal
 
 		if v.SteadyState {
 			query = fmt.Sprintf(`select id, name, eff, area, %d yr from sw.canals left join (select sw_id, sum(st_area(geom) / 43560) area
@@ -88,10 +89,12 @@ func getCanals(v *database.Setup) (canals []Canal, err error) {
 				group by sw_id) a on id = a.sw_id where type_2 = 'Canal' and eff is not null;`, i, i, i)
 		}
 
-		if err := v.PgDb.Select(&canals, query); err != nil {
+		if err := v.PgDb.Select(&qryCanals, query); err != nil {
 			v.Logger.Errorf("Error getting canals: %s", err)
 			return nil, err
 		}
+
+		canals = append(canals, qryCanals...)
 	}
 
 	// fix western canal to max acres since the acres contained are only the SP Irrigated Acres

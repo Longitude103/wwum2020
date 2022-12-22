@@ -20,7 +20,7 @@ func dbConnection() *database.Setup {
 	var v *database.Setup
 	v, err = database.NewSetup(myEnv, database.WithNoSQLite(), database.WithDebug())
 	if err != nil {
-		fmt.Println("Error in NewSetup")
+		fmt.Println("Error in NewSetup: ", err)
 	}
 
 	if err = v.SetYears(1997, 1997); err != nil {
@@ -32,16 +32,32 @@ func dbConnection() *database.Setup {
 
 func Test_getCanals(t *testing.T) {
 	v := dbConnection()
-	v.SYear = 1953
-	v.EYear = 1953
+	v.SYear = 2014
+	v.EYear = 2016
 
 	c, err := getCanals(v)
 	if err != nil {
 		t.Errorf("Error getting canals: %s", err)
 	}
 
+	foundStartYr := false
+	foundEndYr := false
 	for _, canal := range c {
 		v.Logger.Debugf("Canal: %+v\n", canal)
+		if canal.Yr == v.SYear {
+			foundStartYr = true
+		}
+		if canal.Yr == v.EYear {
+			foundEndYr = true
+		}
+	}
+
+	if !foundStartYr {
+		t.Errorf("Didn't find any canals from start year of %d", v.SYear)
+	}
+
+	if !foundEndYr {
+		t.Errorf("Didn't find any canals from end year of %d", v.EYear)
 	}
 
 	if len(c) == 0 {
@@ -64,8 +80,24 @@ func Test_getCanalsSS(t *testing.T) {
 		t.Errorf("Error getting canals: %s", err)
 	}
 
+	foundStartYr := false
+	foundEndYr := false
 	for _, canal := range c {
 		v.Logger.Debugf("Canal: %+v\n", canal)
+		if canal.Yr == v.SYear {
+			foundStartYr = true
+		}
+		if canal.Yr == v.EYear {
+			foundEndYr = true
+		}
+	}
+
+	if !foundStartYr {
+		t.Errorf("Didn't find any canals from start year of %d", v.SYear)
+	}
+
+	if !foundEndYr {
+		t.Errorf("Didn't find any canals from end year of %d", v.EYear)
 	}
 
 	if len(c) == 0 {

@@ -1,6 +1,7 @@
 package conveyLoss
 
 import (
+	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"time"
 )
@@ -31,8 +32,13 @@ func GetSurfaceWaterDelivery(v *database.Setup) (map[int]Diversions, error) {
 		return nil, err
 	}
 
+	for _, c := range canals {
+		fmt.Printf("Canal is: %+v\n", c)
+	}
+
 	for i := 0; i < len(diversions); i++ {
 		c := filterCnl(canals, diversions[i].CanalId, diversions[i].DivDate.Time.Year())
+		//fmt.Printf("Filtered canal is: %+v\n", c)
 		if c.Area.Valid {
 			if diversions[i].CanalId == 13 && diversions[i].DivDate.Time.Year() > 1984 {
 				// fix diversions for Mitchell Canal after 1985
@@ -68,8 +74,8 @@ func GetSurfaceWaterDelivery(v *database.Setup) (map[int]Diversions, error) {
 	return mapDivs, nil
 }
 
-func getGeringDivs(diversions []Diversion) map[int][]Diversion {
-	var geringDiv = make(map[int][]Diversion)
+func getGeringDivs(diversions Diversions) map[int]Diversions {
+	var geringDiv = make(map[int]Diversions)
 
 	for _, diversion := range diversions {
 		if diversion.CanalId == 32 {
@@ -82,7 +88,7 @@ func getGeringDivs(diversions []Diversion) map[int][]Diversion {
 	return geringDiv
 }
 
-func fixMitchell(diversion Diversion, geringDivs map[int][]Diversion, eff float64, acres float64) float64 {
+func fixMitchell(diversion Diversion, geringDivs map[int]Diversions, eff float64, acres float64) float64 {
 	divs := geringDivs[diversion.DivDate.Time.Year()]
 	adjDiv := 0.0
 
@@ -96,12 +102,12 @@ func fixMitchell(diversion Diversion, geringDivs map[int][]Diversion, eff float6
 }
 
 // filterCnl filters the list of canals to a specific one.
-func filterCnl(canals []Canal, canal int, yr int) (c Canal) {
+func filterCnl(canals []Canal, canal int, yr int) Canal {
 	for _, v := range canals {
 		if v.Id == canal && v.Yr == yr {
-			c = v
+			return v
 		}
 	}
 
-	return c
+	return Canal{}
 }

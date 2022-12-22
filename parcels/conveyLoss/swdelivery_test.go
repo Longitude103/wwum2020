@@ -9,9 +9,8 @@ import (
 
 func Test_GetSurfaceWaterDelivery(t *testing.T) {
 	v := dbConnection()
-
-	v.SYear = 1953
-	v.EYear = 1953
+	v.SYear = 1997
+	v.EYear = 2020
 
 	div, err := GetSurfaceWaterDelivery(v)
 	if err != nil {
@@ -19,7 +18,9 @@ func Test_GetSurfaceWaterDelivery(t *testing.T) {
 	}
 
 	for _, d := range div[v.SYear] {
-		v.Logger.Debug(d.printString())
+		if d.CanalId == 43 {
+			v.Logger.Debug(d.printString())
+		}
 	}
 }
 
