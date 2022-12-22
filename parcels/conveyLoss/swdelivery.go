@@ -1,7 +1,6 @@
 package conveyLoss
 
 import (
-	"fmt"
 	"github.com/Longitude103/wwum2020/database"
 	"time"
 )
@@ -30,10 +29,6 @@ func GetSurfaceWaterDelivery(v *database.Setup) (map[int]Diversions, error) {
 	if err != nil {
 		v.Logger.Errorf("Error in getCanals: %s", err)
 		return nil, err
-	}
-
-	for _, c := range canals {
-		fmt.Printf("Canal is: %+v\n", c)
 	}
 
 	for i := 0; i < len(diversions); i++ {
