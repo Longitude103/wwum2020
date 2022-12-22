@@ -12,7 +12,7 @@ import (
 func MakeOutputDir(folderTitle string) (string, string, error) {
 	goTime := time.Now()
 	timeString := fmt.Sprint(goTime.Year()) + "-" + fmt.Sprint(int(goTime.Month())) + "-" + fmt.Sprint(goTime.Day())
-	ts2 := timeString + "T" + fmt.Sprint(goTime.Hour()) + ":" + fmt.Sprint(goTime.Minute()) + ":" + fmt.Sprint(goTime.Second())
+	ts2 := folderTitle + timeString + "T" + fmt.Sprint(goTime.Hour()) + "-" + fmt.Sprint(goTime.Minute()) + "-" + fmt.Sprint(goTime.Second())
 	timeString += "T" + fmt.Sprint(goTime.Hour()) + "-" + fmt.Sprint(goTime.Minute()) + "-" + fmt.Sprint(goTime.Second())
 
 	wd, _ := os.Getwd()
