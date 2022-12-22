@@ -11,7 +11,7 @@ import (
 // any errors that might have occurred since this hits a world time API.
 func MakeOutputDir(folderTitle string) (string, string, error) {
 	goTime := time.Now()
-	timeString := fmt.Sprint(goTime.Year()) + "-" + fmt.Sprint(goTime.Month()) + "-" + fmt.Sprint(goTime.Day())
+	timeString := fmt.Sprint(goTime.Year()) + "-" + fmt.Sprint(int(goTime.Month())) + "-" + fmt.Sprint(goTime.Day())
 	ts2 := timeString + "T" + fmt.Sprint(goTime.Hour()) + ":" + fmt.Sprint(goTime.Minute()) + ":" + fmt.Sprint(goTime.Second())
 	timeString += "T" + fmt.Sprint(goTime.Hour()) + "-" + fmt.Sprint(goTime.Minute()) + "-" + fmt.Sprint(goTime.Second())
 
