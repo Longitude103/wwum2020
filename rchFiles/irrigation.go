@@ -20,6 +20,9 @@ func IrrigationRCH(v *database.Setup, AllParcels []parcels.Parcel, cCData []data
 		p.UpdateTitle(fmt.Sprintf("Filtering %d Parcels", y))
 		parcelList, err := parcelFilterByYear(AllParcels, y)
 		if err != nil {
+			if err.Error() == "no parcels found for that year" {
+				continue
+			}
 			v.Logger.Errorf("parcelFilterByYear error for year: %d", y)
 			return err
 		}

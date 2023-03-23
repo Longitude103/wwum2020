@@ -71,6 +71,13 @@ func Conveyance(v *database.Setup) (err error) {
 
 		structureLoss := 0.0
 		for _, div := range canalDiversions {
+			// Skip divs that are pre-1895 for Steady State
+			if v.SteadyState {
+				if div.DivDate.Time.Before(time.Date(1895, 1, 1, 0, 0, 0, 0, time.UTC)) {
+					continue
+				}
+			}
+
 			if cell.CanalId == 2 || cell.CanalId == 25 || cell.CanalId == 21 {
 				switch div.DivDate.Time.Month() {
 				case 1, 2, 3, 10, 11, 12:

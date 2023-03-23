@@ -42,11 +42,17 @@ func ParcelPumpSS(v *database.Setup, csResults map[string][]fileio.StationResult
 
 	var parcels []Parcel
 
+	// adjust start year
+	startYear := 1895
+	if v.SYear > 1895 {
+		startYear = v.SYear
+	}
+
 	// 1. load parcels
-	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Parcel Operations").WithRemoveWhenDone(true).Start()
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - startYear + 1).WithTitle("Parcel Operations").WithRemoveWhenDone(true).Start()
 	wg := sync.WaitGroup{}
 
-	for y := v.SYear; y < v.EYear+1; y++ {
+	for y := startYear; y < v.EYear+1; y++ {
 		p.UpdateTitle(fmt.Sprintf("Getting %d Parels", y))
 		parcels = GetParcels(v, y)
 
