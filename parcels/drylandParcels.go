@@ -14,9 +14,16 @@ import (
 func DryLandParcels(v *database.Setup, csResults map[string][]fileio.StationResults,
 	wStations []database.WeatherStation, cCrop []database.CoeffCrop) (dryParcels []Parcel, err error) {
 
-	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Dryland Parcel Operations").WithRemoveWhenDone(true).Start()
+	startYear := v.SYear
+	if v.SteadyState {
+		if v.SYear < 1895 {
+			startYear = 1895
+		}
+	}
+
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - startYear + 1).WithTitle("Dryland Parcel Operations").WithRemoveWhenDone(true).Start()
 	v.Logger.Info("Getting Dryland parcels")
-	for y := v.SYear; y < v.EYear+1; y++ {
+	for y := startYear; y < v.EYear+1; y++ {
 		p.UpdateTitle(fmt.Sprintf("Getting %d Dryland Parcels", y))
 		annDryParcels := GetDryParcels(v, y)
 

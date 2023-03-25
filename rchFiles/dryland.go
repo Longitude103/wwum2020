@@ -11,9 +11,15 @@ import (
 
 // Dryland gets a slice of dryland parcels and writes out the values to the results' database.
 func Dryland(v *database.Setup, dryParcels []parcels.Parcel, cCData []database.CoeffCrop) error {
-	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - v.SYear + 1).WithTitle("Dryland Recharge Results").WithRemoveWhenDone(true).Start()
+	startYear := v.SYear
+	if v.SteadyState {
+		if v.SYear < 1895 {
+			startYear = 1895
+		}
+	}
 
-	for y := v.SYear; y < v.EYear+1; y++ {
+	p, _ := pterm.DefaultProgressbar.WithTotal(v.EYear - startYear + 1).WithTitle("Dryland Recharge Results").WithRemoveWhenDone(true).Start()
+	for y := startYear; y < v.EYear+1; y++ {
 		p.UpdateTitle(fmt.Sprintf("Getting %d cells and filtering them", y))
 		dryCells := database.GetDryCells(v, y) // will need to iterate through years
 		annParcels, err := parcelFilterByYear(dryParcels, y)
