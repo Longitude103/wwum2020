@@ -138,7 +138,7 @@ func GetAggResults(db *sqlx.DB, wel bool, excludeList []string) ([]MfResults, er
 		} else { // don't exclude anything
 			qry = AggResultsNoExclude
 		}
-	} else {                      // is a recharge file
+	} else { // is a recharge file
 		if len(excludeList) > 0 { // has an item in exclude list
 			list := excludeList[0][0:3]
 			for i := 1; i < len(excludeList); i++ {
@@ -227,7 +227,11 @@ func GetStartEndYrs(db *sqlx.DB) (SYr, EYr int, err error) {
 		}
 	}
 
-	return SYr, EYr, errors.New("could not find Start and End Years")
+	if SYr == 0 || EYr == 0 {
+		return 0, 0, errors.New("could not find start/end year")
+	}
+
+	return SYr, EYr, nil
 }
 
 func GetSteadyState(db *sqlx.DB) (bool, error) {
