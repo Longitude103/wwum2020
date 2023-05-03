@@ -1,1 +1,0 @@
-select cell_node, sum(result) result from wel_results WHERE strftime('%%Y', dt) = '%d' GROUP BY cell_node;

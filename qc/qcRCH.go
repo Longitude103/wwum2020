@@ -55,8 +55,16 @@ func NewQC(v *database.Setup, fileName string, options ...Option) *QC {
 		option(q)
 	}
 
-	q.grid, _ = database.GetGrid(q.v.SlDb)
-	q.SYear, q.EYear, _ = database.GetStartEndYrs(q.v.SlDb)
+	var err error
+	q.grid, err = database.GetGrid(q.v.SlDb)
+	if err != nil {
+		panic(err)
+	}
+
+	q.SYear, q.EYear, err = database.GetStartEndYrs(q.v.SlDb)
+	if err != nil {
+		panic(err)
+	}
 
 	return q
 }

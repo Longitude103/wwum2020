@@ -36,16 +36,14 @@ var (
 	wellsQuery string
 	//go:embed sql/nodeQuery.sql
 	nodeQuery string
-	//go:embed sql/RchResultsData.sql
-	rQry string
-	//go:embed sql/SsQuery.sql
-	ssQry string
 )
 
 func (q *QC) WellPumpingGJson() error {
 	pterm.DefaultSection.Println("Well GeoJSON Creation")
 	spin, _ := pterm.DefaultSpinner.Start("Getting Wells from DB")
+	formattedQueries := Utils.SplitQueries(welQueries) // welQueries is in wellsAnn.go
 
+	q.v.Logger.Info(fmt.Sprintf("Using Grid: %d", q.grid))
 	var wlls []Well
 	if err := q.v.PgDb.Select(&wlls, wellsQuery); err != nil {
 		return err
@@ -71,12 +69,16 @@ func (q *QC) WellPumpingGJson() error {
 			mnString = fmt.Sprintf("%d", m)
 		}
 
-		if err := q.v.SlDb.Select(&rResults, rQry, q.Year, mnString); err != nil {
+		q.v.Logger.Info(fmt.Sprintf("Qry: %s, Year: %d, mnString: %s", formattedQueries[2], q.Year, mnString))
+		rQuery := fmt.Sprintf(formattedQueries[2], q.Year, mnString)
+		if err := q.v.SlDb.Select(&rResults, rQuery); err != nil {
 			return err
 		}
-		if err := q.v.SlDb.Select(&ssResults, ssQry, q.Year, mnString); err != nil {
+		ssQuery := fmt.Sprintf(formattedQueries[3], q.Year, mnString)
+		if err := q.v.SlDb.Select(&ssResults, ssQuery); err != nil {
 			return err
 		}
+		q.v.Logger.Info(fmt.Sprintf("rResults len: %d", len(rResults)))
 
 		rResMap[m] = rResults
 		ssResMap[m] = ssResults
@@ -105,6 +107,7 @@ func (q *QC) WellPumpingGJson() error {
 
 	_, _ = w.WriteString(header)
 	cL := len(wlls)
+	q.v.Logger.Info(fmt.Sprintf("Number of Wells: %d", cL))
 
 	p, _ := pterm.DefaultProgressbar.WithTotal(cL).WithTitle("Irr Wells").WithRemoveWhenDone(true).Start()
 	firstWrittenRecord := true
@@ -116,11 +119,14 @@ func (q *QC) WellPumpingGJson() error {
 			return err
 		}
 
+		q.v.Logger.Info(fmt.Sprintf("%+v\n", fc))
+
 		// add property to them of the monthly result
 		annTotal := 0.0
 		ft := 0
 		for m := 1; m < 13; m++ {
 			mn := time.Month(m)
+			q.v.Logger.Info(fmt.Sprintf("Wells in rResMap[%d]: %d", m, len(rResMap[m])))
 			res, mft := findWellResult(rResMap[m], wlls[i].Wellid, wlls[i].Nrd)
 			if q.Monthly {
 				fc.Properties[mn.String()[:3]+"_AF"] = res
@@ -137,6 +143,7 @@ func (q *QC) WellPumpingGJson() error {
 		fc.Properties["AnTl_AF"] = annTotal
 		fc.Properties["AnTl_cf/d"] = annTotal * 43560
 
+		q.v.Logger.Info(fmt.Sprintf("Wellid: %d, AnnTotal: %f", wlls[i].Wellid, annTotal))
 		if annTotal > 0.0 {
 			// marshal that item back to json
 			d, err := fc.MarshalJSON()

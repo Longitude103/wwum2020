@@ -23,14 +23,14 @@ func QcResults(myEnv map[string]string) error {
 
 	var opts []qc.Option
 
-	aGJ, err := WellAnnGJQuestion()
-	if err != nil {
-		return err
-	}
-
-	if aGJ {
-		opts = append(opts, qc.WithWellAnnGJson())
-	}
+	//aGJ, err := WellAnnGJQuestion()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if aGJ {
+	//	opts = append(opts, qc.WithWellAnnGJson())
+	//}
 
 	rechBalance, err := RechBalanceQuestion()
 	if err != nil {

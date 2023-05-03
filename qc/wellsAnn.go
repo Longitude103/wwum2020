@@ -4,6 +4,7 @@ import (
 	"bufio"
 	_ "embed"
 	"fmt"
+	"github.com/Longitude103/wwum2020/Utils"
 	"os"
 	"path/filepath"
 
@@ -26,24 +27,24 @@ type GroupedResult struct {
 }
 
 var (
-	//go:embed sql/dataNodes.sql
-	dataNodes string
 	//go:embed sql/nodeQuery.sql
 	nodeQrySubString string
-	//go:embed sql/groupResultsQry.sql
-	groupResultsQrySubString string
+	//go:embed sql/welQueries.sql
+	welQueries string
 )
 
 func (q *QC) WellsAnnPumping() error {
 	// get all the nodes that there is output data for from sqlite in any year
 	p, _ := pterm.DefaultSpinner.Start("Getting data")
+	formattedQueries := Utils.SplitQueries(welQueries)
 
 	var Nodes []Node
-	if err := q.v.SlDb.Select(&Nodes, dataNodes); err != nil {
+	if err := q.v.SlDb.Select(&Nodes, formattedQueries[0]); err != nil {
 		return err
 	}
 
 	// get the centroid location of all nodes from postgis as geojson
+	q.v.Logger.Info(fmt.Sprintf("Using grid: %d", q.grid))
 	nodeQry := fmt.Sprintf(nodeQrySubString, q.grid)
 	var NodeLocs []NodeData
 	if err := q.v.PgDb.Select(&NodeLocs, nodeQry); err != nil {
@@ -54,7 +55,7 @@ func (q *QC) WellsAnnPumping() error {
 	// make a map here for each year
 	for i := q.SYear; i < q.EYear+1; i++ {
 		// get annual amount of pumping at each node in sqlite
-		groupResultsQry := fmt.Sprintf(groupResultsQrySubString, i)
+		groupResultsQry := fmt.Sprintf(formattedQueries[1], i)
 		var gResults []GroupedResult
 		if err := q.v.SlDb.Select(&gResults, groupResultsQry); err != nil {
 			return err
