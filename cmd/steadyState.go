@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/Longitude103/wwum2020/parcels"
+	"github.com/spf13/cobra"
+	"os"
 	"time"
 
 	"github.com/Longitude103/wwum2020/database"
@@ -11,9 +13,51 @@ import (
 	"github.com/pterm/pterm"
 )
 
+var runSteadyStateCmd = &cobra.Command{
+	Use:   "runSteadyState",
+	Short: "Run the EscModel in steady state mode",
+	Long:  `This command is the steady state model execution for the EscModel. This function will run the model using the provided configuration for steady state. It will create a new output database file on your local filesystem in the same directory as the executable.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("runModel called")
+
+		sYr, _ := cmd.Flags().GetInt("StartYr")
+		eYr, _ := cmd.Flags().GetInt("EndYr")
+		asYr, _ := cmd.Flags().GetInt("AvgStart")
+		aeYr, _ := cmd.Flags().GetInt("AvgEnd")
+		csDir, _ := cmd.Flags().GetString("CSDir")
+		desc, _ := cmd.Flags().GetString("Desc")
+		oldGrid, _ := cmd.Flags().GetBool("oldGrid")
+		mf6Grid40, _ := cmd.Flags().GetBool("mf6Grid40")
+
+		if oldGrid && mf6Grid40 {
+			pterm.Error.Println("oldGrid and mf6Grid40 are mutually exclusive")
+			return
+		}
+
+		if err := runSteadyState(csDir, desc, sYr, eYr, asYr, aeYr, oldGrid, mf6Grid40, myEnv); err != nil {
+			pterm.Error.Printf("Error in Application: %s\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(runSteadyStateCmd)
+	runSteadyStateCmd.Flags().IntP("StartYr", "s", 1893, "Sets the start year of Command")
+	runSteadyStateCmd.Flags().IntP("EndYr", "e", 1952, "Sets the end year of Command")
+	runSteadyStateCmd.Flags().IntP("AvgStart", "a", 1953, "Sets the start year of Averaging")
+	runSteadyStateCmd.Flags().IntP("AvgEnd", "q", 2020, "Sets the end year of Averaging")
+	runSteadyStateCmd.Flags().StringP("CSDir", "c", "", "REQUIRED CropSim Directory path")
+	runSteadyStateCmd.Flags().StringP("Desc", "d", "", "REQUIRED Model Description")
+	runSteadyStateCmd.Flags().BoolP("oldGrid", "o", false, "If flag set, the model will use the 40 acre grid, not USG as default")
+	runSteadyStateCmd.Flags().BoolP("mf6Grid40", "m", false, "If flag set, the model will use the 40 acre grid but in MF6 Node Numbers")
+	_ = runSteadyStateCmd.MarkFlagRequired("CSDir")
+	_ = runSteadyStateCmd.MarkFlagRequired("Desc")
+}
+
 // RunSteadyState is a function that runs the model in Steady State Mode. This produces the following recharge file, but no
 // well file is produced.
-func RunSteadyState(mDesc, CSDir string, StartYr, EndYr, AvgStart, AvgEnd int, oldGrid, mf640 bool, myEnv map[string]string) error {
+func runSteadyState(mDesc, CSDir string, StartYr, EndYr, AvgStart, AvgEnd int, oldGrid, mf640 bool, myEnv map[string]string) error {
 	// first stress period is all Natural Veg for whole grid
 	// Second stress period is all natural veg and a repeat of the 1st period
 	// Third -> end is a monthly stress periods using surface water data starting January 1895 to December 1952
