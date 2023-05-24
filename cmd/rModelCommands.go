@@ -1,7 +1,9 @@
-package actions
+package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
+	"os"
 	"time"
 
 	"github.com/Longitude103/wwum2020/database"
@@ -12,7 +14,51 @@ import (
 	"github.com/pterm/pterm"
 )
 
-func RunModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, p97 bool, oldGrid bool, mf640 bool, myEnv map[string]string) error {
+var runModelCmd = &cobra.Command{
+	Use:   "runModel",
+	Short: "Run the EscModel",
+	Long:  `This command is the main execution command of EscModel. This function will run the model using the provided configuration. It will create a new output database file on your local filesystem in the same directory as the executable.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("runModel called")
+
+		debug, _ := cmd.Flags().GetBool("debug")
+		sYr, _ := cmd.Flags().GetInt("StartYr")
+		eYr, _ := cmd.Flags().GetInt("EndYr")
+		csDir, _ := cmd.Flags().GetString("CSDir")
+		ef, _ := cmd.Flags().GetBool("noExcessFlow")
+		desc, _ := cmd.Flags().GetString("Desc")
+		post97, _ := cmd.Flags().GetBool("Post97")
+		oldGrid, _ := cmd.Flags().GetBool("oldGrid")
+		mf6Grid40, _ := cmd.Flags().GetBool("mf6Grid40")
+
+		if oldGrid && mf6Grid40 {
+			pterm.Error.Println("oldGrid and mf6Grid40 are mutually exclusive")
+			return
+		}
+
+		if err := runModel(debug, &csDir, desc, sYr, eYr, ef, post97, oldGrid, mf6Grid40, myEnv); err != nil {
+			pterm.Error.Printf("Error in Application: %s\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(runModelCmd)
+	runModelCmd.Flags().BoolP("debug", "b", false, "sets debugger for more log information")
+	runModelCmd.Flags().IntP("StartYr", "s", 1997, "Sets the start year of Command")
+	runModelCmd.Flags().IntP("EndYr", "e", 2020, "Sets the end year of Command")
+	runModelCmd.Flags().StringP("CSDir", "c", "", "REQUIRED CropSim Directory path")
+	runModelCmd.Flags().BoolP("noExcessFlow", "n", false, "Sets to use Excess Flow or Not")
+	runModelCmd.Flags().StringP("Desc", "d", "", "REQUIRED Model Description")
+	runModelCmd.Flags().BoolP("post97", "p", false, "If flag set, a post 97 run will be made")
+	runModelCmd.Flags().BoolP("oldGrid", "o", false, "If flag set, the model will use the 40 acre grid, not USG as default")
+	runModelCmd.Flags().BoolP("mf6Grid40", "m", false, "If flag set, the model will use the 40 acre grid but in MF6 Node Numbers")
+	_ = runModelCmd.MarkFlagRequired("CSDir")
+	_ = runModelCmd.MarkFlagRequired("Desc")
+}
+
+func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF bool, p97 bool, oldGrid bool, mf640 bool, myEnv map[string]string) error {
 	timeStart := time.Now()
 
 	pterm.Info.Println("Setting up results database")
