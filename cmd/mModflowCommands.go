@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"path/filepath"
 	"time"
 
@@ -14,7 +15,22 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func MakeModflowFiles() error {
+var makeModflowFilesCmd = &cobra.Command{
+	Use:   "mfFiles",
+	Short: "Create ModFlow files",
+	Long:  `Create ModFlow files for use in the modflow application. It will create a new wel and rch file that can be directly imported. The function will ask a series of questions to determine which files to create.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := makeModflowFiles(); err != nil {
+			pterm.Error.Println("Error in Application: ", err)
+		}
+	},
+}
+
+func init() {
+	makeModflowFilesCmd.AddCommand(makeModflowFilesCmd)
+}
+
+func makeModflowFiles() error {
 	_, db, err := DbQuestion()
 	if err != nil {
 		return err

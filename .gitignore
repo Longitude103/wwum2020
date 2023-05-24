@@ -113,3 +113,4 @@ fabric.properties
 OutputFiles/
 testData/
 .DS_Store
+.configjson

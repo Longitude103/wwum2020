@@ -7,10 +7,27 @@ import (
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/logging"
 	"github.com/Longitude103/wwum2020/qc"
+	"github.com/pterm/pterm"
+	"github.com/spf13/cobra"
 	"path/filepath"
 )
 
-func QcResults(myEnv map[string]string) error {
+var qcResultsCmd = &cobra.Command{
+	Use:   "qcResults",
+	Short: "Generate QC results files for output",
+	Long:  `Generate QC results will as a series of questions to output files from the results database. These files can be summaries, GeoJSON files, or Spreadsheets of the data`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := qcResults(myEnv); err != nil {
+			pterm.Error.Println("Error in Application: ", err)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(qcResultsCmd)
+}
+
+func qcResults(myEnv map[string]string) error {
 	dbString, db, err := DbQuestion()
 	if err != nil {
 		return err
