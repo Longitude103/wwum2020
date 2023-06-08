@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -16,7 +15,8 @@ var projectOutput = &cobra.Command{
 	Long:  "Projection command used to create a file set for robust review analysis.",
 	Run: func(cmd *cobra.Command, args []string) {
 		yearsStr, _ := cmd.Flags().GetString("Years")
-		years, err := parseAndSetYears(yearsStr)
+		var years repeatYears
+		err := years.parseAndSetYears(yearsStr)
 		if err != nil {
 			pterm.Error.Println(err)
 			return
@@ -45,35 +45,65 @@ func init() {
 	projectOutput.MarkFlagRequired("Years")
 }
 
-func parseAndSetYears(yearsStr string) ([]int, error) {
-	var years []int
-	split := strings.Split(yearsStr, ",")
-	for _, yr := range split {
-		yearInt, err := strconv.Atoi(strings.TrimSpace(yr))
-		if err != nil {
-			return nil, errors.New("error parsing years: " + err.Error())
-		}
-
-		years = append(years, yearInt)
-	}
-
-	if len(years) == 0 {
-		return nil, errors.New("must include at least one year")
-	}
-
-	return years, nil
-}
-
-func projectRR(myEnv map[string]string, years []int, projYears int, fileName string) error {
+func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileName string) error {
 	// load local database
 	_, db, err := DbQuestion()
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(db)
-	fmt.Println(years)
-	fmt.Println(fileName)
+	// sqlite database
+	_ = db
+
+	for i := 0; i < projYears; i++ {
+		// which year to get
+		year := years.NextYear()
+
+		// query data for this year
+		_ = year
+
+	}
+
+	return nil
+}
+
+type repeatYears struct {
+	yearsList []int
+	index     int
+}
+
+func (r *repeatYears) Len() int {
+	return len(r.yearsList)
+}
+
+func (r *repeatYears) NextYear() int {
+	if r.index < len(r.yearsList)-1 {
+		yr := r.yearsList[r.index]
+		r.index++
+		return yr
+	} else {
+		r.index = 0
+		return r.yearsList[0]
+	}
+}
+
+func (r *repeatYears) parseAndSetYears(yearsStr string) error {
+	var years []int
+	split := strings.Split(yearsStr, ",")
+	for _, yr := range split {
+		yearInt, err := strconv.Atoi(strings.TrimSpace(yr))
+		if err != nil {
+			return errors.New("error parsing years: " + err.Error())
+		}
+
+		years = append(years, yearInt)
+	}
+
+	if len(years) == 0 {
+		return errors.New("must include at least one year")
+	}
+
+	r.yearsList = years
 
 	return nil
 }
