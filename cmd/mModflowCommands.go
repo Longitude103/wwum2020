@@ -27,7 +27,7 @@ var makeModflowFilesCmd = &cobra.Command{
 }
 
 func init() {
-	makeModflowFilesCmd.AddCommand(makeModflowFilesCmd)
+	rootCmd.AddCommand(makeModflowFilesCmd)
 }
 
 func makeModflowFiles() error {
