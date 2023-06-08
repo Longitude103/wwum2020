@@ -19,8 +19,6 @@ var runModelCmd = &cobra.Command{
 	Short: "Run the EscModel",
 	Long:  `This command is the main execution command of EscModel. This function will run the model using the provided configuration. It will create a new output database file on your local filesystem in the same directory as the executable.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("runModel called")
-
 		debug, _ := cmd.Flags().GetBool("debug")
 		sYr, _ := cmd.Flags().GetInt("StartYr")
 		eYr, _ := cmd.Flags().GetInt("EndYr")
