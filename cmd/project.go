@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -14,7 +15,7 @@ var projectOutput = &cobra.Command{
 	Short: "Projection used for Robust Review Analysis",
 	Long:  "Projection command used to create a file set for robust review analysis.",
 	Run: func(cmd *cobra.Command, args []string) {
-		yearsStr, _ := cmd.Flags().GetString("years")
+		yearsStr, _ := cmd.Flags().GetString("Years")
 		years, err := parseAndSetYears(yearsStr)
 		if err != nil {
 			pterm.Error.Println(err)
@@ -64,6 +65,15 @@ func parseAndSetYears(yearsStr string) ([]int, error) {
 }
 
 func projectRR(myEnv map[string]string, years []int, projYears int, fileName string) error {
+	// load local database
+	_, db, err := DbQuestion()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(db)
+	fmt.Println(years)
+	fmt.Println(fileName)
 
 	return nil
 }
