@@ -3,10 +3,11 @@ package conveyLoss
 import (
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/Longitude103/wwum2020/Utils"
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/pterm/pterm"
-	"time"
 )
 
 // CanalRecharge is a function to get the recharge amounts from the diversions and apportion them to the Canal sections
@@ -21,6 +22,7 @@ func CanalRecharge(v *database.Setup) (err error) {
 	}
 
 	if len(diversions) == 0 { // no recharge this year, exit function
+		spinner.Success("Excess Flow Procedure Complete")
 		return nil
 	}
 
