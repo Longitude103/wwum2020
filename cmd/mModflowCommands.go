@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"path/filepath"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/pterm/pterm"
 
@@ -109,16 +110,20 @@ func makeModflowFiles() error {
 		}
 
 		for k := range singleWELResults {
-			fn := fmt.Sprintf("%sWEL", k)
-			if err := MakeFiles(singleWELResults[k], true, false, a.RowCol, fn, path, mDesc, startDate); err != nil {
-				return err
+			if len(singleWELResults[k]) > 0 {
+				fn := fmt.Sprintf("%sWEL", k)
+				if err := MakeFiles(singleWELResults[k], true, false, a.RowCol, fn, path, mDesc, startDate); err != nil {
+					return err
+				}
 			}
 		}
 
 		for k := range singleRCHResults {
-			fn := fmt.Sprintf("%sRCH", k)
-			if err := MakeFiles(singleRCHResults[k], false, true, a.RowCol, fn, path, mDesc, startDate); err != nil {
-				return err
+			if len(singleRCHResults[k]) > 0 {
+				fn := fmt.Sprintf("%sRCH", k)
+				if err := MakeFiles(singleRCHResults[k], false, true, a.RowCol, fn, path, mDesc, startDate); err != nil {
+					return err
+				}
 			}
 		}
 
