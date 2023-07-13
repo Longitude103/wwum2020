@@ -50,8 +50,8 @@ func InitializeDb(db *sqlx.DB, logger lg) error {
 		  (120, 'UNWNRD'), (121, 'CoHyst-FA'), (122, 'CoHyst-25'), (123, 'CoHyst-Western'), (124, 'NP Excess Flow'), (201, 'NP Comingled Pre 1998'), 
 		  (202, 'NP Groundwater Only Pre 1998'), (203, 'NP Comingled Post 1997'), (204, 'NP Groundwater Only Post 1997'), 
 		  (205, 'SP Comingled Pre 1998'), (206, 'SP Groundwater Only Pre 1998'), (207, 'SP Comingled Post 1997'), (208, 'SP Groundwater Only Post 1997'), 
-          (209, 'Steady State'), (210, 'Municipal'), (211, 'Industrial'), (212, 'Other Wells'), (213, 'Western Canal Outside SP'),
-          (214, 'Colorado'), (215, 'Wyoming'), (216, 'UNWNRD'), (217, 'CoHyst-FA'), (218, 'CoHyst-25');
+          (209, 'Steady State'), (210, 'NP Municipal'), (211, 'NP Industrial'), (212, 'Other Wells'), (213, 'Western Canal Outside SP'),
+          (214, 'Colorado'), (215, 'Wyoming'), (216, 'UNWNRD'), (217, 'CoHyst-FA'), (218, 'CoHyst-25'), (219, 'SP Municipal'), (220, 'SP Industrial');
 	`)
 		if err != nil {
 			logger.Errorf("Error in statement of key records: %s", err)

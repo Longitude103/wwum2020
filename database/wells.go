@@ -5,8 +5,9 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/Longitude103/wwum2020/Utils"
 	"time"
+
+	"github.com/Longitude103/wwum2020/Utils"
 )
 
 type WellParcel struct {
@@ -39,6 +40,7 @@ type MIWell struct {
 	IndustWell bool   `db:"indust_well"`
 	Stop97     bool   `db:"stop_97"`
 	Start97    bool   `db:"start_97"`
+	Nrd        string `db:"nrd"`
 	Node       int    `db:"node"`
 	Pumping    []MIPumping
 }
@@ -185,7 +187,7 @@ func GetMIWells(v *Setup) (miWells []MIWell, err error) {
 	miQuery := fmt.Sprintf(formattedQueries[0], v.CellType())
 
 	if err = v.PgDb.Select(&miWells, miQuery); err != nil {
-		return miWells, errors.New("error getting Municipal and industrial wells")
+		return miWells, errors.New("error getting Municipal and industrial wells: " + err.Error())
 	}
 
 	// use setup to get bounds of pumping (earliest is 1997)
@@ -198,7 +200,7 @@ func GetMIWells(v *Setup) (miWells []MIWell, err error) {
 
 	var miPump []MIPumping
 	if err = v.PgDb.Select(&miPump, miPumpQuery); err != nil {
-		return miWells, errors.New("error getting Pumping for M&I wells")
+		return miWells, errors.New("error getting Pumping for M&I wells: " + err.Error())
 	}
 
 	for i := 0; i < len(miWells); i++ {
@@ -213,11 +215,24 @@ func GetMIWells(v *Setup) (miWells []MIWell, err error) {
 }
 
 func (w *MIWell) MIFileType() int {
-	if w.MuniWell {
-		return 210
-	} else if w.IndustWell {
-		return 211
-	} else {
+	switch w.Nrd {
+	case "np":
+		if w.MuniWell {
+			return 210
+		} else if w.IndustWell {
+			return 211
+		} else {
+			return 212
+		}
+	case "sp":
+		if w.MuniWell {
+			return 219
+		} else if w.IndustWell {
+			return 220
+		} else {
+			return 212
+		}
+	default:
 		return 212
 	}
 }

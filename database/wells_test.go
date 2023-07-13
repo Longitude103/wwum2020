@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -54,7 +53,7 @@ func TestGetMIWells(t *testing.T) {
 
 	// removes log file generated when you run v.NewSetup
 	path, _ := os.Getwd()
-	files, _ := ioutil.ReadDir(path)
+	files, _ := os.ReadDir(path)
 
 	for _, file := range files {
 		if file.Name()[len(file.Name())-3:] == "log" {
