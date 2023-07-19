@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/Longitude103/wwum2020/database"
 	"github.com/Longitude103/wwum2020/fileio"
@@ -25,7 +26,7 @@ var runModelCmd = &cobra.Command{
 		csDir, _ := cmd.Flags().GetString("CSDir")
 		ef, _ := cmd.Flags().GetBool("noExcessFlow")
 		desc, _ := cmd.Flags().GetString("Desc")
-		post97, _ := cmd.Flags().GetBool("Post97")
+		post97, _ := cmd.Flags().GetBool("post97")
 		oldGrid, _ := cmd.Flags().GetBool("oldGrid")
 		mf6Grid40, _ := cmd.Flags().GetBool("mf6Grid40")
 
